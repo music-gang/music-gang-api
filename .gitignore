@@ -1,0 +1,16 @@
+# ide and editors
+
+.vscode
+.vs
+.intellij
+.idea
+
+# executables
+*.exe
+main
+
+# custom directories
+/custom
+
+# config file
+config.yaml
