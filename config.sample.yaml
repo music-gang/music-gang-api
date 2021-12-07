@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=schema.json
+
+app:
+  databases:
+    postgres:
+      database: <database_name>
+      user: <database_user>
+      password: <database_password>
+      host: <database_port>
+      port: <database_port>

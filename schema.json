@@ -1,0 +1,80 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/Welcome7",
+    "definitions": {
+        "Welcome7": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "app": {
+                    "$ref": "#/definitions/App"
+                }
+            },
+            "required": [
+                "app"
+            ],
+            "title": "Welcome7"
+        },
+        "App": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "databases": {
+                    "$ref": "#/definitions/Databases"
+                }
+            },
+            "required": [
+                "databases"
+            ],
+            "title": "App"
+        },
+        "Databases": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "postgres": {
+                    "$ref": "#/definitions/Postgres"
+                }
+            },
+            "required": [
+                "postgres"
+            ],
+            "title": "Databases"
+        },
+        "Postgres": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "database": {
+                    "type": "string"
+                },
+                "user": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "host": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": [
+                        "integer",
+                        "string"
+                    ]
+                }
+            },
+            "required": [
+                "database",
+                "host",
+                "password",
+                "port",
+                "user"
+            ],
+            "title": "Postgres"
+        }
+    }
+}
