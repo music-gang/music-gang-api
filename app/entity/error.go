@@ -1,4 +1,4 @@
-package app
+package entity
 
 import (
 	"errors"
@@ -12,6 +12,7 @@ const (
 	ENOTFOUND       = "not_found"
 	ENOTIMPLEMENTED = "not_implemented"
 	EUNAUTHORIZED   = "unauthorized"
+	EFORBIDDEN      = "forbidden"
 )
 
 type Error struct {
@@ -20,7 +21,7 @@ type Error struct {
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("error: code: %s, message: %s", e.Code, e.Message)
+	return fmt.Sprintf("error: code=%s message=%s", e.Code, e.Message)
 }
 
 func ErrorCode(err error) string {
