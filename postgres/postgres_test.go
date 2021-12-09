@@ -1,9 +1,10 @@
-package postgres
+package postgres_test
 
 import (
 	"testing"
 
 	"github.com/music-gang/music-gang-api/config"
+	"github.com/music-gang/music-gang-api/postgres"
 )
 
 func TestDB(t *testing.T) {
@@ -11,7 +12,7 @@ func TestDB(t *testing.T) {
 	MustCloseDB(t, db)
 }
 
-func MustOpenDB(tb testing.TB) *DB {
+func MustOpenDB(tb testing.TB) *postgres.DB {
 
 	tb.Helper()
 
@@ -19,7 +20,7 @@ func MustOpenDB(tb testing.TB) *DB {
 
 	dsn := config.BuildDSNFromDatabaseConfigForPostgres(config.GetConfig().TEST.Databases.Postgres)
 
-	db := NewDB(dsn)
+	db := postgres.NewDB(dsn)
 	if err := db.Open(); err != nil {
 		tb.Fatal(err)
 	}
@@ -27,7 +28,7 @@ func MustOpenDB(tb testing.TB) *DB {
 	return db
 }
 
-func MustCloseDB(tb testing.TB, db *DB) {
+func MustCloseDB(tb testing.TB, db *postgres.DB) {
 
 	tb.Helper()
 
@@ -36,20 +37,20 @@ func MustCloseDB(tb testing.TB, db *DB) {
 	}
 }
 
-func MustExec(tb testing.TB, db *DB, sql string, args ...interface{}) {
+func MustExec(tb testing.TB, db *postgres.DB, sql string, args ...interface{}) {
 
 	tb.Helper()
 
-	if _, err := db.conn.Exec(sql, args...); err != nil {
+	if _, err := postgres.GetConn(db).Exec(sql, args...); err != nil {
 		tb.Fatal(err)
 	}
 }
 
-func MustTruncateTable(tb testing.TB, db *DB, table string) {
+func MustTruncateTable(tb testing.TB, db *postgres.DB, table string) {
 
 	tb.Helper()
 
-	if _, err := db.conn.Exec("TRUNCATE TABLE " + table + " RESTART IDENTITY CASCADE"); err != nil {
+	if _, err := postgres.GetConn(db).Exec("TRUNCATE TABLE " + table + " RESTART IDENTITY CASCADE"); err != nil {
 		tb.Fatal(err)
 	}
 }

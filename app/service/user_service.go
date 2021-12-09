@@ -32,10 +32,9 @@ type UserService interface {
 
 // UserFilter represents the options used to filter the users.
 type UserFilter struct {
-	ID       *int64  `json:"id"`
-	Email    *string `json:"email"`
-	Username *string `json:"username"`
-	Name     *string `json:"name"`
+	ID    *int64  `json:"id"`
+	Email *string `json:"email"`
+	Name  *string `json:"name"`
 
 	Offset int `json:"offset"`
 	Limit  int `json:"limit"`
