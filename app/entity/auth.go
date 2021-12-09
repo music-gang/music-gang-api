@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/music-gang/music-gang-api/app/apperr"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -75,19 +76,19 @@ func (a *Auth) Validate() error {
 
 	if a.UserID == 0 {
 
-		return Errorf(EINVALID, "User is required")
+		return apperr.Errorf(apperr.EINVALID, "User is required")
 
 	} else if a.Source == "" {
 
-		return Errorf(EINVALID, "Source is required")
+		return apperr.Errorf(apperr.EINVALID, "Source is required")
 
 	} else if a.SourceID == "" {
 
-		return Errorf(EINVALID, "Source ID is required")
+		return apperr.Errorf(apperr.EINVALID, "Source ID is required")
 
 	} else if a.AccessToken.Valid && a.AccessToken.String == "" {
 
-		return Errorf(EINVALID, "Access token cannot be empty if providd")
+		return apperr.Errorf(apperr.EINVALID, "Access token cannot be empty if providd")
 	}
 
 	return nil

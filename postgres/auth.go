@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/music-gang/music-gang-api/app"
+	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
 	"gopkg.in/guregu/null.v4"
@@ -45,12 +46,12 @@ func (s *AuthService) CreateAuth(ctx context.Context, auth *entity.Auth) error {
 		*auth = *other
 
 		if err := tx.Commit(); err != nil {
-			return entity.Errorf(entity.EINTERNAL, "failed to commit transaction: %v", err)
+			return apperr.Errorf(apperr.EINTERNAL, "failed to commit transaction: %v", err)
 		}
 
 		return nil
 
-	} else if entity.ErrorCode(err) != entity.ENOTFOUND {
+	} else if apperr.ErrorCode(err) != apperr.ENOTFOUND {
 		// Check if no auth exists, if err is not ENOTFOUND, than returns err.
 		return err
 
@@ -61,7 +62,7 @@ func (s *AuthService) CreateAuth(ctx context.Context, auth *entity.Auth) error {
 		// new user from an auth source because user ID is not set but auth have attached a user object.
 		if user, err := findUserByEmail(ctx, tx, auth.User.Email.String); err == nil {
 			auth.User = user
-		} else if entity.ErrorCode(err) == entity.ENOTFOUND {
+		} else if apperr.ErrorCode(err) == apperr.ENOTFOUND {
 			if err := createUser(ctx, tx, auth.User); err != nil {
 				return err
 			}
@@ -78,7 +79,7 @@ func (s *AuthService) CreateAuth(ctx context.Context, auth *entity.Auth) error {
 	}
 
 	if err := tx.Commit(); err != nil {
-		return entity.Errorf(entity.EINTERNAL, "failed to commit transaction: %v", err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed to commit transaction: %v", err)
 	}
 
 	return nil
@@ -99,7 +100,7 @@ func (s *AuthService) DeleteAuth(ctx context.Context, id int64) error {
 	}
 
 	if err := tx.Commit(); err != nil {
-		return entity.Errorf(entity.EINTERNAL, "failed to commit transaction: %v", err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed to commit transaction: %v", err)
 	}
 
 	return nil
@@ -123,7 +124,7 @@ func (s *AuthService) FindAuthByID(ctx context.Context, id int64) (*entity.Auth,
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, entity.Errorf(entity.EINTERNAL, "failed to commit transaction: %v", err)
+		return nil, apperr.Errorf(apperr.EINTERNAL, "failed to commit transaction: %v", err)
 	}
 
 	return auth, nil
@@ -178,7 +179,7 @@ func createAuth(ctx context.Context, tx *Tx, auth *entity.Auth) error {
 			updated_at
 		) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 ) RETURNING id
 	`, auth.UserID, auth.Source, auth.SourceID, auth.AccessToken, auth.RefreshToken, auth.Expiry, auth.CreatedAt, auth.UpdatedAt).Scan(&auth.ID); err != nil {
-		return entity.Errorf(entity.EINTERNAL, "failed to create auth: %v", err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed to create auth: %v", err)
 	}
 
 	return nil
@@ -193,15 +194,15 @@ func deleteAuth(ctx context.Context, tx *Tx, id int64) error {
 	if auth, err := findAuthByID(ctx, tx, id); err != nil {
 		return err
 	} else if auth.UserID != app.UserIDFromContext(ctx) {
-		return entity.Errorf(entity.EUNAUTHORIZED, "you are not allowed to delete another user auth")
+		return apperr.Errorf(apperr.EUNAUTHORIZED, "you are not allowed to delete another user auth")
 	} else if !entity.CanAuthBeDeleted(auth) {
-		return entity.Errorf(entity.EFORBIDDEN, "cannot delete this auth")
+		return apperr.Errorf(apperr.EFORBIDDEN, "cannot delete this auth")
 	}
 
 	if _, err := tx.ExecContext(ctx, `
 		DELETE FROM auths WHERE id = $1
 	`, id); err != nil {
-		return entity.Errorf(entity.EINTERNAL, "failed to delete auth: %v", err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed to delete auth: %v", err)
 	}
 
 	return nil
@@ -215,7 +216,7 @@ func findAuthByID(ctx context.Context, tx *Tx, id int64) (*entity.Auth, error) {
 	if err != nil {
 		return nil, err
 	} else if len(auths) == 0 {
-		return nil, entity.Errorf(entity.ENOTFOUND, "auth not found")
+		return nil, apperr.Errorf(apperr.ENOTFOUND, "auth not found")
 	}
 
 	return auths[0], nil
@@ -229,7 +230,7 @@ func findAuthBySourceID(ctx context.Context, tx *Tx, source, sourceID string) (*
 	if err != nil {
 		return nil, err
 	} else if len(auths) == 0 {
-		return nil, entity.Errorf(entity.ENOTFOUND, "auth not found")
+		return nil, apperr.Errorf(apperr.ENOTFOUND, "auth not found")
 	}
 
 	return auths[0], nil
@@ -280,7 +281,7 @@ func findAuths(ctx context.Context, tx *Tx, filter service.AuthFilter) (_ entity
 		ORDER BY id ASC
 		`+FormatLimitOffset(filter.Limit, filter.Offset), args...)
 	if err != nil {
-		return nil, 0, entity.Errorf(entity.EINTERNAL, "failed to query auths: %v", err)
+		return nil, 0, apperr.Errorf(apperr.EINTERNAL, "failed to query auths: %v", err)
 	}
 	defer rows.Close()
 
@@ -300,14 +301,14 @@ func findAuths(ctx context.Context, tx *Tx, filter service.AuthFilter) (_ entity
 			&auth.UpdatedAt,
 			&n,
 		); err != nil {
-			return nil, 0, entity.Errorf(entity.EINTERNAL, "failed to scan auth: %v", err)
+			return nil, 0, apperr.Errorf(apperr.EINTERNAL, "failed to scan auth: %v", err)
 		}
 
 		auths = append(auths, &auth)
 
 	}
 	if err := rows.Err(); err != nil {
-		return nil, 0, entity.Errorf(entity.EINTERNAL, "failed to iterate over auths: %v", err)
+		return nil, 0, apperr.Errorf(apperr.EINTERNAL, "failed to iterate over auths: %v", err)
 	}
 
 	return auths, n, nil
@@ -322,7 +323,7 @@ func updateAuth(ctx context.Context, tx *Tx, id int64, accessToken, refreshToken
 	if err != nil {
 		return nil, err
 	} else if auth.UserID != app.UserIDFromContext(ctx) {
-		return nil, entity.Errorf(entity.EUNAUTHORIZED, "you are not allowed to update other user auth")
+		return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "you are not allowed to update other user auth")
 	}
 
 	auth.AccessToken = accessToken
@@ -342,7 +343,7 @@ func updateAuth(ctx context.Context, tx *Tx, id int64, accessToken, refreshToken
 			updated_at = $4
 		WHERE id = $5
 	`, accessToken, refreshToken, expiry, tx.now, id); err != nil {
-		return nil, entity.Errorf(entity.EINTERNAL, "failed to update auth: %v", err)
+		return nil, apperr.Errorf(apperr.EINTERNAL, "failed to update auth: %v", err)
 	}
 
 	return auth, nil

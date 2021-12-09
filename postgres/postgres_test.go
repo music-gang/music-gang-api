@@ -1,6 +1,10 @@
 package postgres
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/music-gang/music-gang-api/config"
+)
 
 func TestDB(t *testing.T) {
 	db := MustOpenDB(t)
@@ -11,7 +15,9 @@ func MustOpenDB(tb testing.TB) *DB {
 
 	tb.Helper()
 
-	dsn := "postgres://postgres:admin@localhost:5432/test?sslmode=disable&TimeZone=UTC"
+	config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "../config.yaml"})
+
+	dsn := config.BuildDSNFromDatabaseConfigForPostgres(config.GetConfig().TEST.Databases.Postgres)
 
 	db := NewDB(dsn)
 	if err := db.Open(); err != nil {
