@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=schema.json
+
+app:
+  databases:
+    postgres:
+      database: ignore
+      user: ignore
+      password: ignore
+      host: ignore
+      port: 0000
+test:
+  databases:
+    postgres:
+      database: music-gang-ci-test
+      user: postgres
+      password: admin
+      host: postgres-db
+      port: 5432
