@@ -136,6 +136,7 @@ func attachUserAssociations(ctx context.Context, tx *Tx, user *entity.User) (err
 	return nil
 }
 
+// createUser creates a new user.
 func createUser(ctx context.Context, tx *Tx, user *entity.User) error {
 
 	user.CreatedAt = tx.now
@@ -162,6 +163,7 @@ func createUser(ctx context.Context, tx *Tx, user *entity.User) error {
 
 // deleteUser deletes the user with the given id.
 // Return EUNAUTHORIZED if the user is not the same as the authenticated user.
+// Return ENOTFOUND if the user does not exist.
 func deleteUser(ctx context.Context, tx *Tx, id int64) error {
 
 	if user, err := findUserByID(ctx, tx, id); err != nil {
@@ -215,6 +217,11 @@ func findUsers(ctx context.Context, tx *Tx, filter service.UserFilter) (_ entity
 
 	if v := filter.ID; v != nil {
 		where = append(where, fmt.Sprintf("id = $%d", counterParameter))
+		args = append(args, *v)
+		counterParameter++
+	}
+	if v := filter.Name; v != nil {
+		where = append(where, fmt.Sprintf("name = $%d", counterParameter))
 		args = append(args, *v)
 		counterParameter++
 	}
@@ -273,6 +280,7 @@ func findUsers(ctx context.Context, tx *Tx, filter service.UserFilter) (_ entity
 
 // updateUser updates the given user.
 // Return EUNAUTHORIZED if the user is not the same as the authenticated user.
+// Return ENOTFOUND if the user does not exist.
 func updateUser(ctx context.Context, tx *Tx, id int64, upd service.UserUpdate) (*entity.User, error) {
 
 	user, err := findUserByID(ctx, tx, id)
