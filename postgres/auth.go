@@ -243,6 +243,12 @@ func findAuths(ctx context.Context, tx *Tx, filter service.AuthFilter) (_ entity
 
 	where, args := []string{"1 = 1"}, []interface{}{}
 	counParameter := 1
+
+	if v := filter.ID; v != nil {
+		where = append(where, fmt.Sprintf("id = $%d", counParameter))
+		args = append(args, *v)
+		counParameter++
+	}
 	if v := filter.UserID; v != nil {
 		where = append(where, fmt.Sprintf("user_id = $%d", counParameter))
 		args = append(args, *v)
