@@ -3,6 +3,7 @@ package entity
 import (
 	"time"
 
+	"github.com/music-gang/music-gang-api/app/apperr"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -29,11 +30,11 @@ type Users []*User
 func (u *User) Validate() error {
 
 	if u.Name == "" {
-		return Errorf(EINVALID, "name is required")
+		return apperr.Errorf(apperr.EINVALID, "name is required")
 	}
 
 	if u.Email.Valid && u.Email.String == "" {
-		return Errorf(EINVALID, "email cannot be empty if provided")
+		return apperr.Errorf(apperr.EINVALID, "email cannot be empty if provided")
 	}
 
 	return nil

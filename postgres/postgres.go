@@ -11,7 +11,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"github.com/music-gang/music-gang-api/app/entity"
+	"github.com/music-gang/music-gang-api/app/apperr"
 )
 
 //go:embed migration/*.sql
@@ -48,7 +48,7 @@ func NewDB(dsn string) *DB {
 // createMigrationsTable creates the migrations table if it doesn't exist.
 func (db *DB) createMigrationsTable() error {
 	if _, err := db.conn.Exec("CREATE TABLE IF NOT EXISTS migrations (name TEXT PRIMARY KEY);"); err != nil {
-		return entity.Errorf(entity.EINTERNAL, "failed to create migrations table: %s", err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed to create migrations table: %s", err)
 	}
 	return nil
 }
@@ -69,7 +69,7 @@ func (db *DB) migrate() error {
 
 	names, err := fs.Glob(migrationsFS, "migration/*.sql")
 	if err != nil {
-		return entity.Errorf(entity.EINTERNAL, "failed to glob migrations: %s", err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed to glob migrations: %s", err)
 	}
 
 	sort.Strings(names)
@@ -89,28 +89,28 @@ func (db *DB) migrateFile(name string) error {
 
 	tx, err := db.conn.Beginx()
 	if err != nil {
-		return entity.Errorf(entity.EINTERNAL, "failed to begin transaction: %s", err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed to begin transaction: %s", err)
 	}
 	defer tx.Rollback()
 
 	var n int
 	if err := tx.QueryRow("SELECT COUNT(*) FROM migrations WHERE name = $1", name).Scan(&n); err != nil {
-		return entity.Errorf(entity.EINTERNAL, "failed to query migrations: %s", err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed to query migrations: %s", err)
 	} else if n != 0 {
 		return nil
 	}
 
 	if buf, err := fs.ReadFile(migrationsFS, name); err != nil {
 
-		return entity.Errorf(entity.EINTERNAL, "failed to read migration file: %s", err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed to read migration file: %s", err)
 
 	} else if _, err := tx.Exec(string(buf)); err != nil {
 
-		return entity.Errorf(entity.EINTERNAL, "failed exec migration %s: %s", name, err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed exec migration %s: %s", name, err)
 	}
 
 	if _, err := tx.Exec("INSERT INTO migrations (name) VALUES ($1)", name); err != nil {
-		return entity.Errorf(entity.EINTERNAL, "failed insert migration: %s", err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed insert migration: %s", err)
 	}
 
 	return tx.Commit()
@@ -122,7 +122,7 @@ func (db *DB) migrateFile(name string) error {
 func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	tx, err := db.conn.BeginTxx(ctx, opts)
 	if err != nil {
-		return nil, entity.Errorf(entity.EINTERNAL, "failed to begin transaction: %v", err)
+		return nil, apperr.Errorf(apperr.EINTERNAL, "failed to begin transaction: %v", err)
 	}
 
 	// Return wrapper Tx that includes the transaction start time.
@@ -153,7 +153,7 @@ func (db *DB) MustOpen() {
 func (db *DB) Open() error {
 
 	if db.DSN == "" {
-		return entity.Errorf(entity.EINVALID, "no DSN provided")
+		return apperr.Errorf(apperr.EINVALID, "no DSN provided")
 	}
 
 	var err error

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/music-gang/music-gang-api/app"
+	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
 )
@@ -39,7 +40,7 @@ func (s *UserService) CreateUser(ctx context.Context, user *entity.User) error {
 	}
 
 	if err := tx.Commit(); err != nil {
-		return entity.Errorf(entity.EINTERNAL, "failed to commit transaction: %v", err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed to commit transaction: %v", err)
 	}
 
 	return nil
@@ -61,7 +62,7 @@ func (s *UserService) DeleteUser(ctx context.Context, id int64) error {
 	}
 
 	if err := tx.Commit(); err != nil {
-		return entity.Errorf(entity.EINTERNAL, "failed to commit transaction: %v", err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed to commit transaction: %v", err)
 	}
 
 	return nil
@@ -85,7 +86,7 @@ func (s *UserService) FindUserByID(ctx context.Context, id int64) (*entity.User,
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, entity.Errorf(entity.EINTERNAL, "failed to commit transaction: %v", err)
+		return nil, apperr.Errorf(apperr.EINTERNAL, "failed to commit transaction: %v", err)
 	}
 
 	return user, nil
@@ -121,7 +122,7 @@ func (u *UserService) UpdateUser(ctx context.Context, id int64, upd service.User
 	} else if err := attachUserAssociations(ctx, tx, user); err != nil {
 		return nil, err
 	} else if err := tx.Commit(); err != nil {
-		return nil, entity.Errorf(entity.EINTERNAL, "failed to commit transaction: %v", err)
+		return nil, apperr.Errorf(apperr.EINTERNAL, "failed to commit transaction: %v", err)
 	}
 
 	return user, nil
@@ -153,7 +154,7 @@ func createUser(ctx context.Context, tx *Tx, user *entity.User) error {
 			updated_at
 		) VALUES ( $1, $2, $3, $4, $5 ) RETURNING id
 	`, user.Name, user.Email, user.Password, user.CreatedAt, user.UpdatedAt).Scan(&user.ID); err != nil {
-		return entity.Errorf(entity.EINTERNAL, "failed to insert user: %v", err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed to insert user: %v", err)
 	}
 
 	return nil
@@ -166,11 +167,11 @@ func deleteUser(ctx context.Context, tx *Tx, id int64) error {
 	if user, err := findUserByID(ctx, tx, id); err != nil {
 		return err
 	} else if user.ID != app.UserIDFromContext(ctx) {
-		return entity.Errorf(entity.EUNAUTHORIZED, "you are not allowed to delete this user")
+		return apperr.Errorf(apperr.EUNAUTHORIZED, "you are not allowed to delete this user")
 	}
 
 	if _, err := tx.ExecContext(ctx, `DELETE FROM users WHERE id = $1`, id); err != nil {
-		return entity.Errorf(entity.EINTERNAL, "failed to delete user: %v", err)
+		return apperr.Errorf(apperr.EINTERNAL, "failed to delete user: %v", err)
 	}
 
 	return nil
@@ -184,7 +185,7 @@ func findUserByEmail(ctx context.Context, tx *Tx, email string) (*entity.User, e
 	if err != nil {
 		return nil, err
 	} else if len(a) == 0 {
-		return nil, entity.Errorf(entity.ENOTFOUND, "user not found")
+		return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
 	}
 
 	return a[0], nil
@@ -198,7 +199,7 @@ func findUserByID(ctx context.Context, tx *Tx, id int64) (*entity.User, error) {
 	if err != nil {
 		return nil, err
 	} else if len(a) == 0 {
-		return nil, entity.Errorf(entity.ENOTFOUND, "user not found")
+		return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
 	}
 
 	return a[0], nil
@@ -239,7 +240,7 @@ func findUsers(ctx context.Context, tx *Tx, filter service.UserFilter) (_ entity
 		args...,
 	)
 	if err != nil {
-		return nil, 0, entity.Errorf(entity.EINTERNAL, "failed to query users: %v", err)
+		return nil, 0, apperr.Errorf(apperr.EINTERNAL, "failed to query users: %v", err)
 	}
 	defer rows.Close()
 
@@ -258,13 +259,13 @@ func findUsers(ctx context.Context, tx *Tx, filter service.UserFilter) (_ entity
 			&user.UpdatedAt,
 			&n,
 		); err != nil {
-			return nil, 0, entity.Errorf(entity.EINTERNAL, "failed to scan user: %v", err)
+			return nil, 0, apperr.Errorf(apperr.EINTERNAL, "failed to scan user: %v", err)
 		}
 
 		users = append(users, &user)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, 0, entity.Errorf(entity.EINTERNAL, "failed to iterate over users: %v", err)
+		return nil, 0, apperr.Errorf(apperr.EINTERNAL, "failed to iterate over users: %v", err)
 	}
 
 	return users, n, nil
@@ -278,7 +279,7 @@ func updateUser(ctx context.Context, tx *Tx, id int64, upd service.UserUpdate) (
 	if err != nil {
 		return nil, err
 	} else if user.ID != app.UserIDFromContext(ctx) {
-		return nil, entity.Errorf(entity.EUNAUTHORIZED, "you are not allowed to update this user")
+		return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "you are not allowed to update this user")
 	}
 
 	if v := upd.Name; v != nil {
@@ -297,7 +298,7 @@ func updateUser(ctx context.Context, tx *Tx, id int64, upd service.UserUpdate) (
 			updated_at = $2
 		WHERE id = $3
 	`, user.Name, user.UpdatedAt, id); err != nil {
-		return nil, entity.Errorf(entity.EINTERNAL, "failed to update user: %v", err)
+		return nil, apperr.Errorf(apperr.EINTERNAL, "failed to update user: %v", err)
 	}
 
 	return user, nil

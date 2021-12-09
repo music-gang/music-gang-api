@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/music-gang/music-gang-api/app"
+	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"gopkg.in/guregu/null.v4"
 )
@@ -66,8 +67,8 @@ func TestUserService_CreateUser(t *testing.T) {
 
 		if err := s.CreateUser(context.Background(), &entity.User{}); err == nil {
 			t.Fatal("expected error")
-		} else if entity.ErrorCode(err) != entity.EINVALID {
-			t.Fatalf("got %v, want %v", entity.ErrorCode(err), entity.EINVALID)
+		} else if apperr.ErrorCode(err) != apperr.EINVALID {
+			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.EINVALID)
 		}
 	})
 }
