@@ -19,6 +19,6 @@ steps:
   - name: test
     image: golang:1.17.4
     commands:
-      - mv config.drone.yaml config.yaml
+      - sleep 5
+      - mv drone-ci/config.drone.yaml config.yaml
       - go test ./... -timeout 120s -race -coverprofile=coverage.txt -covermode=atomic
-      - go build
