@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://json.schemastore.org/drone.json
+
+kind: pipeline
+type: docker
+name: CI-integration-test
+trigger:
+  event:
+    - push
+    - custom
+    - tag
+services:
+  - name: postgres-db
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: music-gang-ci-test
+steps:
+  - name: test
+    image: golang:1.17.4
+    commands:
+      - mv config.drone.yaml config.yaml
+      - go test ./... -timeout 120s -race -coverprofile=coverage.txt -covermode=atomic
+      - go build
