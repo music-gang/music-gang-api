@@ -89,6 +89,10 @@ func (a *Auth) Validate() error {
 	} else if a.AccessToken.Valid && a.AccessToken.String == "" {
 
 		return apperr.Errorf(apperr.EINVALID, "Access token cannot be empty if providd")
+
+	} else if a.RefreshToken.Valid && a.RefreshToken.String == "" {
+
+		return apperr.Errorf(apperr.EINVALID, "Refresh token cannot be empty if providd")
 	}
 
 	return nil
