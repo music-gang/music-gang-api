@@ -8,28 +8,25 @@ import (
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"golang.org/x/oauth2"
-	githuboauth2 "golang.org/x/oauth2/github"
 	"gopkg.in/guregu/null.v4"
 )
 
 var _ AuthProvider = (*GithubProvider)(nil)
 
 // GithubProvider is the Github implementation of AuthProvider.
-type GithubProvider struct{}
+type GithubProvider struct {
+	config *oauth2.Config
+	userFn func(ctx context.Context, client *github.Client) (*github.User, *github.Response, error)
+}
 
 // NewGithubProvider returns a new GithubProvider.
-func NewGithubProvider() *GithubProvider {
-	return &GithubProvider{}
+func NewGithubProvider(config *oauth2.Config) *GithubProvider {
+	return &GithubProvider{config: config, userFn: user}
 }
 
 //  GetConfig returns the oauth2.Config for the provider.
 func (p *GithubProvider) GetOAuthConfig() *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     "",
-		ClientSecret: "",
-		Scopes:       []string{},
-		Endpoint:     githuboauth2.Endpoint,
-	}
+	return p.config
 }
 
 // Source returns the source of the provider.
@@ -54,11 +51,9 @@ func (p *GithubProvider) User(ctx context.Context, opts *AuthUserOptions) (*enti
 		&oauth2.Token{AccessToken: tok.AccessToken},
 	)))
 
-	u, _, err := client.Users.Get(ctx, "")
+	u, _, err := p.userFn(ctx, client)
 	if err != nil {
-		return nil, apperr.Errorf(apperr.EINTERNAL, "failed to get user: %v", err)
-	} else if u.ID == nil || *u.ID == 0 {
-		return nil, apperr.Errorf(apperr.EINTERNAL, "User ID returned from Github is invalid, cannot authenticate")
+		return nil, err
 	}
 
 	var name string
@@ -97,4 +92,18 @@ func (p *GithubProvider) User(ctx context.Context, opts *AuthUserOptions) (*enti
 	}
 
 	return auth, nil
+}
+
+// user implements oauth2 for github.
+// It can be mooked for testing.
+func user(ctx context.Context, client *github.Client) (*github.User, *github.Response, error) {
+
+	u, resp, err := client.Users.Get(ctx, "")
+	if err != nil {
+		return nil, nil, apperr.Errorf(apperr.EINTERNAL, "failed to get user: %v", err)
+	} else if u.ID == nil || *u.ID == 0 {
+		return nil, nil, apperr.Errorf(apperr.EINTERNAL, "User ID returned from Github is invalid, cannot authenticate")
+	}
+
+	return u, resp, nil
 }

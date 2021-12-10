@@ -67,6 +67,6 @@ func (a *Auth) Auhenticate(ctx context.Context, opts *AuthUserOptions) (*entity.
 func (a *Auth) initProviders() {
 	a.providers = make(map[string]AuthProvider)
 
-	a.providers[entity.AuthSourceGitHub] = NewGithubProvider()
+	a.providers[entity.AuthSourceGitHub] = NewGithubProvider(&oauth2.Config{})
 	a.providers[entity.AuthSourceLocal] = NewLocalProvider()
 }
