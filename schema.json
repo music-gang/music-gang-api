@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-06/schema#",
-    "$ref": "#/definitions/Welcome7",
+    "$ref": "#/definitions/Welcome6",
     "definitions": {
-        "Welcome7": {
+        "Welcome6": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
@@ -14,22 +14,84 @@
                 }
             },
             "required": [
-                "app"
+                "app",
+                "test"
             ],
-            "title": "Welcome7"
+            "title": "Welcome6"
         },
         "App": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "auths": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Auths"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
                 "databases": {
                     "$ref": "#/definitions/Databases"
                 }
             },
             "required": [
+                "auths",
                 "databases"
             ],
             "title": "App"
+        },
+        "Auths": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "local": {
+                    "$ref": "#/definitions/Local"
+                }
+            },
+            "required": [
+                "local"
+            ],
+            "title": "Auths"
+        },
+        "Local": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "client_id": {
+                    "type": "null"
+                },
+                "client_secret": {
+                    "type": "null"
+                },
+                "endpoint": {
+                    "$ref": "#/definitions/Endpoint"
+                },
+                "scopes": {
+                    "type": "null"
+                }
+            },
+            "required": [],
+            "title": "Local"
+        },
+        "Endpoint": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "auth_style": {
+                    "type": "null"
+                },
+                "auth_url": {
+                    "type": "null"
+                },
+                "token_url": {
+                    "type": "null"
+                }
+            },
+            "required": [],
+            "title": "Endpoint"
         },
         "Databases": {
             "type": "object",
@@ -55,19 +117,13 @@
                     "type": "string"
                 },
                 "password": {
-                    "type": [
-                        "string",
-                        "null"
-                    ]
+                    "type": "string"
                 },
                 "host": {
                     "type": "string"
                 },
                 "port": {
-                    "type": [
-                        "integer",
-                        "string"
-                    ]
+                    "type": "integer"
                 }
             },
             "required": [

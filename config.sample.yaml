@@ -1,18 +1,22 @@
 # yaml-language-server: $schema=schema.json
 
 app:
+  auths:
+
   databases:
     postgres:
       database: <database_name>
       user: <database_user>
       password: <database_password>
       host: <database_port>
-      port: <database_port>
+      port: 5432
 test:
+  auths:
+
   databases:
     postgres:
       database: <database_test_name>
       user: <database_test_user>
       password: <database_test_password>
       host: <database_test_host>
-      port: <database_test_port>
+      port: 5432

@@ -6,6 +6,7 @@ import (
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
+	"github.com/music-gang/music-gang-api/config"
 	"golang.org/x/oauth2"
 )
 
@@ -30,11 +31,13 @@ type AuthProvider interface {
 type Auth struct {
 	authService service.AuthService
 	providers   map[string]AuthProvider
+
+	conf config.AuthListConfig
 }
 
 // NewAuth creates a new Auth instance
-func NewAuth(authService service.AuthService) *Auth {
-	auth := &Auth{authService: authService}
+func NewAuth(authService service.AuthService, conf config.AuthListConfig) *Auth {
+	auth := &Auth{authService: authService, conf: conf}
 	auth.initProviders()
 	return auth
 }
@@ -67,6 +70,6 @@ func (a *Auth) Auhenticate(ctx context.Context, opts *AuthUserOptions) (*entity.
 func (a *Auth) initProviders() {
 	a.providers = make(map[string]AuthProvider)
 
-	a.providers[entity.AuthSourceGitHub] = NewGithubProvider(&oauth2.Config{})
+	a.providers[entity.AuthSourceGitHub] = NewGithubProvider(a.conf.Github)
 	a.providers[entity.AuthSourceLocal] = NewLocalProvider()
 }
