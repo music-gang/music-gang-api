@@ -17,9 +17,9 @@ var authSourceLocal = entity.AuthSourceLocal
 var authSourceGithub = entity.AuthSourceGitHub
 
 type Auth struct {
-	*auth.Auth
+	*auth.AuthService
 
-	AuthService mock.AuthService
+	as mock.AuthService
 }
 
 func NewAuth() *Auth {
@@ -27,7 +27,7 @@ func NewAuth() *Auth {
 
 	config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "../config.yaml"})
 
-	a.Auth = auth.NewAuth(&a.AuthService, config.GetConfig().TEST.Auths)
+	a.AuthService = auth.NewAuth(&a.as, config.GetConfig().TEST.Auths)
 	return a
 }
 
@@ -59,11 +59,11 @@ func TestAuth_TestLocalProvider(t *testing.T) {
 
 		s := NewAuth()
 
-		s.AuthService.CreateAuthFn = func(ctx context.Context, auth *entity.Auth) error {
+		s.as.CreateAuthFn = func(ctx context.Context, auth *entity.Auth) error {
 			return nil
 		}
 
-		if auth, err := s.Auhenticate(context.Background(), &auth.AuthUserOptions{
+		if auth, err := s.Auhenticate(context.Background(), &entity.AuthUserOptions{
 			Source: &authSourceLocal,
 			User: &entity.User{
 				Name:  "Jane Doe",
@@ -104,13 +104,13 @@ func TestAuth_TestGithubProvider(t *testing.T) {
 			},
 		})
 
-		s.AuthService.CreateAuthFn = func(ctx context.Context, auth *entity.Auth) error {
+		s.as.CreateAuthFn = func(ctx context.Context, auth *entity.Auth) error {
 			return nil
 		}
 
 		fakeAuthCode := "FAKE_AUTH_CODE"
 
-		if auth, err := s.Auhenticate(context.Background(), &auth.AuthUserOptions{
+		if auth, err := s.Auhenticate(context.Background(), &entity.AuthUserOptions{
 			Source:   &authSourceGithub,
 			AuthCode: &fakeAuthCode,
 		}); err != nil {

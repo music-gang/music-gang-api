@@ -39,6 +39,13 @@ type Auth struct {
 // Auths represents a list of Auth objects.
 type Auths []*Auth
 
+// AuthUserOptions represents the options for a user during fetching auth service.
+type AuthUserOptions struct {
+	AuthCode *string
+	Source   *string
+	User     *User
+}
+
 // CanAuthBeDeleted returns if the passed authentication source can be deleted.
 func CanAuthBeDeleted(auth *Auth) bool {
 

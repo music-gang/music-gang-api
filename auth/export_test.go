@@ -7,7 +7,7 @@ import (
 	"github.com/music-gang/music-gang-api/config"
 )
 
-func (a *Auth) ProviderBySource(source string) AuthProvider {
+func (a *AuthService) ProviderBySource(source string) AuthProvider {
 	return a.providers[source]
 }
 

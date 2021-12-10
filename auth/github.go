@@ -47,7 +47,7 @@ func (p *GithubProvider) Source() string {
 
 // User implements oauth2 for github.
 // AuthUserOptions.AuthCode is required to exchange for tokens.
-func (p *GithubProvider) User(ctx context.Context, opts *AuthUserOptions) (*entity.Auth, error) {
+func (p *GithubProvider) User(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
 
 	if opts == nil || opts.AuthCode == nil || *opts.AuthCode == "" {
 		return nil, apperr.Errorf(apperr.EINVALID, "opts.AuthCode is required")

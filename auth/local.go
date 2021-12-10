@@ -30,7 +30,7 @@ func (p *LocalProvider) Source() string {
 
 // User returns the user from local auth.
 // Requires a user passed through opts.User.
-func (p *LocalProvider) User(ctx context.Context, opts *AuthUserOptions) (*entity.Auth, error) {
+func (p *LocalProvider) User(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
 
 	if opts == nil || opts.User == nil {
 		return nil, apperr.Errorf(apperr.EINVALID, "opts.User is required")
