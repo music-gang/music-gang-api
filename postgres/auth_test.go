@@ -2,7 +2,6 @@ package postgres_test
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -28,7 +27,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 
 		auth := &entity.Auth{
 			Source:       entity.AuthSourceGitHub,
-			SourceID:     "SOURCEID",
+			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
@@ -72,7 +71,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 
 		auth0, ctx0 := MustCreateAuth(t, context.Background(), db, &entity.Auth{
 			Source:       entity.AuthSourceGitHub,
-			SourceID:     "SOURCEID",
+			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
@@ -84,7 +83,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 
 		auth01 := &entity.Auth{
 			Source:       entity.AuthSourceGitHub,
-			SourceID:     "SOURCEID",
+			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN-NEW"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN-NEW"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
@@ -112,7 +111,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 		s := postgres.NewAuthService(db)
 
 		auth := &entity.Auth{
-			SourceID:     "SOURCEID",
+			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
@@ -167,7 +166,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 
 		auth := &entity.Auth{
 			Source:       entity.AuthSourceGitHub,
-			SourceID:     "SOURCEID",
+			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
@@ -191,7 +190,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 
 		auth := &entity.Auth{
 			Source:       entity.AuthSourceGitHub,
-			SourceID:     "SOURCEID",
+			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom(""),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
@@ -219,7 +218,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 
 		auth := &entity.Auth{
 			Source:       entity.AuthSourceGitHub,
-			SourceID:     "SOURCEID",
+			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom(""),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
@@ -250,7 +249,7 @@ func TestAuthService_DeleteAuth(t *testing.T) {
 
 		auth, ctx := MustCreateAuth(t, context.Background(), db, &entity.Auth{
 			Source:       entity.AuthSourceGitHub,
-			SourceID:     "SOURCEID",
+			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
@@ -295,9 +294,9 @@ func TestAuthService_DeleteAuth(t *testing.T) {
 
 		auth, ctx := MustCreateAuth(t, context.Background(), db, &entity.Auth{
 			Source:       entity.AuthSourceLocal,
-			SourceID:     fmt.Sprint(user.ID),
-			AccessToken:  null.StringFrom("ACCESSTOKEN"),
-			RefreshToken: null.StringFrom("REFRESHTOKEN"),
+			SourceID:     null.StringFromPtr(nil),
+			AccessToken:  null.StringFromPtr(nil),
+			RefreshToken: null.StringFromPtr(nil),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
 			User:         user,
 		})
@@ -320,7 +319,7 @@ func TestAuthService_DeleteAuth(t *testing.T) {
 
 		auth0, _ := MustCreateAuth(t, context.Background(), db, &entity.Auth{
 			Source:       entity.AuthSourceGitHub,
-			SourceID:     "SOURCEID",
+			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
@@ -331,7 +330,7 @@ func TestAuthService_DeleteAuth(t *testing.T) {
 
 		_, ctx1 := MustCreateAuth(t, context.Background(), db, &entity.Auth{
 			Source:       entity.AuthSourceGitHub,
-			SourceID:     "SOURCEID-1",
+			SourceID:     null.StringFrom("SOURCEID-1"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN-1"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN-1"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
@@ -361,7 +360,7 @@ func TestAuthService_FindAuthByID(t *testing.T) {
 
 		auth, ctx := MustCreateAuth(t, context.Background(), db, &entity.Auth{
 			Source:       entity.AuthSourceGitHub,
-			SourceID:     "SOURCEID",
+			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
@@ -396,19 +395,19 @@ func TestAuthService_FindAuths(t *testing.T) {
 
 		MustCreateAuth(t, context.Background(), db, &entity.Auth{
 			Source:      "SRCA",
-			SourceID:    "X1",
+			SourceID:    null.StringFrom("X1"),
 			AccessToken: null.StringFrom("ACCESSX1"),
 			User:        &entity.User{Name: "X", Email: null.StringFrom("x@y.com")},
 		})
 		MustCreateAuth(t, context.Background(), db, &entity.Auth{
 			Source:      "SRCB",
-			SourceID:    "X2",
+			SourceID:    null.StringFrom("X2"),
 			AccessToken: null.StringFrom("ACCESSX2"),
 			User:        &entity.User{Name: "X", Email: null.StringFrom("x@y.com")},
 		})
 		MustCreateAuth(t, context.Background(), db, &entity.Auth{
 			Source:      entity.AuthSourceGitHub,
-			SourceID:    "Y",
+			SourceID:    null.StringFrom("Y"),
 			AccessToken: null.StringFrom("ACCESSY"),
 			User:        &entity.User{Name: "Y"},
 		})
@@ -418,9 +417,9 @@ func TestAuthService_FindAuths(t *testing.T) {
 			t.Fatal(err)
 		} else if got, want := len(a), 2; got != want {
 			t.Fatalf("len=%v, want %v", got, want)
-		} else if got, want := a[0].SourceID, "X1"; got != want {
+		} else if got, want := a[0].SourceID, "X1"; got.String != want {
 			t.Fatalf("[]=%v, want %v", got, want)
-		} else if got, want := a[1].SourceID, "X2"; got != want {
+		} else if got, want := a[1].SourceID, "X2"; got.String != want {
 			t.Fatalf("[]=%v, want %v", got, want)
 		} else if got, want := n, 2; got != want {
 			t.Fatalf("n=%v, want %v", got, want)

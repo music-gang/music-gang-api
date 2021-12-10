@@ -34,7 +34,7 @@ func (s *AuthService) CreateAuth(ctx context.Context, auth *entity.Auth) error {
 	defer tx.Rollback()
 
 	// Check to see if the auth already exists for the given source.
-	if other, err := findAuthBySourceID(ctx, tx, auth.Source, auth.SourceID); err == nil {
+	if other, err := findAuthBySourceID(ctx, tx, auth.Source, auth.SourceID.String); err == nil {
 		// If an auth already exists for the source user, update with the new tokens.
 		if other, err := updateAuth(ctx, tx, other.ID, auth.AccessToken, auth.RefreshToken, auth.Expiry); err != nil {
 			return err
