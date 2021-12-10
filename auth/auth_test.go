@@ -8,8 +8,8 @@ import (
 
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/auth"
+	"github.com/music-gang/music-gang-api/config"
 	"github.com/music-gang/music-gang-api/mock"
-	"golang.org/x/oauth2"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -24,7 +24,10 @@ type Auth struct {
 
 func NewAuth() *Auth {
 	a := &Auth{}
-	a.Auth = auth.NewAuth(&a.AuthService)
+
+	config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "../config.yaml"})
+
+	a.Auth = auth.NewAuth(&a.AuthService, config.GetConfig().TEST.Auths)
 	return a
 }
 
@@ -86,12 +89,16 @@ func TestAuth_TestGithubProvider(t *testing.T) {
 		githubProvider := s.ProviderBySource(authSourceGithub).(*auth.GithubProvider)
 		githubProvider.MockUserFn()
 
-		githubProvider.SetConfig(&oauth2.Config{
+		githubProvider.SetConfig(config.AuthConfig{
 			ClientID:     "CLIENT_ID",
 			ClientSecret: "CLIENT_SECRET",
 			RedirectURL:  "REDIRECT_URL",
 			Scopes:       []string{},
-			Endpoint: oauth2.Endpoint{
+			Endpoint: struct {
+				AuthURL   string "yaml:\"auth_url\""
+				TokenURL  string "yaml:\"token_url\""
+				AuthStyle int    "yaml:\"auth_style\""
+			}{
 				AuthURL:  server.URL + "/auth",
 				TokenURL: server.URL + "/github/token",
 			},

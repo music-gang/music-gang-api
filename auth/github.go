@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-github/v32/github"
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
+	"github.com/music-gang/music-gang-api/config"
 	"golang.org/x/oauth2"
 	"gopkg.in/guregu/null.v4"
 )
@@ -15,18 +16,28 @@ var _ AuthProvider = (*GithubProvider)(nil)
 
 // GithubProvider is the Github implementation of AuthProvider.
 type GithubProvider struct {
-	config *oauth2.Config
+	config config.AuthConfig
 	userFn func(ctx context.Context, client *github.Client) (*github.User, *github.Response, error)
 }
 
 // NewGithubProvider returns a new GithubProvider.
-func NewGithubProvider(config *oauth2.Config) *GithubProvider {
+func NewGithubProvider(config config.AuthConfig) *GithubProvider {
 	return &GithubProvider{config: config, userFn: user}
 }
 
 //  GetConfig returns the oauth2.Config for the provider.
 func (p *GithubProvider) GetOAuthConfig() *oauth2.Config {
-	return p.config
+	return &oauth2.Config{
+		ClientID:     p.config.ClientID,
+		ClientSecret: p.config.ClientSecret,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:   p.config.Endpoint.AuthURL,
+			TokenURL:  p.config.Endpoint.TokenURL,
+			AuthStyle: oauth2.AuthStyle(p.config.Endpoint.AuthStyle),
+		},
+		RedirectURL: p.config.RedirectURL,
+		Scopes:      p.config.Scopes,
+	}
 }
 
 // Source returns the source of the provider.

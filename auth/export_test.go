@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"github.com/google/go-github/v32/github"
-	"golang.org/x/oauth2"
+	"github.com/music-gang/music-gang-api/config"
 )
 
 func (a *Auth) ProviderBySource(source string) AuthProvider {
 	return a.providers[source]
 }
 
-func (p *GithubProvider) SetConfig(config *oauth2.Config) {
+func (p *GithubProvider) SetConfig(config config.AuthConfig) {
 	p.config = config
 }
 

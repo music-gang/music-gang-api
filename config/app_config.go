@@ -12,31 +12,88 @@ const (
 	configFile = "config.yaml"
 )
 
+// cfg is the config loaded from LoadConfigWithOptions
 var cfg Config
 
+type AuthConfig struct {
+	// ClientID is the application's ID.
+	ClientID string `yaml:"client_id"`
+
+	// ClientSecret is the application's secret.
+	ClientSecret string `yaml:"client_secret"`
+
+	// Endpoint contains the resource server's token endpoint
+	// URLs. These are constants specific to each server and are
+	// often available via site-specific packages, such as
+	// google.Endpoint or github.Endpoint.
+	Endpoint struct {
+		AuthURL  string `yaml:"auth_url"`
+		TokenURL string `yaml:"token_url"`
+
+		// AuthStyle optionally specifies how the endpoint wants the
+		// client ID & client secret sent. The zero value means to
+		// auto-detect.
+		AuthStyle int `yaml:"auth_style"`
+	} `yaml:"endpoint"`
+
+	// RedirectURL is the URL to redirect users going through
+	// the OAuth flow, after the resource owner's URLs.
+	RedirectURL string `yaml:"redirect_url"`
+
+	// Scope specifies optional requested permissions.
+	Scopes []string `yaml:"scopes"`
+}
+
+// AuthListConfig contains the list of auth configs
+type AuthListConfig struct {
+	// Local is the local auth config
+	Local AuthConfig `yaml:"local"`
+
+	// Github is the github auth config
+	Github AuthConfig `yaml:"github"`
+}
+
 type DatabaseConfig struct {
+	// Database is the name of the database to connect to.
 	Database string `yaml:"database"`
-	User     string `yaml:"user"`
+
+	// User is the database user to sign in as.
+	User string `yaml:"user"`
+
+	// Password is the user's password.
 	Password string `yaml:"password"`
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
+
+	// Host is the host to connect to. Values that start with / are for unix domain sockets.
+	Host string `yaml:"host"`
+
+	// Port is the port to connect to.
+	Port int `yaml:"port"`
 }
 
 type DatabaseListConfig struct {
+	// Postgres is the Postgres database configuration
 	Postgres DatabaseConfig `yaml:"postgres"`
 }
 
 type AppConfig struct {
+	// Databases contains the databases configuration
 	Databases DatabaseListConfig `yaml:"databases"`
+
+	// Auths contains the auths configuration
+	Auths AuthListConfig `yaml:"auths"`
 }
 
 // Config - Configuration
 type Config struct {
-	APP  AppConfig `yaml:"app"`
+	// APP contains the application configuration
+	APP AppConfig `yaml:"app"`
+
+	// TEST contains the test configuration
 	TEST AppConfig `yaml:"test"`
 }
 
 type LoadOptions struct {
+	// ConfigFilePath is the path to the config file
 	ConfigFilePath string
 }
 
@@ -79,7 +136,7 @@ func LoadConfigWithOptions(opt LoadOptions) error {
 	return nil
 }
 
-// getConfigFilePath - Restituisce il percorso del file di configurazione
+// getConfigFilePath returns the config file path
 func getConfigFilePath() string {
 	wd := util.GetWd()
 	return wd + "/" + configFile
