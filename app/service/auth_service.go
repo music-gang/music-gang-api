@@ -8,6 +8,10 @@ import (
 
 // AuthService is an interface for managing user authentication
 type AuthService interface {
+	// Auhenticate authenticates the user with the given auth source and options.
+	// Returns the user if the authentication was successful, otherwise returns an error.
+	// Return ENOTIMPLEMENTED if the service not support authentications
+	Auhenticate(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error)
 	// CreateAuth creates a new auth.
 	// If is attached to a user, links the auth to the user, otherwise creates a new user.
 	// On success, the auth.ID is set.

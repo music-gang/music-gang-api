@@ -12,6 +12,8 @@ import (
 	"gopkg.in/guregu/null.v4"
 )
 
+var _ service.AuthService = (*AuthService)(nil)
+
 // AuthService is a service for managing authentication.
 type AuthService struct {
 	db *DB
@@ -20,6 +22,11 @@ type AuthService struct {
 // NewAuthService creates a new AuthService.
 func NewAuthService(db *DB) *AuthService {
 	return &AuthService{db}
+}
+
+// Auhenticate not implemented.
+func (a *AuthService) Auhenticate(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
+	return nil, apperr.Errorf(apperr.ENOTIMPLEMENTED, "not implemented")
 }
 
 // CreateAuth creates a new auth.
