@@ -21,10 +21,10 @@ const (
 // users don't provide their email publicly so we may not be able to link them
 // by email address.
 type Auth struct {
-	ID       int64  `json:"id"`
-	UserID   int64  `json:"user_id"`
-	Source   string `json:"source"`
-	SourceID string `json:"source_id"`
+	ID       int64       `json:"id"`
+	UserID   int64       `json:"user_id"`
+	Source   string      `json:"source"`
+	SourceID null.String `json:"source_id"`
 
 	AccessToken  null.String `json:"-"`
 	RefreshToken null.String `json:"-"`
@@ -49,9 +49,6 @@ func CanAuthBeDeleted(auth *Auth) bool {
 	case AuthSourceGitHub:
 		canBeDeleted = true
 
-	case AuthSourceLocal:
-		fallthrough
-
 	default:
 		canBeDeleted = false
 	}
@@ -59,12 +56,22 @@ func CanAuthBeDeleted(auth *Auth) bool {
 	return canBeDeleted
 }
 
+// IsSourceIDRequired returns if the authentication source requires a source ID.
+func IsSourceIDRequired(source string) bool {
+	switch source {
+	case AuthSourceGitHub:
+		return true
+	default:
+		return false
+	}
+}
+
 // AvatarURL returns a URL to the avatar image hosted by the authentication source.
 // Returns an empty string if the authentication source is invalid.
 func (a *Auth) AvatarURL(size int) string {
 	switch a.Source {
 	case AuthSourceGitHub:
-		return fmt.Sprintf("https://avatars1.githubusercontent.com/u/%s?s=%d", a.SourceID, size)
+		return fmt.Sprintf("https://avatars1.githubusercontent.com/u/%s?s=%d", a.SourceID.String, size)
 	default:
 		return ""
 	}
@@ -82,17 +89,21 @@ func (a *Auth) Validate() error {
 
 		return apperr.Errorf(apperr.EINVALID, "Source is required")
 
-	} else if a.SourceID == "" {
+	} else if IsSourceIDRequired(a.Source) && a.SourceID.String == "" {
 
 		return apperr.Errorf(apperr.EINVALID, "Source ID is required")
 
+	} else if a.SourceID.Valid && a.SourceID.String == "" {
+
+		return apperr.Errorf(apperr.EINVALID, "Source ID cannot be empty if provided")
+
 	} else if a.AccessToken.Valid && a.AccessToken.String == "" {
 
-		return apperr.Errorf(apperr.EINVALID, "Access token cannot be empty if providd")
+		return apperr.Errorf(apperr.EINVALID, "Access token cannot be empty if provided")
 
 	} else if a.RefreshToken.Valid && a.RefreshToken.String == "" {
 
-		return apperr.Errorf(apperr.EINVALID, "Refresh token cannot be empty if providd")
+		return apperr.Errorf(apperr.EINVALID, "Refresh token cannot be empty if provided")
 	}
 
 	return nil
