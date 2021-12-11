@@ -1,4 +1,4 @@
-package api
+package http
 
 import (
 	"net"
@@ -55,8 +55,9 @@ func NewAPISerer() *ServerAPI {
 	// Base Middleware
 	s.handler.Use(middleware.Recover())
 
-	// Register routes
-	s.registerRoutes()
+	// Register routes for the API v1.
+	v1Group := s.handler.Group("/v1")
+	s.registerRoutes(v1Group)
 
 	return s
 }
@@ -91,4 +92,22 @@ func (s *ServerAPI) UseTLS() bool {
 }
 
 // registerRoutes registers all routes for the API.
-func (s *ServerAPI) registerRoutes() {}
+func (s *ServerAPI) registerRoutes(g *echo.Group) {
+
+	authGroup := g.Group("/auth")
+	s.registerAuthRoutes(authGroup)
+}
+
+func (s *ServerAPI) registerAuthRoutes(g *echo.Group) {
+	g.POST("/login", s.handleLogin)
+	g.POST("/register", nil)
+	g.GET("/refresh", nil)
+	g.DELETE("/logout", nil)
+
+	// oauth2 routes
+	g.GET("/oauth2/:source/callback", nil)
+}
+
+func SuccessResponseJSON(c echo.Context, httpCode int, data interface{}) error {
+	return c.JSON(httpCode, data)
+}
