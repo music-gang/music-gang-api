@@ -41,9 +41,15 @@ type Auths []*Auth
 
 // AuthUserOptions represents the options for a user during fetching auth service.
 type AuthUserOptions struct {
-	AuthCode *string
-	Source   *string
-	User     *User
+	AuthCode   *string
+	Source     *string
+	UserParams *UserParams
+}
+
+// UserParams represents the parameters for a user authentication.
+type UserParams struct {
+	Email    *string
+	Password *string
 }
 
 // CanAuthBeDeleted returns if the passed authentication source can be deleted.

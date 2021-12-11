@@ -6,10 +6,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
+	"github.com/music-gang/music-gang-api/app/util"
 	"github.com/music-gang/music-gang-api/auth"
 	"github.com/music-gang/music-gang-api/config"
 	"github.com/music-gang/music-gang-api/mock"
+	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -20,6 +23,7 @@ type Auth struct {
 	*auth.AuthService
 
 	as mock.AuthService
+	us mock.UserService
 }
 
 func NewAuth() *Auth {
@@ -27,7 +31,8 @@ func NewAuth() *Auth {
 
 	config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "../config.yaml"})
 
-	a.AuthService = auth.NewAuth(&a.as, config.GetConfig().TEST.Auths)
+	a.AuthService = auth.NewAuth(&a.as, &a.us, config.GetConfig().TEST.Auths)
+
 	return a
 }
 
@@ -59,20 +64,120 @@ func TestAuth_TestLocalProvider(t *testing.T) {
 
 		s := NewAuth()
 
+		name := "Jane Doe"
+		email := "jane.done@test.com"
+		password := "123456"
+
+		var hashedPassword []byte
+		if p, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost); err == nil {
+			hashedPassword = p
+		}
+
 		s.as.CreateAuthFn = func(ctx context.Context, auth *entity.Auth) error {
 			return nil
 		}
 
+		s.us.FindUserByEmailFn = func(ctx context.Context, email string) (*entity.User, error) {
+			return &entity.User{
+				ID:        1,
+				Name:      name,
+				Email:     null.StringFrom(email),
+				Password:  null.StringFrom(string(hashedPassword)),
+				CreatedAt: util.AppNowUTC(),
+				UpdatedAt: util.AppNowUTC(),
+				Auths: []*entity.Auth{{
+					ID:        1,
+					UserID:    1,
+					Source:    authSourceLocal,
+					CreatedAt: util.AppNowUTC(),
+					UpdatedAt: util.AppNowUTC(),
+				}},
+			}, nil
+		}
+
 		if auth, err := s.Auhenticate(context.Background(), &entity.AuthUserOptions{
 			Source: &authSourceLocal,
-			User: &entity.User{
-				Name:  "Jane Doe",
-				Email: null.StringFrom("jane.doe@test.com"),
+			UserParams: &entity.UserParams{
+				Email:    &email,
+				Password: &password,
 			},
 		}); err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		} else if auth.User.Name != "Jane Doe" {
 			t.Errorf("Expected user name to be 'Jane Doe', got %v", auth.User.Name)
+		}
+	})
+
+	t.Run("UserNotFound", func(t *testing.T) {
+
+		s := NewAuth()
+
+		email := "jane.done@test.com"
+		password := "123456"
+
+		s.us.FindUserByEmailFn = func(ctx context.Context, email string) (*entity.User, error) {
+			return nil, apperr.Errorf(apperr.ENOTFOUND, "User not found")
+		}
+
+		if _, err := s.Auhenticate(context.Background(), &entity.AuthUserOptions{
+			Source: &authSourceLocal,
+			UserParams: &entity.UserParams{
+				Email:    &email,
+				Password: &password,
+			},
+		}); err == nil {
+			t.Errorf("Expected error, got nil")
+		} else if apperr.ErrorCode(err) != apperr.ENOTFOUND {
+			t.Errorf("Expected error code to be %v, got %v", apperr.ENOTFOUND, err)
+		}
+	})
+
+	t.Run("PasswordMismatch", func(t *testing.T) {
+
+		s := NewAuth()
+
+		name := "Jane Doe"
+		email := "jane.done@test.com"
+		password := "123456"
+
+		var hashedPassword []byte
+		if p, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost); err == nil {
+			hashedPassword = p
+		}
+
+		s.as.CreateAuthFn = func(ctx context.Context, auth *entity.Auth) error {
+			return nil
+		}
+
+		s.us.FindUserByEmailFn = func(ctx context.Context, email string) (*entity.User, error) {
+			return &entity.User{
+				ID:        1,
+				Name:      name,
+				Email:     null.StringFrom(email),
+				Password:  null.StringFrom(string(hashedPassword)),
+				CreatedAt: util.AppNowUTC(),
+				UpdatedAt: util.AppNowUTC(),
+				Auths: []*entity.Auth{{
+					ID:        1,
+					UserID:    1,
+					Source:    authSourceLocal,
+					CreatedAt: util.AppNowUTC(),
+					UpdatedAt: util.AppNowUTC(),
+				}},
+			}, nil
+		}
+
+		wrongPassword := "wrong_password"
+
+		if _, err := s.Auhenticate(context.Background(), &entity.AuthUserOptions{
+			Source: &authSourceLocal,
+			UserParams: &entity.UserParams{
+				Email:    &email,
+				Password: &wrongPassword,
+			}}); err == nil {
+			t.Errorf("Expected error, got nil")
+		} else if apperr.ErrorCode(err) != apperr.EUNAUTHORIZED {
+			t.Errorf("Expected error code to be %v, got %v", apperr.EUNAUTHORIZED, err)
 		}
 	})
 }

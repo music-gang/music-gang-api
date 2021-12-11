@@ -16,6 +16,10 @@ type UserService interface {
 	// Return ENOTFOUND if the user does not exist.
 	DeleteUser(ctx context.Context, id int64) error
 
+	// FindUserByEmail returns the user with the given email.
+	// Return ENOTFOUND if the user does not exist.
+	FindUserByEmail(ctx context.Context, email string) (*entity.User, error)
+
 	// FindUserByID returns the user with the given id.
 	// Return ENOTFOUND if the user does not exist.
 	FindUserByID(ctx context.Context, id int64) (*entity.User, error)
