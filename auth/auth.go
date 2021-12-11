@@ -16,9 +16,9 @@ type AuthProvider interface {
 	GetOAuthConfig() *oauth2.Config
 	// Source returns the source of the auth provider.
 	Source() string
-	// GetUser returns the user from the auth provider.
+	// Auhenticate returns the user from the auth provider.
 	// May returns err if something went wrong.
-	User(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error)
+	Auhenticate(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error)
 }
 
 var _ service.AuthService = (*AuthService)(nil)
@@ -29,14 +29,15 @@ var _ service.AuthService = (*AuthService)(nil)
 // Implements service.AuthService interface.
 type AuthService struct {
 	as        service.AuthService
+	us        service.UserService
 	providers map[string]AuthProvider
 
 	conf config.AuthListConfig
 }
 
 // NewAuth creates a new Auth instance
-func NewAuth(authService service.AuthService, conf config.AuthListConfig) *AuthService {
-	auth := &AuthService{as: authService, conf: conf}
+func NewAuth(authService service.AuthService, userService service.UserService, conf config.AuthListConfig) *AuthService {
+	auth := &AuthService{as: authService, us: userService, conf: conf}
 	auth.initProviders()
 	return auth
 }
@@ -53,7 +54,7 @@ func (a *AuthService) Auhenticate(ctx context.Context, opts *entity.AuthUserOpti
 		return nil, apperr.Errorf(apperr.ENOTFOUND, "auth provider not found")
 	}
 
-	auth, err := a.providers[*opts.Source].User(ctx, opts)
+	auth, err := a.providers[*opts.Source].Auhenticate(ctx, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -94,6 +95,6 @@ func (a *AuthService) FindAuths(ctx context.Context, filter service.AuthFilter) 
 func (a *AuthService) initProviders() {
 	a.providers = make(map[string]AuthProvider)
 
-	a.providers[entity.AuthSourceGitHub] = NewGithubProvider(a.conf.Github)
-	a.providers[entity.AuthSourceLocal] = NewLocalProvider()
+	a.providers[entity.AuthSourceGitHub] = NewGithubProvider(a.conf.Github, a.as)
+	a.providers[entity.AuthSourceLocal] = NewLocalProvider(a.as, a.us)
 }

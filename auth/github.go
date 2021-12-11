@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-github/v32/github"
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
+	"github.com/music-gang/music-gang-api/app/service"
 	"github.com/music-gang/music-gang-api/config"
 	"golang.org/x/oauth2"
 	"gopkg.in/guregu/null.v4"
@@ -16,13 +17,14 @@ var _ AuthProvider = (*GithubProvider)(nil)
 
 // GithubProvider is the Github implementation of AuthProvider.
 type GithubProvider struct {
-	config config.AuthConfig
-	userFn func(ctx context.Context, client *github.Client) (*github.User, *github.Response, error)
+	config      config.AuthConfig
+	authService service.AuthService
+	userFn      func(ctx context.Context, client *github.Client) (*github.User, *github.Response, error)
 }
 
 // NewGithubProvider returns a new GithubProvider.
-func NewGithubProvider(config config.AuthConfig) *GithubProvider {
-	return &GithubProvider{config: config, userFn: user}
+func NewGithubProvider(config config.AuthConfig, authService service.AuthService) *GithubProvider {
+	return &GithubProvider{config: config, authService: authService, userFn: user}
 }
 
 //  GetConfig returns the oauth2.Config for the provider.
@@ -45,9 +47,9 @@ func (p *GithubProvider) Source() string {
 	return entity.AuthSourceGitHub
 }
 
-// User implements oauth2 for github.
+// Auhenticate implements oauth2 for github.
 // AuthUserOptions.AuthCode is required to exchange for tokens.
-func (p *GithubProvider) User(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
+func (p *GithubProvider) Auhenticate(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
 
 	if opts == nil || opts.AuthCode == nil || *opts.AuthCode == "" {
 		return nil, apperr.Errorf(apperr.EINVALID, "opts.AuthCode is required")
@@ -100,6 +102,10 @@ func (p *GithubProvider) User(ctx context.Context, opts *entity.AuthUserOptions)
 
 	if !tok.Expiry.IsZero() {
 		auth.Expiry = null.TimeFrom(tok.Expiry)
+	}
+
+	if err := p.authService.CreateAuth(ctx, auth); err != nil {
+		return nil, err
 	}
 
 	return auth, nil

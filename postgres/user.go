@@ -68,6 +68,30 @@ func (s *UserService) DeleteUser(ctx context.Context, id int64) error {
 	return nil
 }
 
+// FindUserByEmail returns the user with the given email.
+// Return ENOTFOUND if the user does not exist.
+func (s *UserService) FindUserByEmail(ctx context.Context, email string) (*entity.User, error) {
+
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	user, err := findUserByEmail(ctx, tx, email)
+	if err != nil {
+		return nil, err
+	} else if err := attachUserAssociations(ctx, tx, user); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, apperr.Errorf(apperr.EINTERNAL, "failed to commit transaction: %v", err)
+	}
+
+	return user, nil
+}
+
 // FindUserByID returns the user with the given id.
 // Return ENOTFOUND if the user does not exist.
 func (s *UserService) FindUserByID(ctx context.Context, id int64) (*entity.User, error) {
