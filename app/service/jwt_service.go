@@ -21,3 +21,14 @@ type JWTService interface {
 	// Refresh a JWT token and returns the new token pair.
 	Refresh(ctx context.Context, refreshToken string) (*entity.Token, error)
 }
+
+// JWTBlacklistService is an interface for JWT blacklist service.
+type JWTBlacklistService interface {
+
+	// Invalidate a JWT token.
+	// Returns EUNAUTHORIZED if the user is not allowed to invalidate the token.
+	Invalidate(ctx context.Context, token string) error
+
+	// IsBlacklisted checks if a token is blacklisted.
+	IsBlacklisted(ctx context.Context, token string) (bool, error)
+}
