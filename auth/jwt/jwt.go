@@ -26,7 +26,7 @@ func NewJWTService() *JWTService {
 	return &JWTService{}
 }
 
-// Exchange a auth entity for a JWT token pair-
+// Exchange a auth entity for a JWT token pair.
 func (s *JWTService) Exchange(ctx context.Context, auth *entity.Auth) (*entity.Token, error) {
 
 	accessTokenclaims := entity.NewAppClaims(auth, accessTokenExpiration)
@@ -78,5 +78,15 @@ func (s *JWTService) Parse(ctx context.Context, token string) (*entity.AppClaims
 
 // Refresh a JWT token and returns the new token pair.
 func (s *JWTService) Refresh(ctx context.Context, refreshToken string) (*entity.Token, error) {
-	return nil, nil
+
+	claims, err := s.Parse(ctx, refreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.Invalidate(ctx, refreshToken); err != nil {
+		return nil, err
+	}
+
+	return s.Exchange(ctx, claims.Auth)
 }
