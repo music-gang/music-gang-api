@@ -18,7 +18,8 @@ var _ service.JWTService = (*JWTService)(nil)
 
 // JWTService implements the JWT service.
 type JWTService struct {
-	Secret string
+	Secret              string
+	JWTBlacklistService service.JWTBlacklistService
 }
 
 // NewJWTService creates a new JWT service.
@@ -55,7 +56,7 @@ func (s *JWTService) Exchange(ctx context.Context, auth *entity.Auth) (*entity.T
 
 // Invalidate a JWT token.
 func (s *JWTService) Invalidate(ctx context.Context, token string) error {
-	return nil
+	return s.JWTBlacklistService.Invalidate(ctx, token)
 }
 
 // Parse a JWT token and return the associated claims.
@@ -69,11 +70,21 @@ func (s *JWTService) Parse(ctx context.Context, token string) (*entity.AppClaims
 		return []byte(s.Secret), nil
 	})
 
-	if claims, ok := t.Claims.(*entity.AppClaims); ok && t.Valid {
-		return claims, nil
+	claims, ok := t.Claims.(*entity.AppClaims)
+	if !ok {
+		return nil, apperr.Errorf(apperr.EINTERNAL, "failed to parse claims")
 	}
 
-	return nil, apperr.Errorf(apperr.EINTERNAL, "failed to parse claims")
+	invalidated, err := s.JWTBlacklistService.IsBlacklisted(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+
+	if !t.Valid || invalidated {
+		return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "invalid token")
+	}
+
+	return claims, nil
 }
 
 // Refresh a JWT token and returns the new token pair.
