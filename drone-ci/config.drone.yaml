@@ -19,14 +19,14 @@ test:
   auths:
 
   redis:
-    host: localhost
+    host: redis-db
     port: 6379
     password:
 
   databases:
     postgres:
+      host: postgres-db
       database: music-gang-ci-test
       user: postgres
       password: admin
-      host: postgres-db
       port: 5432
