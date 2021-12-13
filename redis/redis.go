@@ -19,10 +19,14 @@ type DB struct {
 
 // NewDB creates a new redis connection.
 func NewDB(Addr, Password string) *DB {
-	return &DB{
+	db := &DB{
 		Addr:     Addr,
 		Password: Password,
 	}
+
+	db.ctx, db.cancel = context.WithCancel(context.Background())
+
+	return db
 }
 
 // Close closes the redis connection.
@@ -34,14 +38,6 @@ func (db *DB) Close() error {
 	return nil
 }
 
-// MustOpen opens a new redis connection.
-// If an error occurs, it panics.
-func (db *DB) MustOpen() {
-	if err := db.Open(); err != nil {
-		panic(err)
-	}
-}
-
 // Open opens a new redis connection.
 func (db *DB) Open() error {
 
@@ -49,8 +45,6 @@ func (db *DB) Open() error {
 		Addr:     db.Addr,
 		Password: db.Password,
 	})
-
-	db.ctx, db.cancel = context.WithCancel(context.Background())
 
 	if res := db.client.Ping(db.ctx); res.Err() != nil {
 		return apperr.Errorf(apperr.EINTERNAL, "redis ping error: %s", res.Err())
