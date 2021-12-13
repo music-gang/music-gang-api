@@ -3,6 +3,11 @@
 app:
   auths:
 
+  redis:
+    host: localhost
+    port: 6379
+    password:
+
   databases:
     postgres:
       database: <database_name>
@@ -12,6 +17,11 @@ app:
       port: 5432
 test:
   auths:
+
+  redis:
+    host: localhost
+    port: 6379
+    password:
 
   databases:
     postgres:

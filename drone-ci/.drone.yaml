@@ -15,9 +15,15 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: music-gang-ci-test
+
+  - name: redis-db
+    image: redis
+    environment:
+      ALLOW_EMPTY_PASSWORD: yes
+
 steps:
   - name: test
-    image: golang:1.17.4
+    image: golang:1.17.5
     commands:
       - sleep 15
       - mv drone-ci/config.drone.yaml config.yaml
