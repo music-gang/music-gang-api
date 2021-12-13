@@ -7,6 +7,7 @@ import (
 	"github.com/music-gang/music-gang-api/app/apperr"
 )
 
+// DB is a wrapper for redis.Client.
 type DB struct {
 	client *redis.Client
 	ctx    context.Context
@@ -16,6 +17,14 @@ type DB struct {
 	Password string
 }
 
+// NewDB creates a new redis connection.
+func NewDB(Addr, Password string) *DB {
+	return &DB{
+		Addr:     Addr,
+		Password: Password,
+	}
+}
+
 // Close closes the redis connection.
 func (db *DB) Close() error {
 	db.cancel()
@@ -23,6 +32,14 @@ func (db *DB) Close() error {
 		return db.client.Close()
 	}
 	return nil
+}
+
+// MustOpen opens a new redis connection.
+// If an error occurs, it panics.
+func (db *DB) MustOpen() {
+	if err := db.Open(); err != nil {
+		panic(err)
+	}
 }
 
 // Open opens a new redis connection.

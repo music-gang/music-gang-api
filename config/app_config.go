@@ -70,6 +70,13 @@ type DatabaseConfig struct {
 	Port int `yaml:"port"`
 }
 
+// RedisConfig contains the redis config
+type RedisConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Password string `yaml:"password"`
+}
+
 type DatabaseListConfig struct {
 	// Postgres is the Postgres database configuration
 	Postgres DatabaseConfig `yaml:"postgres"`
@@ -81,6 +88,9 @@ type AppConfig struct {
 
 	// Auths contains the auths configuration
 	Auths AuthListConfig `yaml:"auths"`
+
+	// Redis contains the redis configuration
+	Redis RedisConfig `yaml:"redis"`
 }
 
 // Config - Configuration

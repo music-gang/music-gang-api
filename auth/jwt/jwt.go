@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"context"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/music-gang/music-gang-api/app/apperr"
@@ -55,8 +56,8 @@ func (s *JWTService) Exchange(ctx context.Context, auth *entity.Auth) (*entity.T
 }
 
 // Invalidate a JWT token.
-func (s *JWTService) Invalidate(ctx context.Context, token string) error {
-	return s.JWTBlacklistService.Invalidate(ctx, token)
+func (s *JWTService) Invalidate(ctx context.Context, token string, expiration time.Duration) error {
+	return s.JWTBlacklistService.Invalidate(ctx, token, expiration)
 }
 
 // Parse a JWT token and return the associated claims.
@@ -95,7 +96,7 @@ func (s *JWTService) Refresh(ctx context.Context, refreshToken string) (*entity.
 		return nil, err
 	}
 
-	if err := s.Invalidate(ctx, refreshToken); err != nil {
+	if err := s.Invalidate(ctx, refreshToken, refreshTokenExpiration); err != nil {
 		return nil, err
 	}
 
