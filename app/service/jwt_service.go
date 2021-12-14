@@ -10,7 +10,7 @@ import (
 // JWTService is an interface for JWT service.
 // It is used to generate and validate JWT tokens.
 type JWTService interface {
-	// Exchange a auth entity for a JWT token pair-
+	// Exchange a auth entity for a JWT token pair.
 	Exchange(ctx context.Context, auth *entity.Auth) (*entity.TokenPair, error)
 
 	// Invalidate a JWT token.

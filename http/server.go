@@ -31,6 +31,7 @@ type ServerAPI struct {
 	// Services used by HTTP handler.
 	AuthService service.AuthService
 	UserService service.UserService
+	JWTService  service.JWTService
 }
 
 // NewAPISerer creates a new API server.
