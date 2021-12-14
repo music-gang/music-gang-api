@@ -90,6 +90,26 @@ func TestUserService_CreateUser(t *testing.T) {
 			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.EINVALID)
 		}
 	})
+
+	t.Run("ErrCtxDone", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		MustTruncateTable(t, db, "users")
+
+		s := postgres.NewUserService(db)
+
+		ctxToCancel, cancel := context.WithCancel(context.Background())
+
+		cancel()
+
+		if err := s.CreateUser(ctxToCancel, &entity.User{Name: "Jane"}); err == nil {
+			t.Fatal("expected error")
+		} else if apperr.ErrorCode(err) != apperr.EINTERNAL {
+			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.EINTERNAL)
+		}
+	})
 }
 
 func TestUserService_UpdateUser(t *testing.T) {
@@ -167,6 +187,31 @@ func TestUserService_UpdateUser(t *testing.T) {
 			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.ENOTFOUND)
 		}
 	})
+
+	t.Run("ErrCtxDone", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		// truncate users test table
+		MustTruncateTable(t, db, "users")
+
+		s := postgres.NewUserService(db)
+
+		user0, ctx0 := MustCreateUser(t, context.Background(), db, &entity.User{Name: "Jane"})
+
+		newName := "Jane Doe"
+
+		ctxToCancel, cancel := context.WithCancel(ctx0)
+
+		cancel()
+
+		if _, err := s.UpdateUser(ctxToCancel, user0.ID, service.UserUpdate{Name: &newName}); err == nil {
+			t.Fatal("expected error")
+		} else if apperr.ErrorCode(err) != apperr.EINTERNAL {
+			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.EINTERNAL)
+		}
+	})
 }
 
 func TestUserService_DeleteUser(t *testing.T) {
@@ -230,9 +275,32 @@ func TestUserService_DeleteUser(t *testing.T) {
 			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.ENOTFOUND)
 		}
 	})
+
+	t.Run("ErrCtxDone", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		// truncate users test table
+		MustTruncateTable(t, db, "users")
+
+		s := postgres.NewUserService(db)
+
+		user0, ctx0 := MustCreateUser(t, context.Background(), db, &entity.User{Name: "Jane"})
+
+		ctxToCancel, cancel := context.WithCancel(ctx0)
+
+		cancel()
+
+		if err := s.DeleteUser(ctxToCancel, user0.ID); err == nil {
+			t.Fatal("expected error")
+		} else if apperr.ErrorCode(err) != apperr.EINTERNAL {
+			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.EINTERNAL)
+		}
+	})
 }
 
-func TestUserService_FinUser(t *testing.T) {
+func TestUserService_FinUserByID(t *testing.T) {
 
 	t.Run("OK", func(t *testing.T) {
 
@@ -252,7 +320,7 @@ func TestUserService_FinUser(t *testing.T) {
 			t.Fatalf("mismatch: %#v != %#v", uu, user0)
 		}
 
-		if uu, err := postgres.FindUserByEmail(ctx0, db, user0.Email.String); err != nil {
+		if uu, err := s.FindUserByEmail(ctx0, user0.Email.String); err != nil {
 			t.Fatal(err)
 		} else if got, want := uu.ID, user0.ID; got != want {
 			t.Fatalf("got %d, want %d", got, want)
@@ -273,6 +341,29 @@ func TestUserService_FinUser(t *testing.T) {
 			t.Fatal("expected error")
 		} else if apperr.ErrorCode(err) != apperr.ENOTFOUND {
 			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.ENOTFOUND)
+		}
+	})
+
+	t.Run("ErrCtxDone", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		// truncate users test table
+		MustTruncateTable(t, db, "users")
+
+		s := postgres.NewUserService(db)
+
+		user0, ctx0 := MustCreateUser(t, context.Background(), db, &entity.User{Name: "Jane", Email: null.StringFrom("jane.doe@test.com")})
+
+		ctxToCancel, cancel := context.WithCancel(ctx0)
+
+		cancel()
+
+		if _, err := s.FindUserByID(ctxToCancel, user0.ID); err == nil {
+			t.Fatal("expected error")
+		} else if apperr.ErrorCode(err) != apperr.EINTERNAL {
+			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.EINTERNAL)
 		}
 	})
 }
@@ -356,6 +447,31 @@ func TestUserService_FindUsers(t *testing.T) {
 			t.Fatalf("got %q, want %q", got, want)
 		} else if got, want := n, 1; got != want {
 			t.Fatalf("got %d, want %d", got, want)
+		}
+	})
+
+	t.Run("ErrCtxDone", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		// truncate users test table
+		MustTruncateTable(t, db, "users")
+
+		s := postgres.NewUserService(db)
+
+		ctx := context.Background()
+
+		MustCreateUser(t, context.Background(), db, &entity.User{Name: "Jane", Email: null.StringFrom("jane.doe@test.com")})
+
+		ctxToCancel, cancel := context.WithCancel(ctx)
+
+		cancel()
+
+		if _, _, err := s.FindUsers(ctxToCancel, service.UserFilter{}); err == nil {
+			t.Fatal("expected error")
+		} else if apperr.ErrorCode(err) != apperr.EINTERNAL {
+			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.EINTERNAL)
 		}
 	})
 }
