@@ -32,8 +32,8 @@ func NewAppClaims(auth *Auth, expiresAfterMinutes time.Duration) *AppClaims {
 	}
 }
 
-// Token is a struct that contains the tokens and the expiration time
-type Token struct {
+// TokenPair is a struct that contains the tokens and the expiration time
+type TokenPair struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 	TokenType    string `json:"token_type"`

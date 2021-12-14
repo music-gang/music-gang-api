@@ -11,13 +11,13 @@ import (
 var _ service.JWTService = (*JWTService)(nil)
 
 type JWTService struct {
-	ExchangeFn   func(ctx context.Context, auth *entity.Auth) (*entity.Token, error)
+	ExchangeFn   func(ctx context.Context, auth *entity.Auth) (*entity.TokenPair, error)
 	InvalidateFn func(ctx context.Context, token string, expiration time.Duration) error
 	ParseFn      func(ctx context.Context, token string) (*entity.AppClaims, error)
-	RefreshFn    func(ctx context.Context, refreshToken string) (*entity.Token, error)
+	RefreshFn    func(ctx context.Context, refreshToken string) (*entity.TokenPair, error)
 }
 
-func (s *JWTService) Exchange(ctx context.Context, auth *entity.Auth) (*entity.Token, error) {
+func (s *JWTService) Exchange(ctx context.Context, auth *entity.Auth) (*entity.TokenPair, error) {
 	return s.ExchangeFn(ctx, auth)
 }
 
@@ -29,7 +29,7 @@ func (s *JWTService) Parse(ctx context.Context, token string) (*entity.AppClaims
 	return s.ParseFn(ctx, token)
 }
 
-func (s *JWTService) Refresh(ctx context.Context, refreshToken string) (*entity.Token, error) {
+func (s *JWTService) Refresh(ctx context.Context, refreshToken string) (*entity.TokenPair, error) {
 	return s.RefreshFn(ctx, refreshToken)
 }
 
