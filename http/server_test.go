@@ -1,6 +1,7 @@
 package http_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/music-gang/music-gang-api/http"
@@ -32,6 +33,18 @@ func TestServerAPI_Open(t *testing.T) {
 			t.Error("error: expected error")
 		}
 	})
+}
+
+func MustMarshalJSON(tb testing.TB, value interface{}) []byte {
+
+	tb.Helper()
+
+	bytes, err := json.Marshal(value)
+	if err != nil {
+		tb.Fatal(err)
+	}
+
+	return bytes
 }
 
 func MustOpenServerAPI(tb testing.TB) *http.ServerAPI {

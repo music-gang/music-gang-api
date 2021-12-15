@@ -72,7 +72,7 @@ func (s *ServerAPI) AuthRegister(c echo.Context) error {
 
 	params := RegisterParams{}
 	if err := c.Bind(&params); err != nil {
-		return ErrorResponseJSON(c, err, nil)
+		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "missing data"), nil)
 	}
 
 	if err := params.validate(); err != nil {

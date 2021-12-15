@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"time"
@@ -42,16 +43,11 @@ type ServerAPI struct {
 // NewServerAPI creates a new API server.
 func NewServerAPI() *ServerAPI {
 
-	addr := ":8080"
-	domain := ""
-
 	jwtSecret := "secret"
 
 	s := &ServerAPI{
 		server:    &http.Server{},
 		handler:   echo.New(),
-		Addr:      addr,
-		Domain:    domain,
 		JWTSecret: jwtSecret,
 	}
 
@@ -72,6 +68,15 @@ func (s *ServerAPI) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), ShutdownTimeout)
 	defer cancel()
 	return s.server.Shutdown(ctx)
+}
+
+// Port returns the TCP port for the running server.
+// This is useful in tests where we allocate a random port by using ":0".
+func (s *ServerAPI) Port() int {
+	if s.ln == nil {
+		return 0
+	}
+	return s.ln.Addr().(*net.TCPAddr).Port
 }
 
 // Open validates the server options and start it on the bind address.
@@ -96,6 +101,21 @@ func (s *ServerAPI) Scheme() string {
 		return "https"
 	}
 	return "http"
+}
+
+// URL returns the URL for the server.
+// This is useful in tests where we allocate a random port by using ":0".
+func (s *ServerAPI) URL() string {
+
+	scheme, port := s.Scheme(), s.Port()
+
+	domain := "localhost"
+
+	if (scheme == "http" && port == 80) || (scheme == "https" && port == 443) {
+		return fmt.Sprintf("%s://%s", scheme, domain)
+	}
+
+	return fmt.Sprintf("%s://%s:%d", scheme, domain, port)
 }
 
 // UseTLS returns true if the server is using TLS.
