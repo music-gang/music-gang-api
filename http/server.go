@@ -100,7 +100,7 @@ func (s *ServerAPI) registerRoutes(g *echo.Group) {
 }
 
 func (s *ServerAPI) registerAuthRoutes(g *echo.Group) {
-	g.POST("/login", s.handleLogin)
+	g.POST("/login", s.AuthLogin)
 	g.POST("/register", nil)
 	g.GET("/refresh", nil)
 	g.DELETE("/logout", nil)
