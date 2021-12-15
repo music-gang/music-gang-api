@@ -7,6 +7,11 @@ import (
 	"github.com/music-gang/music-gang-api/app/apperr"
 )
 
+const (
+	DefaultInternalErrorMessage = "Internal Server Error"
+	GenericErrorMessage         = "An error occurred"
+)
+
 // codes represents an HTTP status code.
 var codes = map[string]int{
 	apperr.ECONFLICT:       http.StatusConflict,
@@ -26,11 +31,11 @@ func MessageFromErr(err error) string {
 	appErrCode := apperr.ErrorCode(err)
 
 	if appErrCode == apperr.EINTERNAL {
-		return "Internal Server Error"
+		return DefaultInternalErrorMessage
 	}
 
 	if appErrMessage == "" {
-		return "An error occurred"
+		return GenericErrorMessage
 	}
 
 	return appErrMessage

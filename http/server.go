@@ -1,14 +1,19 @@
 package http
 
 import (
+	"context"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/music-gang/music-gang-api/app/service"
 	"golang.org/x/crypto/acme/autocert"
 )
+
+// ShutdownTimeout is the time given for outstanding requests to finish before shutdown.
+const ShutdownTimeout = 1 * time.Second
 
 // ServerAPI is the main server for the API
 type ServerAPI struct {
@@ -34,8 +39,8 @@ type ServerAPI struct {
 	JWTService  service.JWTService
 }
 
-// NewAPISerer creates a new API server.
-func NewAPISerer() *ServerAPI {
+// NewServerAPI creates a new API server.
+func NewServerAPI() *ServerAPI {
 
 	addr := ":8080"
 	domain := ""
@@ -61,6 +66,12 @@ func NewAPISerer() *ServerAPI {
 	s.registerRoutes(v1Group)
 
 	return s
+}
+
+func (s *ServerAPI) Close() error {
+	ctx, cancel := context.WithTimeout(context.Background(), ShutdownTimeout)
+	defer cancel()
+	return s.server.Shutdown(ctx)
 }
 
 // Open validates the server options and start it on the bind address.
@@ -99,9 +110,10 @@ func (s *ServerAPI) registerRoutes(g *echo.Group) {
 	s.registerAuthRoutes(authGroup)
 }
 
+// registerAuthRoutes registers all routes for the API group auth.
 func (s *ServerAPI) registerAuthRoutes(g *echo.Group) {
 	g.POST("/login", s.AuthLogin)
-	g.POST("/register", nil)
+	g.POST("/register", s.AuthRegister)
 	g.GET("/refresh", nil)
 	g.DELETE("/logout", nil)
 
@@ -109,6 +121,7 @@ func (s *ServerAPI) registerAuthRoutes(g *echo.Group) {
 	g.GET("/oauth2/:source/callback", nil)
 }
 
+// SuccessResponseJSON returns a JSON response with the given status code and data.
 func SuccessResponseJSON(c echo.Context, httpCode int, data interface{}) error {
 	return c.JSON(httpCode, data)
 }
