@@ -12,7 +12,6 @@ import (
 	"github.com/music-gang/music-gang-api/auth"
 	"github.com/music-gang/music-gang-api/config"
 	"github.com/music-gang/music-gang-api/mock"
-	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -69,7 +68,7 @@ func TestAuth_TestLocalProvider(t *testing.T) {
 		password := "123456"
 
 		var hashedPassword []byte
-		if p, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost); err == nil {
+		if p, err := util.HashPassword(password); err == nil {
 			hashedPassword = p
 		}
 
@@ -141,7 +140,7 @@ func TestAuth_TestLocalProvider(t *testing.T) {
 		password := "123456"
 
 		var hashedPassword []byte
-		if p, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost); err == nil {
+		if p, err := util.HashPassword(password); err == nil {
 			hashedPassword = p
 		}
 

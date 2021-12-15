@@ -6,7 +6,7 @@ import (
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/music-gang/music-gang-api/app/util"
 	"golang.org/x/oauth2"
 )
 
@@ -63,7 +63,7 @@ func (p *LocalProvider) Auhenticate(ctx context.Context, opts *entity.AuthUserOp
 		return nil, apperr.Errorf(apperr.EINVALID, "user does not have local auth")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password.String), []byte(*opts.UserParams.Password)); err != nil {
+	if err := util.CompareHashAndPassword([]byte(user.Password.String), []byte(*opts.UserParams.Password)); err != nil {
 		return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "wrong credentials")
 	}
 
