@@ -8,7 +8,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
-	"github.com/music-gang/music-gang-api/app/service"
 	"github.com/music-gang/music-gang-api/app/util"
 	"gopkg.in/guregu/null.v4"
 )
@@ -84,7 +83,7 @@ func (s *ServerAPI) AuthLogin(c echo.Context) error {
 		return ErrorResponseJSON(c, err, nil)
 	}
 
-	return handleAuthLogin(c, s.AuthService, s.JWTService, params)
+	return handleAuthLogin(c, s, params)
 }
 
 // AuthRegister handles the register request.
@@ -99,13 +98,37 @@ func (s *ServerAPI) AuthRegister(c echo.Context) error {
 		return ErrorResponseJSON(c, err, nil)
 	}
 
-	return handleAuthRegister(c, s.AuthService, s.JWTService, params)
+	return handleAuthRegister(c, s, params)
+}
+
+// AuthLogout handles the logout request.
+func (s *ServerAPI) AuthLogout(c echo.Context) error {
+
+	var pair *entity.TokenPair
+
+	if err := c.Bind(pair); err != nil {
+		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid request"), nil)
+	}
+
+	return handleAuthLogout(c, s, pair)
+}
+
+// AuthRefresh handles the refresh request.
+func (s *ServerAPI) AuthRefresh(c echo.Context) error {
+
+	var pair *entity.TokenPair
+
+	if err := c.Bind(pair); err != nil {
+		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid request"), nil)
+	}
+
+	return handleAuthRefresh(c, s, pair)
 }
 
 // handleAuthLogin handles the login Business Logic.
-func handleAuthLogin(c echo.Context, authService service.AuthService, jwtService service.JWTService, params LoginParams) error {
+func handleAuthLogin(c echo.Context, server *ServerAPI, params LoginParams) error {
 
-	auth, err := authService.Auhenticate(c.Request().Context(), &entity.AuthUserOptions{
+	auth, err := server.AuthService.Auhenticate(c.Request().Context(), &entity.AuthUserOptions{
 		Source: &localSource,
 		UserParams: &entity.UserParams{
 			Email:    &params.Email,
@@ -116,27 +139,56 @@ func handleAuthLogin(c echo.Context, authService service.AuthService, jwtService
 		return ErrorResponseJSON(c, err, nil)
 	}
 
-	pair, err := jwtService.Exchange(c.Request().Context(), auth)
+	pair, err := server.JWTService.Exchange(c.Request().Context(), auth)
 	if err != nil {
 		return ErrorResponseJSON(c, err, nil)
 	}
 
-	return SuccessResponseJSON(c, http.StatusOK, echo.Map{
-		"access_token":  pair.AccessToken,
-		"refresh_token": pair.RefreshToken,
-		"expires_in":    pair.Expiry,
-	})
+	return SuccessResponseJSON(c, http.StatusOK, tokenPairToEchoMap(pair))
+}
+
+// handleAuthLogout handles the logout Business Logic.
+func handleAuthLogout(c echo.Context, server *ServerAPI, pair *entity.TokenPair) error {
+
+	if pair.AccessToken != "" {
+		if err := server.JWTService.Invalidate(c.Request().Context(), pair.AccessToken, entity.AccessTokenExpiration); err != nil {
+			return ErrorResponseJSON(c, err, nil)
+		}
+	}
+
+	if pair.RefreshToken != "" {
+		if err := server.JWTService.Invalidate(c.Request().Context(), pair.RefreshToken, entity.RefreshTokenExpiration); err != nil {
+			return ErrorResponseJSON(c, err, nil)
+		}
+	}
+
+	return SuccessResponseJSON(c, http.StatusOK, nil)
+}
+
+// handleAuthRefresh handles the refresh Business Logic.
+func handleAuthRefresh(c echo.Context, server *ServerAPI, pair *entity.TokenPair) error {
+
+	if pair.RefreshToken == "" {
+		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "refresh token is required"), nil)
+	}
+
+	pair, err := server.JWTService.Refresh(c.Request().Context(), pair.RefreshToken)
+	if err != nil {
+		return ErrorResponseJSON(c, err, nil)
+	}
+
+	return SuccessResponseJSON(c, http.StatusOK, tokenPairToEchoMap(pair))
 }
 
 // handleAuthRegister handles the register Business Logic.
 // On success, the user is created and the JWT pairs is returned.
-func handleAuthRegister(c echo.Context, authService service.AuthService, jwtService service.JWTService, params RegisterParams) error {
+func handleAuthRegister(c echo.Context, server *ServerAPI, params RegisterParams) error {
 	passwordhashed, err := util.HashPassword(params.Password)
 	if err != nil {
 		return ErrorResponseJSON(c, err, nil)
 	}
 
-	if err := authService.CreateAuth(c.Request().Context(), &entity.Auth{
+	if err := server.AuthService.CreateAuth(c.Request().Context(), &entity.Auth{
 		Source: localSource,
 		User: &entity.User{
 			Email:    null.StringFrom(params.Email),
@@ -147,8 +199,17 @@ func handleAuthRegister(c echo.Context, authService service.AuthService, jwtServ
 		return ErrorResponseJSON(c, err, nil)
 	}
 
-	return handleAuthLogin(c, authService, jwtService, LoginParams{
+	return handleAuthLogin(c, server, LoginParams{
 		Email:    params.Email,
 		Password: params.Password,
 	})
+}
+
+// tokenPairToEchoMap converts a TokenPair to a map for JSON serialization.
+func tokenPairToEchoMap(pair *entity.TokenPair) echo.Map {
+	return echo.Map{
+		"access_token":  pair.AccessToken,
+		"refresh_token": pair.RefreshToken,
+		"expires_in":    pair.Expiry,
+	}
 }

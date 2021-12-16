@@ -9,6 +9,11 @@ import (
 	"github.com/music-gang/music-gang-api/app/util"
 )
 
+const (
+	AccessTokenExpiration  = 60           // 1 hour
+	RefreshTokenExpiration = 60 * 24 * 15 // 15 days
+)
+
 // AppClaims is a custom claims type for JWT
 // It contains the information about the user and the standard claims
 type AppClaims struct {

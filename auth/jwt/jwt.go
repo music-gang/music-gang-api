@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	accessTokenExpiration  = 60           // 1 hour
-	refreshTokenExpiration = 60 * 24 * 15 // 15 days
+	accessTokenExpiration  = entity.AccessTokenExpiration
+	refreshTokenExpiration = entity.RefreshTokenExpiration
 )
 
 var _ service.JWTService = (*JWTService)(nil)

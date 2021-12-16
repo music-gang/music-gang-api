@@ -135,7 +135,7 @@ func (s *ServerAPI) registerAuthRoutes(g *echo.Group) {
 	g.POST("/login", s.AuthLogin)
 	g.POST("/register", s.AuthRegister)
 	g.GET("/refresh", nil)
-	g.DELETE("/logout", nil)
+	g.DELETE("/logout", s.AuthLogout)
 
 	// oauth2 routes
 	g.GET("/oauth2/:source/callback", nil)
