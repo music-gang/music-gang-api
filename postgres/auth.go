@@ -40,34 +40,44 @@ func (s *AuthService) CreateAuth(ctx context.Context, auth *entity.Auth) error {
 	}
 	defer tx.Rollback()
 
-	// Check to see if the auth already exists for the given source.
-	if other, err := findAuthBySourceID(ctx, tx, auth.Source, auth.SourceID.String); err == nil {
-		// If an auth already exists for the source user, update with the new tokens.
-		if other, err := updateAuth(ctx, tx, other.ID, auth.AccessToken, auth.RefreshToken, auth.Expiry); err != nil {
-			return err
-		} else if err := attachAuthAssociations(ctx, tx, other); err != nil {
+	if auth.SourceID.Valid {
+		// Check to see if the auth already exists for the given source.
+		other, err := findAuthBySourceID(ctx, tx, auth.Source, auth.SourceID.String)
+		if err == nil {
+			// If an auth already exists for the source user, update with the new tokens.
+			other, err := updateAuth(ctx, tx, other.ID, auth.AccessToken, auth.RefreshToken, auth.Expiry)
+			if err != nil {
+				return err
+			}
+
+			if err := attachAuthAssociations(ctx, tx, other); err != nil {
+				return err
+			}
+
+			// Copy found auth back to the caller's arg & return.
+			*auth = *other
+
+			if err := tx.Commit(); err != nil {
+				return apperr.Errorf(apperr.EINTERNAL, "failed to commit transaction: %v", err)
+			}
+
+			return nil
+
+		} else if apperr.ErrorCode(err) != apperr.ENOTFOUND {
+			// Check if no auth exists, if err is not ENOTFOUND, than returns err.
 			return err
 		}
-
-		// Copy found auth back to the caller's arg & return.
-		*auth = *other
-
-		if err := tx.Commit(); err != nil {
-			return apperr.Errorf(apperr.EINTERNAL, "failed to commit transaction: %v", err)
-		}
-
-		return nil
-
-	} else if apperr.ErrorCode(err) != apperr.ENOTFOUND {
-		// Check if no auth exists, if err is not ENOTFOUND, than returns err.
-		return err
-
 	}
 
 	// check if user had new object passed in. It is considered "new" if the user ID is not set.
 	if auth.UserID == 0 && auth.User != nil {
+
 		// new user from an auth source because user ID is not set but auth have attached a user object.
-		if user, err := findUserByEmail(ctx, tx, auth.User.Email.String); err == nil {
+		user, err := findUserByEmail(ctx, tx, auth.User.Email.String)
+		if err == nil {
+			if !auth.SourceID.Valid {
+				return apperr.Errorf(apperr.EFORBIDDEN, "email already exists")
+			}
 			auth.User = user
 		} else if apperr.ErrorCode(err) == apperr.ENOTFOUND {
 			if err := createUser(ctx, tx, auth.User); err != nil {
@@ -76,6 +86,7 @@ func (s *AuthService) CreateAuth(ctx context.Context, auth *entity.Auth) error {
 		} else {
 			return err
 		}
+
 		auth.UserID = auth.User.ID
 	}
 

@@ -234,6 +234,133 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			t.Fatalf("got %v, want EINVALID", err)
 		}
 	})
+
+	t.Run("CannotCreateWithAlreadyUsedEmail", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForAuthTests(t, db)
+
+		s := postgres.NewAuthService(db)
+
+		auth := &entity.Auth{
+			Source: entity.AuthSourceLocal,
+			User: &entity.User{
+				Name:     "Jane Doe",
+				Email:    null.StringFrom("jane.doe@test.com"),
+				Password: null.StringFrom("123456"),
+			},
+		}
+
+		if err := s.CreateAuth(context.Background(), auth); err != nil {
+			t.Fatal(err)
+		}
+
+		tamperAuth := &entity.Auth{
+			Source: entity.AuthSourceLocal,
+			User: &entity.User{
+				Name:     "Bob Smith",
+				Email:    null.StringFrom("jane.doe@test.com"),
+				Password: null.StringFrom("123456"),
+			},
+		}
+
+		if err := s.CreateAuth(context.Background(), tamperAuth); err == nil {
+			t.Fatal("expected error")
+		} else if apperr.ErrorCode(err) != apperr.EFORBIDDEN {
+			t.Fatalf("got %v, want EFORBIDDEN", err)
+		}
+	})
+
+	t.Run("CannotCreateLocalAfterOauth", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForAuthTests(t, db)
+
+		s := postgres.NewAuthService(db)
+
+		auth := &entity.Auth{
+			Source:       entity.AuthSourceGitHub,
+			SourceID:     null.StringFrom("SOURCEID"),
+			AccessToken:  null.StringFrom("ACCESSTOKEN"),
+			RefreshToken: null.StringFrom("REFRESHTOKEN"),
+			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			User: &entity.User{
+				Name:  "Jane Doe",
+				Email: null.StringFrom("jane.doe@test.com"),
+			},
+		}
+
+		if err := s.CreateAuth(context.Background(), auth); err != nil {
+			t.Fatal(err)
+		}
+
+		localAuth := &entity.Auth{
+			Source: entity.AuthSourceGitHub,
+			User: &entity.User{
+				Name:  "Jane Doe",
+				Email: null.StringFrom("jane.doe@test.com"),
+			},
+		}
+
+		if err := s.CreateAuth(context.Background(), localAuth); err == nil {
+			t.Fatal("expected error")
+		} else if apperr.ErrorCode(err) != apperr.EFORBIDDEN {
+			t.Fatalf("got %v, want EFORBIDDEN", err)
+		}
+	})
+
+	t.Run("CanCreateOauthAfterLocal", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForAuthTests(t, db)
+
+		s := postgres.NewAuthService(db)
+
+		localAuth := &entity.Auth{
+			Source: entity.AuthSourceLocal,
+			User: &entity.User{
+				Name:     "Jane Doe",
+				Email:    null.StringFrom("jane.doe@test.com"),
+				Password: null.StringFrom("123456"),
+			},
+		}
+
+		if err := s.CreateAuth(context.Background(), localAuth); err != nil {
+			t.Fatal(err)
+		}
+
+		auth := &entity.Auth{
+			Source:       entity.AuthSourceGitHub,
+			SourceID:     null.StringFrom("SOURCEID"),
+			AccessToken:  null.StringFrom("ACCESSTOKEN"),
+			RefreshToken: null.StringFrom("REFRESHTOKEN"),
+			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			User: &entity.User{
+				Name:  "Jane Doe",
+				Email: null.StringFrom("jane.doe@test.com"),
+			},
+		}
+
+		if err := s.CreateAuth(context.Background(), auth); err != nil {
+			t.Fatal(err)
+		}
+
+		userIdFind := int64(1)
+
+		if _, n, err := s.FindAuths(context.Background(), service.AuthFilter{
+			UserID: &userIdFind,
+		}); err != nil {
+			t.Fatal(err)
+		} else if n != 2 {
+			t.Fatalf("got %d, want 2", n)
+		}
+	})
 }
 
 func TestAuthService_DeleteAuth(t *testing.T) {
