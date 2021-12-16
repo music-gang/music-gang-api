@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	apphttp "github.com/music-gang/music-gang-api/http"
 	"github.com/music-gang/music-gang-api/mock"
@@ -283,6 +284,43 @@ func TestAuth_Register(t *testing.T) {
 
 		if resp.StatusCode != http.StatusBadRequest {
 			t.Errorf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
+		}
+	})
+
+	t.Run("ErrCreateAuth", func(t *testing.T) {
+
+		s := MustOpenServerAPI(t)
+		defer MustCloseServerAPI(t, s)
+
+		s.AuthService = &mock.AuthService{
+			CreateAuthFn: func(ctx context.Context, auth *entity.Auth) error {
+				return apperr.Errorf(apperr.EUNAUTHORIZED, "authentication failed")
+			},
+		}
+
+		registerParam := apphttp.RegisterParams{
+			Email:           "jane.doe@test.com",
+			Name:            "Jane Doe",
+			Password:        validPassword,
+			ConfirmPassword: validPassword,
+		}
+
+		jsonValue := MustMarshalJSON(t, registerParam)
+
+		req, err := http.NewRequest(http.MethodPost, s.URL()+"/v1/auth/register", bytes.NewBuffer(jsonValue))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Errorf("expected status code %d, got %d", http.StatusOK, resp.StatusCode)
 		}
 	})
 }
