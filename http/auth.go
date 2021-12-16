@@ -22,6 +22,22 @@ type LoginParams struct {
 	Password string `json:"password"`
 }
 
+// validate is the validation function for the LoginParams.
+func (p *LoginParams) validate() error {
+
+	if p.Email == "" {
+		return apperr.Errorf(apperr.EINVALID, "email is required")
+	} else if _, err := mail.ParseAddress(p.Email); err != nil {
+		return apperr.Errorf(apperr.EINVALID, "email is invalid")
+	}
+
+	if p.Password == "" {
+		return apperr.Errorf(apperr.EINVALID, "password is required")
+	}
+
+	return nil
+}
+
 // RegisterParams represents the parameters for a user registration (local source).
 type RegisterParams struct {
 	Email           string `json:"email"`
@@ -59,12 +75,16 @@ func (p *RegisterParams) validate() error {
 // AuthLogin handles the login request.
 func (s *ServerAPI) AuthLogin(c echo.Context) error {
 
-	email, password := c.FormValue("email"), c.FormValue("password")
+	params := LoginParams{}
+	if err := c.Bind(&params); err != nil {
+		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid request"), nil)
+	}
 
-	return handleAuthLogin(c, s.AuthService, s.JWTService, LoginParams{
-		Email:    email,
-		Password: password,
-	})
+	if err := params.validate(); err != nil {
+		return ErrorResponseJSON(c, err, nil)
+	}
+
+	return handleAuthLogin(c, s.AuthService, s.JWTService, params)
 }
 
 // AuthRegister handles the register request.
@@ -72,7 +92,7 @@ func (s *ServerAPI) AuthRegister(c echo.Context) error {
 
 	params := RegisterParams{}
 	if err := c.Bind(&params); err != nil {
-		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "missing data"), nil)
+		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid request"), nil)
 	}
 
 	if err := params.validate(); err != nil {
