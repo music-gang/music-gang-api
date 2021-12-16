@@ -24,6 +24,7 @@ func TestServerAPI_Open(t *testing.T) {
 	t.Run("ErrPortAlreadyBinded", func(t *testing.T) {
 
 		server := http.NewServerAPI()
+		server.Addr = ":8080"
 		defer MustCloseServerAPI(t, server)
 		if err := server.Open(); err != nil {
 			t.Errorf("error: %v", err)
