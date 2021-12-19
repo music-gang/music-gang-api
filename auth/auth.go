@@ -12,13 +12,13 @@ import (
 
 // AuthProvider is the interface for the auth provider.
 type AuthProvider interface {
+	// Auhenticate returns the user from the auth provider.
+	// May returns err if something went wrong.
+	Auhenticate(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error)
 	// GetAuthURL returns the auth url, nil if not supported.
 	GetOAuthConfig() *oauth2.Config
 	// Source returns the source of the auth provider.
 	Source() string
-	// Auhenticate returns the user from the auth provider.
-	// May returns err if something went wrong.
-	Auhenticate(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error)
 }
 
 var _ service.AuthService = (*AuthService)(nil)

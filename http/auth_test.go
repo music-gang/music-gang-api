@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
@@ -250,6 +251,112 @@ func TestAuth_Login(t *testing.T) {
 		jsonValue := MustMarshalJSON(t, params)
 
 		req, err := http.NewRequest(http.MethodPost, s.URL()+"/v1/auth/login", bytes.NewBuffer(jsonValue))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if res.StatusCode != http.StatusInternalServerError {
+			t.Fatalf("expected status code %d got %d", http.StatusInternalServerError, res.StatusCode)
+		}
+	})
+}
+
+func TestAuth_Logout(t *testing.T) {
+
+	t.Run("OK", func(t *testing.T) {
+
+		s := MustOpenServerAPI(t)
+		defer MustCloseServerAPI(t, s)
+
+		s.JWTService = &mock.JWTService{
+			InvalidateFn: func(ctx context.Context, token string, expiration time.Duration) error {
+				return nil
+			},
+		}
+
+		pair := &entity.TokenPair{
+			AccessToken:  "access_token",
+			RefreshToken: "refresh_token",
+		}
+
+		jsonValue := MustMarshalJSON(t, pair)
+
+		req, err := http.NewRequest(http.MethodDelete, s.URL()+"/v1/auth/logout", bytes.NewBuffer(jsonValue))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if res.StatusCode != http.StatusOK {
+			t.Fatalf("expected status code %d got %d", http.StatusOK, res.StatusCode)
+		}
+	})
+
+	t.Run("ErrInvalidateAccessToken", func(t *testing.T) {
+
+		s := MustOpenServerAPI(t)
+		defer MustCloseServerAPI(t, s)
+
+		s.JWTService = &mock.JWTService{
+			InvalidateFn: func(ctx context.Context, token string, expiration time.Duration) error {
+				return apperr.Errorf(apperr.EINTERNAL, "internal error")
+			},
+		}
+
+		pair := &entity.TokenPair{
+			AccessToken: "access_token",
+		}
+
+		jsonValue := MustMarshalJSON(t, pair)
+
+		req, err := http.NewRequest(http.MethodDelete, s.URL()+"/v1/auth/logout", bytes.NewBuffer(jsonValue))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if res.StatusCode != http.StatusInternalServerError {
+			t.Fatalf("expected status code %d got %d", http.StatusInternalServerError, res.StatusCode)
+		}
+	})
+
+	t.Run("ErrInvalidateRefreshToken", func(t *testing.T) {
+
+		s := MustOpenServerAPI(t)
+		defer MustCloseServerAPI(t, s)
+
+		s.JWTService = &mock.JWTService{
+			InvalidateFn: func(ctx context.Context, token string, expiration time.Duration) error {
+				return apperr.Errorf(apperr.EINTERNAL, "internal error")
+			},
+		}
+
+		pair := &entity.TokenPair{
+			RefreshToken: "refresh_token",
+		}
+
+		jsonValue := MustMarshalJSON(t, pair)
+
+		req, err := http.NewRequest(http.MethodDelete, s.URL()+"/v1/auth/logout", bytes.NewBuffer(jsonValue))
 		if err != nil {
 			t.Fatal(err)
 		}

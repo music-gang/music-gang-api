@@ -86,25 +86,10 @@ func (s *ServerAPI) AuthLogin(c echo.Context) error {
 	return handleAuthLogin(c, s, params)
 }
 
-// AuthRegister handles the register request.
-func (s *ServerAPI) AuthRegister(c echo.Context) error {
-
-	params := RegisterParams{}
-	if err := c.Bind(&params); err != nil {
-		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid request"), nil)
-	}
-
-	if err := params.validate(); err != nil {
-		return ErrorResponseJSON(c, err, nil)
-	}
-
-	return handleAuthRegister(c, s, params)
-}
-
 // AuthLogout handles the logout request.
 func (s *ServerAPI) AuthLogout(c echo.Context) error {
 
-	var pair *entity.TokenPair
+	pair := &entity.TokenPair{}
 
 	if err := c.Bind(pair); err != nil {
 		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid request"), nil)
@@ -123,6 +108,21 @@ func (s *ServerAPI) AuthRefresh(c echo.Context) error {
 	}
 
 	return handleAuthRefresh(c, s, pair)
+}
+
+// AuthRegister handles the register request.
+func (s *ServerAPI) AuthRegister(c echo.Context) error {
+
+	params := RegisterParams{}
+	if err := c.Bind(&params); err != nil {
+		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid request"), nil)
+	}
+
+	if err := params.validate(); err != nil {
+		return ErrorResponseJSON(c, err, nil)
+	}
+
+	return handleAuthRegister(c, s, params)
 }
 
 // handleAuthLogin handles the login Business Logic.
