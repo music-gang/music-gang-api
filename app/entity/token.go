@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	AccessTokenExpiration  = 60           // 1 hour
-	RefreshTokenExpiration = 60 * 24 * 15 // 15 days
+	AccessTokenExpiration  = 60 * time.Minute           // 1 hour
+	RefreshTokenExpiration = 60 * 24 * 15 * time.Minute // 15 days
 )
 
 // AppClaims is a custom claims type for JWT
