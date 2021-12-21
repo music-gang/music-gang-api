@@ -101,7 +101,7 @@ func (s *ServerAPI) AuthLogout(c echo.Context) error {
 // AuthRefresh handles the refresh request.
 func (s *ServerAPI) AuthRefresh(c echo.Context) error {
 
-	var pair *entity.TokenPair
+	pair := &entity.TokenPair{}
 
 	if err := c.Bind(pair); err != nil {
 		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid request"), nil)
