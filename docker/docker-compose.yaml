@@ -1,0 +1,41 @@
+version: "3.7"
+services:
+  music-gang:
+    build:
+     context: ../
+     dockerfile: ./docker/Dockerfile
+    ports:
+      - "8888:8888"
+    volumes:
+      - music-gang-custom-data:/app/custom
+      - ./config.yaml:/app/config.yaml
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+  postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=music-gang
+      - POSTGRES_PASSWORD=music-gang
+      - POSTGRES_DB=music-gang
+    volumes:
+      - music-gang-postgres-data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    restart: always
+    environment:
+      - REDIS_PASSWORD=music-gang
+    volumes:
+      - music-gang-redis-data:/var/lib/redis/data
+
+volumes:
+  music-gang-custom-data: {}
+  music-gang-postgres-data: {}
+  music-gang-redis-data: {}

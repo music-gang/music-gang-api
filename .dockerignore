@@ -1,0 +1,8 @@
+.github
+.vscode
+
+/custom
+/drone-ci
+
+schema.json
+config.yaml
