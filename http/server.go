@@ -43,12 +43,9 @@ type ServerAPI struct {
 // NewServerAPI creates a new API server.
 func NewServerAPI() *ServerAPI {
 
-	jwtSecret := "secret"
-
 	s := &ServerAPI{
-		server:    &http.Server{},
-		handler:   echo.New(),
-		JWTSecret: jwtSecret,
+		server:  &http.Server{},
+		handler: echo.New(),
 	}
 
 	// Set echo as the default HTTP handler.
@@ -144,4 +141,12 @@ func (s *ServerAPI) registerAuthRoutes(g *echo.Group) {
 // SuccessResponseJSON returns a JSON response with the given status code and data.
 func SuccessResponseJSON(c echo.Context, httpCode int, data interface{}) error {
 	return c.JSON(httpCode, data)
+}
+
+// ListenAndServeTLSRedirect runs an HTTP server on port 80 to redirect users
+// to the TLS-enabled port 443 server.
+func ListenAndServeTLSRedirect(domain string) error {
+	return http.ListenAndServe(":80", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "https://"+domain, http.StatusFound)
+	}))
 }

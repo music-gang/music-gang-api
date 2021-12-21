@@ -59,8 +59,14 @@ func (a *AuthService) Auhenticate(ctx context.Context, opts *entity.AuthUserOpti
 		return nil, err
 	}
 
-	if err := a.CreateAuth(ctx, auth); err != nil {
-		return nil, err
+	if *opts.Source != entity.AuthSourceLocal {
+		if err := a.CreateAuth(ctx, auth); err != nil {
+			return nil, err
+		}
+	}
+
+	if auth.User.Auths != nil {
+		auth.User.Auths = nil
 	}
 
 	return auth, nil

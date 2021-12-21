@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 	"net/mail"
 
@@ -139,6 +138,10 @@ func handleAuthLogin(c echo.Context, server *ServerAPI, params LoginParams) erro
 		return ErrorResponseJSON(c, err, nil)
 	}
 
+	if auth.User.Auths != nil {
+		auth.User.Auths = nil
+	}
+
 	pair, err := server.JWTService.Exchange(c.Request().Context(), auth)
 	if err != nil {
 		return ErrorResponseJSON(c, err, nil)
@@ -183,6 +186,7 @@ func handleAuthRefresh(c echo.Context, server *ServerAPI, pair *entity.TokenPair
 // handleAuthRegister handles the register Business Logic.
 // On success, the user is created and the JWT pairs is returned.
 func handleAuthRegister(c echo.Context, server *ServerAPI, params RegisterParams) error {
+
 	passwordhashed, err := util.HashPassword(params.Password)
 	if err != nil {
 		return ErrorResponseJSON(c, err, nil)
@@ -193,7 +197,7 @@ func handleAuthRegister(c echo.Context, server *ServerAPI, params RegisterParams
 		User: &entity.User{
 			Email:    null.StringFrom(params.Email),
 			Name:     params.Name,
-			Password: null.StringFrom(fmt.Sprint(passwordhashed)),
+			Password: null.StringFrom(string(passwordhashed)),
 		},
 	}); err != nil {
 		return ErrorResponseJSON(c, err, nil)
