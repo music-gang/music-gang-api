@@ -47,6 +47,7 @@ func TestAuth_Login(t *testing.T) {
 						Name:     "Jane Doe",
 						Email:    null.StringFrom("jane.doe@test.com"),
 						Password: null.StringFrom("123456"),
+						Auths:    []*entity.Auth{},
 					},
 				}, nil
 			},
@@ -265,6 +266,41 @@ func TestAuth_Login(t *testing.T) {
 
 		if res.StatusCode != http.StatusInternalServerError {
 			t.Fatalf("expected status code %d got %d", http.StatusInternalServerError, res.StatusCode)
+		}
+	})
+
+	t.Run("ErrNotFoundAsUnauthorized", func(t *testing.T) {
+
+		s := MustOpenServerAPI(t)
+		defer MustCloseServerAPI(t, s)
+
+		s.AuthService = &mock.AuthService{
+			AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
+				return nil, apperr.Errorf(apperr.ENOTFOUND, "User not found")
+			},
+		}
+
+		params := apphttp.LoginParams{
+			Email:    "jane.doe@test.com",
+			Password: "123456",
+		}
+
+		jsonValue := MustMarshalJSON(t, params)
+
+		req, err := http.NewRequest(http.MethodPost, s.URL()+"/v1/auth/login", bytes.NewBuffer(jsonValue))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if res.StatusCode != http.StatusUnauthorized {
+			t.Fatalf("expected status code %d got %d", http.StatusUnauthorized, res.StatusCode)
 		}
 	})
 }

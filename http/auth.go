@@ -135,6 +135,9 @@ func handleAuthLogin(c echo.Context, server *ServerAPI, params LoginParams) erro
 		},
 	})
 	if err != nil {
+		if apperr.ErrorCode(err) == apperr.ENOTFOUND {
+			return ErrorResponseJSON(c, apperr.Errorf(apperr.EUNAUTHORIZED, "wrong credentials"), nil)
+		}
 		return ErrorResponseJSON(c, err, nil)
 	}
 
