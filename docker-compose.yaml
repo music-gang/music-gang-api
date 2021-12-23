@@ -1,9 +1,7 @@
 version: "3.7"
 services:
   music-gang:
-    build:
-     context: ../
-     dockerfile: ./docker/Dockerfile
+    image: iacopomelani/musicgang-api
     ports:
       - "8888:8888"
     volumes:

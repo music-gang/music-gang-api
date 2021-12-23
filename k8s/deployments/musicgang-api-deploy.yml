@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: musicgang-api-deploy
+  labels:
+    name: musicgang-api-deploy
+    app: musicgang
+    kind: deploy
+spec:
+  selector:
+    matchLabels:
+      name: musicgang-api-pod
+      app: musicgang
+      kind: pod
+  template:
+    metadata:
+      labels:
+        name: musicgang-api-pod
+        app: musicgang
+        kind: pod
+    spec:
+      containers:
+        - name: musicgang-api
+          image: iacopomelani/musicgang-api
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config.yaml
+              subPath: config.yaml
+      volumes:
+        - name: config-volume
+          configMap:
+            name: musicgang-api-config
