@@ -110,10 +110,11 @@ func (m *Main) Run(ctx context.Context) error {
 	authService := auth.NewAuth(postgresAuthService, postgresUserService, config.GetConfig().APP.Auths)
 
 	jwtService := jwt.NewJWTService()
-	jwtService.Secret = "secret"
+	jwtService.Secret = config.GetConfig().APP.JWT.Secret
 	jwtService.JWTBlacklistService = redis.NewJWTBlacklistService(m.Redis)
 
-	m.HTTPServerAPI.Addr = ":8888"
+	m.HTTPServerAPI.Addr = config.GetConfig().APP.HTTP.Addr
+	m.HTTPServerAPI.Domain = config.GetConfig().APP.HTTP.Domain
 	m.HTTPServerAPI.UserService = postgresUserService
 	m.HTTPServerAPI.AuthService = authService
 	m.HTTPServerAPI.JWTService = jwtService
