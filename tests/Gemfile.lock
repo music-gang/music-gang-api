@@ -1,0 +1,129 @@
+GIT
+  remote: https://github.com/faker-ruby/faker.git
+  revision: 869641999b268ef154e6e112dd21cb7b2ba9a09e
+  branch: master
+  specs:
+    faker (2.19.0)
+      i18n (>= 1.8.11, < 2)
+
+GIT
+  remote: https://github.com/rspec/rspec-core.git
+  revision: e3bda9da1e625a428fd005f0d1a633531f5da749
+  branch: main
+  specs:
+    rspec-core (3.11.0.pre)
+      rspec-support (= 3.11.0.pre)
+
+GIT
+  remote: https://github.com/rspec/rspec-expectations.git
+  revision: d9fd9a5589e3914bcd25d66560eccadd75493727
+  branch: main
+  specs:
+    rspec-expectations (3.11.0.pre)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (= 3.11.0.pre)
+
+GIT
+  remote: https://github.com/rspec/rspec-mocks.git
+  revision: 17cf86ab61544b93232c4e9ca9784ab212dccbf6
+  branch: main
+  specs:
+    rspec-mocks (3.11.0.pre)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (= 3.11.0.pre)
+
+GIT
+  remote: https://github.com/rspec/rspec-support.git
+  revision: 321dc7227df43cd682c293fa31fa427b94b2ea74
+  branch: main
+  specs:
+    rspec-support (3.11.0.pre)
+
+GIT
+  remote: https://github.com/rspec/rspec.git
+  revision: 694150e421c797e2e4d6e252c9bbeca0a4e2d79f
+  branch: main
+  specs:
+    rspec (3.11.0.pre)
+      rspec-core (= 3.11.0.pre)
+      rspec-expectations (= 3.11.0.pre)
+      rspec-mocks (= 3.11.0.pre)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    ast (2.4.2)
+    backport (1.2.0)
+    benchmark (0.2.0)
+    concurrent-ruby (1.1.9)
+    diff-lcs (1.5.0)
+    e2mmap (0.1.0)
+    i18n (1.8.11)
+      concurrent-ruby (~> 1.0)
+    jaro_winkler (1.5.4)
+    kramdown (2.3.1)
+      rexml
+    kramdown-parser-gfm (1.1.0)
+      kramdown (~> 2.0)
+    nokogiri (1.12.5-x64-mingw32)
+      racc (~> 1.4)
+    nokogiri (1.12.5-x86_64-linux)
+      racc (~> 1.4)
+    parallel (1.21.0)
+    parser (3.0.3.2)
+      ast (~> 2.4.1)
+    racc (1.6.0)
+    rainbow (3.0.0)
+    regexp_parser (2.2.0)
+    reverse_markdown (2.1.1)
+      nokogiri
+    rexml (3.2.5)
+    rubocop (1.24.0)
+      parallel (~> 1.10)
+      parser (>= 3.0.0.0)
+      rainbow (>= 2.2.2, < 4.0)
+      regexp_parser (>= 1.8, < 3.0)
+      rexml
+      rubocop-ast (>= 1.15.0, < 2.0)
+      ruby-progressbar (~> 1.7)
+      unicode-display_width (>= 1.4.0, < 3.0)
+    rubocop-ast (1.15.0)
+      parser (>= 3.0.1.1)
+    ruby-progressbar (1.11.0)
+    solargraph (0.44.2)
+      backport (~> 1.2)
+      benchmark
+      bundler (>= 1.17.2)
+      diff-lcs (~> 1.4)
+      e2mmap
+      jaro_winkler (~> 1.5)
+      kramdown (~> 2.3)
+      kramdown-parser-gfm (~> 1.1)
+      parser (~> 3.0)
+      reverse_markdown (>= 1.0.5, < 3)
+      rubocop (>= 0.52)
+      thor (~> 1.0)
+      tilt (~> 2.0)
+      yard (~> 0.9, >= 0.9.24)
+    thor (1.1.0)
+    tilt (2.0.10)
+    unicode-display_width (2.1.0)
+    webrick (1.7.0)
+    yard (0.9.27)
+      webrick (~> 1.7.0)
+
+PLATFORMS
+  x64-mingw32
+  x86_64-linux
+
+DEPENDENCIES
+  faker!
+  rspec!
+  rspec-core!
+  rspec-expectations!
+  rspec-mocks!
+  rspec-support!
+  solargraph
+
+BUNDLED WITH
+   2.2.29
