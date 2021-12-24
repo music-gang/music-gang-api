@@ -1,4 +1,4 @@
-FROM golang:1.17 AS builder
+FROM golang:alpine AS builder
 
 WORKDIR /app
 
@@ -19,4 +19,4 @@ WORKDIR /app
 
 COPY --from=builder /app/mg-api .
 
-ENTRYPOINT [ "./mg-api" ]
+CMD [ "./mg-api" ]deployment.apps/musicgang-api-deploydeployment.apps/musicgang-api-deploykubectl describe pods
