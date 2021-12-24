@@ -1,6 +1,13 @@
 # yaml-language-server: $schema=../schema.json
 
 app:
+  http: {}
+
+  jwt:
+    secret: secret
+    expiresIn: 60 # minutes
+    refreshExpiresIn: 20160 # minutes
+
   auths:
 
   redis:
@@ -16,6 +23,13 @@ app:
       host: ignore
       port: 0000
 test:
+  http: {}
+
+  jwt:
+    secret: secret
+    expiresIn: 60 # minutes
+    refreshExpiresIn: 20160 # minutes
+
   auths:
 
   redis:

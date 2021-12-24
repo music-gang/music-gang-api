@@ -23,6 +23,12 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "http": {
+                    "$ref": "#/definitions/HTTP"
+                },
+                "jwt": {
+                    "$ref": "#/definitions/JWT"
+                },
                 "auths": {
                     "anyOf": [
                         {
@@ -41,6 +47,7 @@
                 }
             },
             "required": [
+                "jwt",
                 "auths",
                 "redis",
                 "databases"
@@ -157,6 +164,41 @@
                 }
             },
             "title": "Redis"
+        },
+        "HTTP": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "domain": {
+                    "type": "string"
+                },
+                "addr": {
+                    "type": "string"
+                }
+            },
+            "title": "HTTP",
+            "required": []
+        },
+        "JWT": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "secret": {
+                    "type": "string"
+                },
+                "expiresIn": {
+                    "type": "integer"
+                },
+                "refreshExpiresIn": {
+                    "type": "integer"
+                }
+            },
+            "title": "JWT",
+            "required": [
+                "secret",
+                "expiresIn",
+                "refreshExpiresIn"
+            ]
         }
     }
 }

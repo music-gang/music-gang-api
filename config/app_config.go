@@ -70,6 +70,19 @@ type DatabaseConfig struct {
 	Port int `yaml:"port"`
 }
 
+// HTTPConfig contains the http config
+type HTTPConfig struct {
+	Domain string `yaml:"domain"`
+	Addr   string `yaml:"addr"`
+}
+
+// JWTConfig contains the jwt config
+type JWTConfig struct {
+	Secret           string `yaml:"secret"`
+	ExpiresIn        int    `yaml:"expiresIn"`
+	RefreshExpiresIn int    `yaml:"refreshExpiresIn"`
+}
+
 // RedisConfig contains the redis config
 type RedisConfig struct {
 	Host     string `yaml:"host"`
@@ -83,6 +96,12 @@ type DatabaseListConfig struct {
 }
 
 type AppConfig struct {
+	// HTTP is the http config
+	HTTP HTTPConfig `yaml:"http"`
+
+	// JWT is the jwt config
+	JWT JWTConfig `yaml:"jwt"`
+
 	// Databases contains the databases configuration
 	Databases DatabaseListConfig `yaml:"databases"`
 

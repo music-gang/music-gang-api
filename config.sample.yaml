@@ -1,7 +1,16 @@
 # yaml-language-server: $schema=schema.json
 
 app:
+  http:
+    domain: musicgang.org
+
+  jwt:
+    secret: secret
+    expiresIn: 60 # minutes
+    refreshExpiresIn: 20160 # minutes
+
   auths:
+    local: {}
 
   redis:
     host: localhost
@@ -16,6 +25,11 @@ app:
       host: <database_port>
       port: 5432
 test:
+  jwt:
+    secret: secret_for_test
+    expiresIn: 60 # minutes
+    refreshExpiresIn: 20160 # minutes
+
   auths:
 
   redis:
