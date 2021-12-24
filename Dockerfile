@@ -1,9 +1,22 @@
-FROM golang:1.17.5
+FROM golang:1.17 AS builder
 
 WORKDIR /app
 
+ENV GO111MODULE=on
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
 COPY . .
 
-RUN go build -o mg-api cmd/main.go
+RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o mg-api cmd/main.go
 
-CMD [ "/app/mg-api" ]
+FROM alpine
+
+WORKDIR /app
+
+COPY --from=builder /app/mg-api .
+
+ENTRYPOINT [ "./mg-api" ]
