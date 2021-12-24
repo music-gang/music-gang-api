@@ -1,0 +1,42 @@
+# Metrics Cops
+
+AllCops:
+  Exclude:
+    - ".github/**/*"
+    - ".git/**/*"
+    - "custom/**/*"
+
+Metrics/ClassLength:
+  Description: "Avoid classes longer than 300 lines of code."
+  Max: 300
+  Enabled: true
+
+Metrics/ModuleLength:
+  Description: "Avoid modules longer than 300 lines of code."
+  Max: 300
+  Enabled: true
+
+Metrics/ParameterLists:
+  Enabled: false
+
+Metrics/MethodLength:
+  Description: "Avoid methods longer than 20 lines of code."
+  StyleGuide: "<https://github.com/bbatsov/ruby-style-guide#short-methods>"
+  Max: 20
+  Enabled: true
+
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/BlockLength:
+  Enabled: false
+  IgnoredMethods:
+    - context
+    - describe
+    - it
+    - shared_examples
+    - shared_examples_for
+    - namespace
+    - draw
+    - configure
+    - group
