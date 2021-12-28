@@ -19,4 +19,4 @@ WORKDIR /app
 
 COPY --from=builder /app/mg-api .
 
-CMD [ "./mg-api" ]deployment.apps/musicgang-api-deploydeployment.apps/musicgang-api-deploykubectl describe pods
+CMD [ "./mg-api" ]
