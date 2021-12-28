@@ -8,6 +8,7 @@ metadata:
     app: musicgang
     kind: deploy
 spec:
+  replicas: 3
   selector:
     matchLabels:
       name: musicgang-api-pod

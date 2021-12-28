@@ -26,3 +26,20 @@ data:
           password: admin
           host: postgres-service
           port: 5432
+    test:
+      http:
+        addr: ":8888"
+        
+      auths:
+
+      redis:
+        host: redis-service
+        port: 6379
+
+      databases:
+        postgres:
+          database: music-gang-api
+          user: postgres
+          password: admin
+          host: postgres-service
+          port: 5432
