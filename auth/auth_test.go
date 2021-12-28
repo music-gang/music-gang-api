@@ -30,7 +30,7 @@ func NewAuth() *Auth {
 
 	config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "../config.yaml"})
 
-	a.AuthService = auth.NewAuth(&a.as, &a.us, config.GetConfig().TEST.Auths)
+	a.AuthService = auth.NewAuth(&a.as, &a.us, config.GetConfig().APP.Auths)
 
 	return a
 }

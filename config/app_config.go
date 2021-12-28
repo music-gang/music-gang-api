@@ -116,9 +116,6 @@ type AppConfig struct {
 type Config struct {
 	// APP contains the application configuration
 	APP AppConfig `yaml:"app"`
-
-	// TEST contains the test configuration
-	TEST AppConfig `yaml:"test"`
 }
 
 type LoadOptions struct {

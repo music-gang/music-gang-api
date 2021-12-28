@@ -22,9 +22,9 @@ func TestRedis(t *testing.T) {
 
 		config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "../config.yaml"})
 
-		redisHost := config.GetConfig().TEST.Redis.Host
-		redisPort := config.GetConfig().TEST.Redis.Port
-		redisPassword := config.GetConfig().TEST.Redis.Password
+		redisHost := config.GetConfig().APP.Redis.Host
+		redisPort := config.GetConfig().APP.Redis.Port
+		redisPassword := config.GetConfig().APP.Redis.Password
 
 		redisAddr := fmt.Sprintf("%s:%d", redisHost, redisPort)
 
@@ -41,9 +41,9 @@ func TestRedis(t *testing.T) {
 
 		config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "../config.yaml"})
 
-		redisHost := config.GetConfig().TEST.Redis.Host
-		redisPort := config.GetConfig().TEST.Redis.Port
-		redisPassword := config.GetConfig().TEST.Redis.Password
+		redisHost := config.GetConfig().APP.Redis.Host
+		redisPort := config.GetConfig().APP.Redis.Port
+		redisPassword := config.GetConfig().APP.Redis.Password
 
 		redisAddr := fmt.Sprintf("%s:%d", redisHost, redisPort)
 
@@ -60,9 +60,9 @@ func MustOpenDB(tb testing.TB) *redis.DB {
 
 	config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "../config.yaml"})
 
-	redisHost := config.GetConfig().TEST.Redis.Host
-	redisPort := config.GetConfig().TEST.Redis.Port
-	redisPassword := config.GetConfig().TEST.Redis.Password
+	redisHost := config.GetConfig().APP.Redis.Host
+	redisPort := config.GetConfig().APP.Redis.Port
+	redisPassword := config.GetConfig().APP.Redis.Password
 
 	redisAddr := fmt.Sprintf("%s:%d", redisHost, redisPort)
 

@@ -24,23 +24,3 @@ app:
       password: <database_password>
       host: <database_port>
       port: 5432
-test:
-  jwt:
-    secret: secret_for_test
-    expiresIn: 60 # minutes
-    refreshExpiresIn: 20160 # minutes
-
-  auths:
-
-  redis:
-    host: localhost
-    port: 6379
-    password:
-
-  databases:
-    postgres:
-      database: <database_test_name>
-      user: <database_test_user>
-      password: <database_test_password>
-      host: <database_test_host>
-      port: 5432

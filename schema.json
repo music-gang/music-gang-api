@@ -8,14 +8,10 @@
             "properties": {
                 "app": {
                     "$ref": "#/definitions/App"
-                },
-                "test": {
-                    "$ref": "#/definitions/App"
                 }
             },
             "required": [
-                "app",
-                "test"
+                "app"
             ],
             "title": "Welcome6"
         },

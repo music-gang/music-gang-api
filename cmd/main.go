@@ -56,9 +56,9 @@ type Main struct {
 // NewMain returns a new instance of Main
 func NewMain() *Main {
 
-	redisHost := config.GetConfig().TEST.Redis.Host
-	redisPort := config.GetConfig().TEST.Redis.Port
-	redisPassword := config.GetConfig().TEST.Redis.Password
+	redisHost := config.GetConfig().APP.Redis.Host
+	redisPort := config.GetConfig().APP.Redis.Port
+	redisPassword := config.GetConfig().APP.Redis.Password
 
 	redisAddr := fmt.Sprintf("%s:%d", redisHost, redisPort)
 
