@@ -1,3 +1,4 @@
+---
 # yaml-language-server: $schema=https://json.schemastore.org/drone.json
 
 kind: pipeline
@@ -30,3 +31,20 @@ steps:
       - sleep 15
       - mv drone-ci/config.drone.yaml config.yaml
       - go test ./... -timeout 120s -race -coverprofile=coverage.txt -covermode=atomic
+
+  - name: slack
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: slack_webhook
+      channel: drone-ci
+      username: drone
+      template: >
+        {{#success build.status}}
+          build {{build.number}} succeeded. Good job.
+        {{else}}
+          build {{build.number}} failed. Fix me please.
+        {{/success}}
+---
+kind: signature
+hmac: ceea8cfc69f9b52811c4f245bb8257d6885b284e1743f11b65d31d7547b8873a
