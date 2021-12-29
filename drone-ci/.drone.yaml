@@ -39,6 +39,7 @@ steps:
         from_secret: slack_webhook
       channel: drone-ci
       username: drone
+      icon_url: https://avatars.githubusercontent.com/u/2181346?s=200&v=4
       template: >
         {{#success build.status}}
           build {{build.number}} succeeded. Good job.
@@ -47,4 +48,4 @@ steps:
         {{/success}}
 ---
 kind: signature
-hmac: ceea8cfc69f9b52811c4f245bb8257d6885b284e1743f11b65d31d7547b8873a
+hmac: 962ee6abca9fbfcde94ce8979ac2b50781ddae0fa382afa274e399103082ecdf
