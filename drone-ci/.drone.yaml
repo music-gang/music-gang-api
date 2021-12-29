@@ -3,7 +3,7 @@
 
 kind: pipeline
 type: docker
-name: CI-integration-test
+name: CI-CD
 trigger:
   branch:
     - master
@@ -26,11 +26,25 @@ services:
 
 steps:
   - name: test
-    image: golang:1.17.5
+    image: golang:1.17
     commands:
       - sleep 15
       - mv drone-ci/config.drone.yaml config.yaml
       - go test ./... -timeout 120s -race -coverprofile=coverage.txt -covermode=atomic
+
+  - name: build-docker-image
+    image: plugins/docker
+    when:
+      status:
+        - success
+    settings:
+      repo:
+        from_secret: docker_repo
+      auto_tag: true
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
 
   - name: slack
     image: plugins/slack
@@ -48,4 +62,4 @@ steps:
         {{/success}}
 ---
 kind: signature
-hmac: 962ee6abca9fbfcde94ce8979ac2b50781ddae0fa382afa274e399103082ecdf
+hmac: b57e3414bfdf4bedad6389f402db8475268a2cf2f2a92977e776c32825ded705
