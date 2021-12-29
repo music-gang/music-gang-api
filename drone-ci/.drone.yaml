@@ -11,6 +11,7 @@ trigger:
     - push
     - custom
     - tag
+    - cron
 services:
   - name: postgres-db
     image: postgres
@@ -37,6 +38,9 @@ steps:
     when:
       status:
         - success
+      event:
+        - cron
+        - tag
     settings:
       repo:
         from_secret: docker_repo
@@ -62,4 +66,4 @@ steps:
         {{/success}}
 ---
 kind: signature
-hmac: b57e3414bfdf4bedad6389f402db8475268a2cf2f2a92977e776c32825ded705
+hmac: 0744a06ba51b6dbdbe71ba4f33c4cbd609017ea9df5a62f820865bde2fe3a147
