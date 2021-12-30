@@ -7,12 +7,18 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/music-gang/music-gang-api/app"
 	"github.com/music-gang/music-gang-api/auth"
 	"github.com/music-gang/music-gang-api/auth/jwt"
 	"github.com/music-gang/music-gang-api/config"
 	"github.com/music-gang/music-gang-api/http"
 	"github.com/music-gang/music-gang-api/postgres"
 	"github.com/music-gang/music-gang-api/redis"
+)
+
+var (
+	Version string
+	Commit  string
 )
 
 func init() {
@@ -24,6 +30,9 @@ func init() {
 }
 
 func main() {
+
+	app.Commit = Commit
+	app.Version = Version
 
 	// Create a context that is cancelled when the program is terminated
 	ctx, cancel := context.WithCancel(context.Background())

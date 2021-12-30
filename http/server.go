@@ -9,6 +9,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/music-gang/music-gang-api/app"
 	"github.com/music-gang/music-gang-api/app/service"
 	"golang.org/x/crypto/acme/autocert"
 )
@@ -122,6 +123,14 @@ func (s *ServerAPI) UseTLS() bool {
 
 // registerRoutes registers all routes for the API.
 func (s *ServerAPI) registerRoutes(g *echo.Group) {
+
+	buildGroup := g.Group("/build")
+	buildGroup.GET("/info", func(c echo.Context) error {
+		return SuccessResponseJSON(c, http.StatusOK, map[string]string{
+			"commit":  app.Commit,
+			"version": app.Version,
+		})
+	})
 
 	authGroup := g.Group("/auth")
 	s.registerAuthRoutes(authGroup)
