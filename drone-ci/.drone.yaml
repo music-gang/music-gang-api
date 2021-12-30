@@ -58,15 +58,14 @@ steps:
         from_secret: docker_password
 
   - name: deliver-to-k8s
-    image: vallard/drone-kube
-    environment:
-      KUBE_SERVER:
-        from_secret: KUBE_SERVER
-      KUBE_TOKEN:
-        from_secret: KUBE_TOKEN
-      KUBE_CA:
-        from_secret: KUBE_CA
+    image: danielgormly/drone-plugin-kube:0.0.2
     settings:
+      server:
+        from_secret: KUBE_SERVER
+      token:
+        from_secret: KUBE_TOKEN
+      ca:
+        from_secret: KUBE_CA
       template: k8s/deployments/musicgang-api-deploy.yml
     when:
       event:
@@ -95,4 +94,6 @@ steps:
         - success
 ---
 kind: signature
-hmac: d343d4686a628da8ae398c63e4c4fc18718f87afb73928a1f4bcaf8cf1782b69
+hmac: 08c2a16e685c775c66406cf42865dbc020064e540b5a3f59eaa16aea7c33de50
+
+...
