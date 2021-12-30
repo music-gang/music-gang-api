@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   music-gang:
-    image: iacopomelani/musicgang-api
+    image: iacopomelani/music-gang-api
     ports:
       - "8888:8888"
     volumes:
@@ -29,7 +29,7 @@ services:
       - "6379:6379"
     restart: always
     environment:
-      - REDIS_PASSWORD=music-gang
+      - ALLOW_EMPTY_PASSWORD=yes
     volumes:
       - music-gang-redis-data:/var/lib/redis/data
 

@@ -1,6 +1,9 @@
-FROM golang:1.17-alpine AS builder
+FROM golang:1.17 AS builder
 
 WORKDIR /app
+
+RUN apt update
+RUN apt install -y git
 
 ENV GO111MODULE=on
 
@@ -11,9 +14,11 @@ RUN go mod download
 
 COPY . .
 
-RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o mg-api cmd/main.go
+RUN GIT_COMMIT=$(git rev-list -1 HEAD) && \
+    GIT_TAG=$(git describe --tags --always) && \ 
+    GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Commit=$GIT_COMMIT -X main.Version=$GIT_TAG" -o mg-api cmd/main.go
 
-FROM alpine
+FROM debian
 
 WORKDIR /app
 
