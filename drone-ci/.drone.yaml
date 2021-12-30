@@ -12,6 +12,9 @@ trigger:
     - custom
     - tag
     - cron
+    - promote
+    - pull_request
+
 services:
   - name: postgres-db
     image: postgres
@@ -33,7 +36,7 @@ steps:
       - mv drone-ci/config.drone.yaml config.yaml
       - go test ./... -timeout 120s -race -coverprofile=coverage.txt -covermode=atomic
 
-  - name: build-docker-image
+  - name: publish-docker-image
     image: plugins/docker
     when:
       status:
@@ -41,6 +44,9 @@ steps:
       event:
         - cron
         - tag
+        - promote
+      target:
+        - dev
     settings:
       repo:
         from_secret: docker_repo
@@ -49,6 +55,31 @@ steps:
         from_secret: docker_username
       password:
         from_secret: docker_password
+
+  - name: publish-github-release
+    image: plugins/github-release
+    settings:
+      api_key:
+        from_secret: github_api_key
+      title: ${DRONE_TAG}
+    when:
+      status:
+        - success
+      event:
+        - tag
+
+  - name: deliver-prod-to-k8s
+    image: vallard/drone-kube
+    settings:
+      template: k8s/deployments/musicgang-api-deploy.yml
+    when:
+      status:
+        - success
+      event:
+        - promote
+        - rollback
+      target:
+        - prod
 
   - name: slack
     image: plugins/slack
@@ -66,4 +97,4 @@ steps:
         {{/success}}
 ---
 kind: signature
-hmac: 8ef37dc662fb14a68520566f917173bd13434e272f0632877274a3bdc6d8e8d3
+hmac: 48c27342b4a277b3c238795370c0c2ed19a3dcae9406e6f49658c71e931463c8

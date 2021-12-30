@@ -8,7 +8,6 @@ metadata:
     app: musicgang
     kind: deploy
 spec:
-  replicas: 3
   selector:
     matchLabels:
       name: musicgang-api-pod
@@ -23,7 +22,7 @@ spec:
     spec:
       containers:
         - name: musicgang-api
-          image: iacopomelani/music-gang-api
+          image: iacopomelani/music-gang-api:{{build.tag}}
           imagePullPolicy: Always
           ports:
             - containerPort: 8888
