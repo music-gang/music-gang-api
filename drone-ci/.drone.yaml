@@ -58,7 +58,7 @@ steps:
         from_secret: docker_password
 
   - name: deliver-to-k8s
-    image: danielgormly/drone-plugin-kube:0.0.2
+    image: danielgormly/drone-plugin-kube:0.2.0
     settings:
       server:
         from_secret: KUBE_SERVER
@@ -94,6 +94,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: 08c2a16e685c775c66406cf42865dbc020064e540b5a3f59eaa16aea7c33de50
-
-...
+hmac: 96854919e619f70e8de096c11863d87c532cd8dd2c6577886d14a117abd04b67
