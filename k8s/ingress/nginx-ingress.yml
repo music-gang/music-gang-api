@@ -9,11 +9,16 @@ metadata:
     kind: ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
     kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
+  tls:
+    - hosts:
+        - app.musicgang.org
+      secretName: musicgang-tls
   rules:
-    - host: app.musicgang.local
+    - host: app.musicgang.org
       http:
         paths:
           - path: /
