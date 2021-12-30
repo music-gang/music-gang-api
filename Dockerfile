@@ -2,9 +2,6 @@ FROM golang:1.17 AS builder
 
 WORKDIR /app
 
-RUN apt update
-RUN apt install -y git
-
 ENV GO111MODULE=on
 
 COPY go.mod .
