@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: musicgang-api
-          image: iacopomelani/music-gang-api:{{build.tag}}
+          image: iacopomelani/music-gang-api:{{build.tag##v}}
           imagePullPolicy: Always
           ports:
             - containerPort: 8888
