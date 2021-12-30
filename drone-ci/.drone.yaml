@@ -49,7 +49,9 @@ steps:
     settings:
       repo:
         from_secret: docker_repo
-      auto_tag: true
+      tags:
+        - latest
+        - ${DRONE_TAG##v}
       username:
         from_secret: docker_username
       password:
@@ -57,6 +59,13 @@ steps:
 
   - name: deliver-to-k8s
     image: vallard/drone-kube
+    environment:
+      KUBE_SERVER:
+        from_secret: KUBE_SERVER
+      KUBE_TOKEN:
+        from_secret: KUBE_TOKEN
+      KUBE_CA:
+        from_secret: KUBE_CA
     settings:
       template: k8s/deployments/musicgang-api-deploy.yml
     when:
@@ -82,6 +91,6 @@ steps:
         {{/success}}
 ---
 kind: signature
-hmac: 726f0cf04972a79e83ff34f4bbafeb011f07f4fefedd0fcdbbebdfb57387d9e9
+hmac: b851657c2723c0fe7cad73f5d0a06caef3f55de83d3b19901edea582e2adaf78
 
 ...
