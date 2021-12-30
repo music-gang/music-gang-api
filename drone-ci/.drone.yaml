@@ -39,8 +39,6 @@ steps:
   - name: publish-docker-image
     image: plugins/docker
     when:
-      status:
-        - success
       event:
         - cron
         - tag
@@ -57,25 +55,11 @@ steps:
       password:
         from_secret: docker_password
 
-  - name: publish-github-release
-    image: plugins/github-release
-    settings:
-      api_key:
-        from_secret: github_api_key
-      title: ${DRONE_TAG}
-    when:
-      status:
-        - success
-      event:
-        - tag
-
-  - name: deliver-prod-to-k8s
+  - name: deliver-to-k8s
     image: vallard/drone-kube
     settings:
       template: k8s/deployments/musicgang-api-deploy.yml
     when:
-      status:
-        - success
       event:
         - promote
         - rollback
@@ -98,4 +82,6 @@ steps:
         {{/success}}
 ---
 kind: signature
-hmac: c6e2238430ba02b61a395790a33d755de57e695831c4746b3036c47d7fe80d05
+hmac: 726f0cf04972a79e83ff34f4bbafeb011f07f4fefedd0fcdbbebdfb57387d9e9
+
+...
