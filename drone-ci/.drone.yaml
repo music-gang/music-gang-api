@@ -46,7 +46,8 @@ steps:
         - tag
         - promote
       target:
-        - dev
+        exclude:
+          - production
     settings:
       repo:
         from_secret: docker_repo
@@ -79,7 +80,7 @@ steps:
         - promote
         - rollback
       target:
-        - prod
+        - production
 
   - name: slack
     image: plugins/slack
@@ -97,4 +98,4 @@ steps:
         {{/success}}
 ---
 kind: signature
-hmac: 48c27342b4a277b3c238795370c0c2ed19a3dcae9406e6f49658c71e931463c8
+hmac: c6e2238430ba02b61a395790a33d755de57e695831c4746b3036c47d7fe80d05
