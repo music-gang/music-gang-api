@@ -91,7 +91,7 @@ steps:
         {{/success}}
     when:
       status:
-        - failed
+        - failure
         - success
 ---
 kind: signature
