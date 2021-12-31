@@ -67,7 +67,7 @@ steps:
         from_secret: KUBE_TOKEN
       ca:
         from_secret: KUBE_CA
-      template: k8s/deployments/musicgang-api-deploy.yml
+      template: k8s/deployments/musicgang-api-deploy.yaml
     when:
       event:
         - promote
@@ -95,4 +95,6 @@ steps:
         - success
 ---
 kind: signature
-hmac: 96854919e619f70e8de096c11863d87c532cd8dd2c6577886d14a117abd04b67
+hmac: eca6712069c2b85275981e266ca55a22573ea01a0a49f3b0371a7297c3f86944
+
+...
