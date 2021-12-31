@@ -60,6 +60,7 @@ steps:
   - name: deliver-to-k8s
     image: danielgormly/drone-plugin-kube:0.2.0
     settings:
+      build_tag: ${DRONE_TAG}
       server:
         from_secret: KUBE_SERVER
       token:
