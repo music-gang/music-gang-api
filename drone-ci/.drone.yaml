@@ -40,7 +40,6 @@ steps:
     image: plugins/docker
     when:
       event:
-        - cron
         - tag
         - promote
       target:
@@ -95,4 +94,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: fb3fd4ed0601514c48c0cc98d051184098fb36c259a302aaa0b0e795a3eaec0a
+hmac: 07839994e0fe8b6cef1fbf7384a71b4815ea55dfd356672eb9931bd5ee6dbf4c
