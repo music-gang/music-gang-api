@@ -17,8 +17,7 @@ import (
 )
 
 var (
-	Version string
-	Commit  string
+	Commit string
 )
 
 func init() {
@@ -32,7 +31,6 @@ func init() {
 func main() {
 
 	app.Commit = Commit
-	app.Version = Version
 
 	// Create a context that is cancelled when the program is terminated
 	ctx, cancel := context.WithCancel(context.Background())
