@@ -50,7 +50,7 @@ steps:
         from_secret: docker_repo
       tags:
         - latest
-      auto_tag: true
+        - ${DRONE_TAG}
       username:
         from_secret: docker_username
       password:
@@ -94,4 +94,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: 07839994e0fe8b6cef1fbf7384a71b4815ea55dfd356672eb9931bd5ee6dbf4c
+hmac: 8f9ea77dd16c07c78d8d4308d24b9d288a272b8b0e8a24747cc40bff845be1ee
