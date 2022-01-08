@@ -11,8 +11,7 @@ RUN go mod download
 
 COPY . .
 
-RUN GIT_COMMIT=$(git rev-list -1 HEAD) && \
-    GIT_TAG=$(git describe --tags --always) && \ 
+RUN GIT_COMMIT=$(git rev-list -1 HEAD) && \ 
     go build -ldflags "-X main.Commit=$GIT_COMMIT" -o mg-api cmd/main.go
 
 FROM debian
