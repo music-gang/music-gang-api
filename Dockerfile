@@ -13,7 +13,7 @@ COPY . .
 
 RUN GIT_COMMIT=$(git rev-list -1 HEAD) && \
     GIT_TAG=$(git describe --tags --always) && \ 
-    go build -ldflags "-X main.Commit=$GIT_COMMIT -X main.Version=$GIT_TAG" -o mg-api cmd/main.go
+    go build -ldflags "-X main.Commit=$GIT_COMMIT" -o mg-api cmd/main.go
 
 FROM debian
 
