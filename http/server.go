@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -133,17 +134,26 @@ func (s *ServerAPI) registerRoutes(g *echo.Group) {
 
 	authGroup := g.Group("/auth")
 	s.registerAuthRoutes(authGroup)
+
+	userGroup := g.Group("/user", s.JWTVerifyMiddleware)
+	s.registerUserRoutes(userGroup)
 }
 
 // registerAuthRoutes registers all routes for the API group auth.
 func (s *ServerAPI) registerAuthRoutes(g *echo.Group) {
-	g.POST("/login", s.AuthLogin)
-	g.POST("/register", s.AuthRegister)
-	g.POST("/refresh", s.AuthRefresh)
-	g.DELETE("/logout", s.AuthLogout)
+	g.POST("/login", s.AuthLoginHandler)
+	g.POST("/register", s.AuthRegisterHandler)
+	g.POST("/refresh", s.AuthRefreshHandler)
+	g.DELETE("/logout", s.AuthLogoutHandler)
 
 	// oauth2 routes
 	g.GET("/oauth2/:source/callback", nil)
+}
+
+// registerUserRoutes register all routes for the API group user.
+func (s *ServerAPI) registerUserRoutes(g *echo.Group) {
+	g.GET("", s.UserHandler)
+	g.PUT("", s.UserUpdateHandler)
 }
 
 // SuccessResponseJSON returns a JSON response with the given status code and data.
@@ -157,4 +167,14 @@ func ListenAndServeTLSRedirect(domain string) error {
 	return http.ListenAndServe(":80", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "https://"+domain, http.StatusFound)
 	}))
+}
+
+// extractJWT from the *http.Request if omitted or wrong formed, empty string is returned
+func extractJWT(r *http.Request) string {
+	bearToken := r.Header.Get("Authorization")
+	strArr := strings.Split(bearToken, " ")
+	if len(strArr) == 2 {
+		return strArr[1]
+	}
+	return ""
 }

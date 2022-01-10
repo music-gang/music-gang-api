@@ -70,8 +70,8 @@ func (p *RegisterParams) validate() error {
 	return nil
 }
 
-// AuthLogin handles the login request.
-func (s *ServerAPI) AuthLogin(c echo.Context) error {
+// AuthLoginHandler handles the login request.
+func (s *ServerAPI) AuthLoginHandler(c echo.Context) error {
 
 	params := LoginParams{}
 	if err := c.Bind(&params); err != nil {
@@ -85,8 +85,8 @@ func (s *ServerAPI) AuthLogin(c echo.Context) error {
 	return handleAuthLogin(c, s, params)
 }
 
-// AuthLogout handles the logout request.
-func (s *ServerAPI) AuthLogout(c echo.Context) error {
+// AuthLogoutHandler handles the logout request.
+func (s *ServerAPI) AuthLogoutHandler(c echo.Context) error {
 
 	pair := &entity.TokenPair{}
 
@@ -97,8 +97,8 @@ func (s *ServerAPI) AuthLogout(c echo.Context) error {
 	return handleAuthLogout(c, s, pair)
 }
 
-// AuthRefresh handles the refresh request.
-func (s *ServerAPI) AuthRefresh(c echo.Context) error {
+// AuthRefreshHandler handles the refresh request.
+func (s *ServerAPI) AuthRefreshHandler(c echo.Context) error {
 
 	pair := &entity.TokenPair{}
 
@@ -109,8 +109,8 @@ func (s *ServerAPI) AuthRefresh(c echo.Context) error {
 	return handleAuthRefresh(c, s, pair)
 }
 
-// AuthRegister handles the register request.
-func (s *ServerAPI) AuthRegister(c echo.Context) error {
+// AuthRegisterHandler handles the register request.
+func (s *ServerAPI) AuthRegisterHandler(c echo.Context) error {
 
 	params := RegisterParams{}
 	if err := c.Bind(&params); err != nil {
