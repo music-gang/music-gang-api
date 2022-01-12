@@ -1,18 +1,17 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres-service
-  namespace: musicgang
+  name: redis-service
   labels:
-    name: postgres-service
+    name: redis-service
     app: musicgang
     kind: cluster-ip
 spec:
   type: ClusterIP
   ports:
-    - port: 5432
-      targetPort: 5432
+    - port: 6379
+      targetPort: 6379
   selector:
-    name: postgres-pod
+    name: redis-pod
     app: musicgang
     kind: pod

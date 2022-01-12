@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres-deploy
-  namespace: musicgang
   labels:
     name: postgres-deploy
     app: musicgang
@@ -21,7 +20,7 @@ spec:
         kind: pod
     spec:
       volumes:
-        - name: postgrres-storage
+        - name: postgres-storage
           persistentVolumeClaim:
             claimName: postgres-pvc
       containers:
@@ -37,5 +36,5 @@ spec:
             - name: POSTGRES_DB
               value: music-gang-api
           volumeMounts:
-            - name: postgrres-storage
+            - name: postgres-storage
               mountPath: /var/lib/postgresql/data
