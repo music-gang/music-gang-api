@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/music-gang/music-gang-api/app"
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 )
@@ -49,4 +50,9 @@ func authUser(c echo.Context) (*entity.User, error) {
 // setClaimsInContext sets the claims in the context.
 func setClaimsInContext(c echo.Context, claims *entity.AppClaims) {
 	c.Set(claimsContextParam, claims)
+	c.SetRequest(
+		c.Request().WithContext(
+			app.NewContextWithUser(c.Request().Context(), claims.Auth.User),
+		),
+	)
 }
