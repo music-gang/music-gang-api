@@ -116,7 +116,7 @@ steps:
   - name: deliver-to-k8s-mercury
     image: danielgormly/drone-plugin-kube:0.2.0
     settings:
-      build_tag: latest
+      build_tag: mercury
       server:
         from_secret: KUBE_SERVER
       token:
@@ -153,4 +153,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: fcf69a74fdc4113522aaced4ae7021fe7f52e4435974b48167d2334bcb53e6a7
+hmac: 046069da15af1da8e6d41e9a47a49c896738d4a8eb2142043f6851a47783a4db
