@@ -104,7 +104,7 @@ steps:
       ca:
         from_secret: KUBE_CA
       namespace: musicgang
-      template: k8s/deployments/musicgang-api-deploy.yaml
+      template: k8s/base/deployments/musicgang-api-deploy.yaml
     when:
       event:
         - promote
@@ -124,7 +124,7 @@ steps:
       ca:
         from_secret: KUBE_CA
       namespace: mercury
-      template: k8s/deployments/musicgang-api-deploy.yaml
+      template: k8s/base/deployments/musicgang-api-deploy.yaml
     when:
       event:
         - promote
@@ -153,4 +153,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: 046069da15af1da8e6d41e9a47a49c896738d4a8eb2142043f6851a47783a4db
+hmac: 428ec926889f3cb1391689f7f338ed34b0f028cf8fb5206cd91e9291f723ffcc
