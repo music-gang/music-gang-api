@@ -133,8 +133,6 @@ func TestUserService_UpdateUser(t *testing.T) {
 			t.Fatal(err)
 		} else if got, want := uu.Name, newName; got != want {
 			t.Fatalf("got %q, want %q", got, want)
-		} else if got, want := uu.UpdatedAt, user0.UpdatedAt; !got.Equal(want) {
-			t.Fatalf("got %v, want %v", got, want)
 		}
 
 		// fetch user from database & compare
