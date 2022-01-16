@@ -92,46 +92,6 @@ steps:
       password:
         from_secret: docker_password
 
-  # DEPLOY TO PRODUCTION K8S
-  - name: deliver-to-k8s-prod
-    image: danielgormly/drone-plugin-kube:0.2.0
-    settings:
-      build_tag: ${DRONE_TAG}
-      server:
-        from_secret: KUBE_SERVER
-      token:
-        from_secret: KUBE_TOKEN
-      ca:
-        from_secret: KUBE_CA
-      namespace: musicgang
-      template: k8s/base/deployments/musicgang-api-deploy.yaml
-    when:
-      event:
-        - promote
-        - rollback
-      target:
-        - production
-
-  # DEPLOY TO MERCURY K8S
-  - name: deliver-to-k8s-mercury
-    image: danielgormly/drone-plugin-kube:0.2.0
-    settings:
-      build_tag: mercury
-      server:
-        from_secret: KUBE_SERVER
-      token:
-        from_secret: KUBE_TOKEN
-      ca:
-        from_secret: KUBE_CA
-      namespace: mercury
-      template: k8s/base/deployments/musicgang-api-deploy.yaml
-    when:
-      event:
-        - promote
-        - rollback
-      target:
-        - mercury
-
   # SLACK NOTIFICATIONS
   - name: slack
     image: plugins/slack
@@ -153,4 +113,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: 428ec926889f3cb1391689f7f338ed34b0f028cf8fb5206cd91e9291f723ffcc
+hmac: 1b7dbc073d81e418736d4607ce362290e1e5b83adc36d6038c665abb18cc2d95
