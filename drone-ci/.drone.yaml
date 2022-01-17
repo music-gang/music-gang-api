@@ -92,6 +92,46 @@ steps:
       password:
         from_secret: docker_password
 
+  # UPDATE PROD MANIFEST
+  - name: update-manifest-prod
+    image: minghsu0107/update-kustomization:v1.0.3
+    environment:
+      SSH_KEY:
+        from_secret: ssh_key
+      IMAGES: iacopomelani/music-gang-api
+      IMAGE_TAG: ${DRONE_TAG}
+      MANIFEST_HOST: github.com
+      MANIFEST_USER: music-gang
+      MANIFEST_REPO: music-gang-api-manifest
+      MANIFEST_BRANCH: master
+      KUSTOMIZATION: overlays/prod
+    when:
+      event:
+        - promote
+        - rollback
+      target:
+        - production
+
+  # UPDATE DEV MANIFEST
+  - name: update-manifest-dev-${DRONE_DEPLOY_TO}
+    image: minghsu0107/update-kustomization:v1.0.3
+    environment:
+      SSH_KEY:
+        from_secret: ssh_key
+      IMAGES: iacopomelani/music-gang-api
+      IMAGE_TAG: ${DRONE_DEPLOY_TO}
+      MANIFEST_HOST: github.com
+      MANIFEST_USER: music-gang
+      MANIFEST_REPO: music-gang-api-manifest
+      MANIFEST_BRANCH: master
+      KUSTOMIZATION: overlays/dev/${DRONE_DEPLOY_TO}
+    when:
+      event:
+        - promote
+        - rollback
+      target:
+        - mercury
+
   # SLACK NOTIFICATIONS
   - name: slack
     image: plugins/slack
@@ -113,4 +153,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: 1b7dbc073d81e418736d4607ce362290e1e5b83adc36d6038c665abb18cc2d95
+hmac: f5cfbd81389315ecdbfc57c5aca830a70eb889bdb808c76771f2df7d59480114
