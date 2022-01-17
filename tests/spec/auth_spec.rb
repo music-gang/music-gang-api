@@ -61,4 +61,12 @@ describe 'Flow Auth: ' do
       end
     end
   end
+
+  describe 'login a user' do
+    context 'given correct data' do
+      it 'returns token pairs' do
+        container.auth_service.login name, password
+      end
+    end
+  end
 end
