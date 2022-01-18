@@ -28,6 +28,7 @@ func (s *ServerAPI) UserUpdateHandler(c echo.Context) error {
 func handleUser(c echo.Context, s *ServerAPI) error {
 	user, err := authUser(c)
 	if err != nil {
+		s.LogService.ReportFatal(c.Request().Context(), err)
 		return ErrorResponseJSON(c, err, nil)
 	}
 
@@ -41,10 +42,12 @@ func handleUserUpdate(c echo.Context, s *ServerAPI, userParams service.UserUpdat
 
 	user, err := authUser(c)
 	if err != nil {
+		s.LogService.ReportFatal(c.Request().Context(), err)
 		return ErrorResponseJSON(c, err, nil)
 	}
 
 	if updatedUser, err := s.UserService.UpdateUser(c.Request().Context(), user.ID, userParams); err != nil {
+		s.LogService.ReportError(c.Request().Context(), err)
 		return ErrorResponseJSON(c, err, nil)
 	} else {
 		return SuccessResponseJSON(c, http.StatusOK, echo.Map{
