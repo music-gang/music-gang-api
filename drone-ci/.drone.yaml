@@ -70,6 +70,7 @@ steps:
       repo:
         from_secret: docker_repo
       tags:
+        - latest
         - ${DRONE_DEPLOY_TO}-${DRONE_BUILD_NUMBER}
       username:
         from_secret: docker_username
@@ -153,4 +154,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: 9013d9e84bd62700196833ac8b09a135cd2a43000229f3a5c73c5401a292ab75
+hmac: 239737db8b50159271fb4e5c4d54795ab0ea93a340e2bec85a2162d87843de16
