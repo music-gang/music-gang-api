@@ -90,6 +90,12 @@ type RedisConfig struct {
 	Password string `yaml:"password"`
 }
 
+// SlackConfig contains the slack config
+type SlackConfig struct {
+	Webhook string `yaml:"webhook"`
+}
+
+// DatabaseListConfig contains the list of database configs
 type DatabaseListConfig struct {
 	// Postgres is the Postgres database configuration
 	Postgres DatabaseConfig `yaml:"postgres"`
@@ -101,6 +107,9 @@ type AppConfig struct {
 
 	// JWT is the jwt config
 	JWT JWTConfig `yaml:"jwt"`
+
+	// Slack is the slack config
+	Slack SlackConfig `yaml:"slack"`
 
 	// Databases contains the databases configuration
 	Databases DatabaseListConfig `yaml:"databases"`

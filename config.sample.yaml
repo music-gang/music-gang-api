@@ -17,10 +17,13 @@ app:
     port: 6379
     password:
 
+  slack:
+    webhook: your-slack-webhook-url
+
   databases:
     postgres:
-      database: <database_name>
-      user: <database_user>
-      password: <database_password>
-      host: <database_port>
+      database: database_name
+      user: database_user
+      password: database_password
+      host: database_port
       port: 5432

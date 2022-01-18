@@ -128,7 +128,16 @@ func (m *Main) Run(ctx context.Context) error {
 	m.HTTPServerAPI.JWTService = jwtService
 
 	logService := &applog.Logger{}
-	logService.AddBackend(applog.NewStdOutputLogger())
+
+	stdOutLogger := applog.NewStdOutputLogger()
+	logService.AddBackend(stdOutLogger)
+
+	// Add slack logger if provided webhook urlLogs
+	if config.GetConfig().APP.Slack.Webhook != "" {
+		slackLogger := applog.NewSlackLogger(config.GetConfig().APP.Slack.Webhook)
+		slackLogger.Fallback = stdOutLogger
+		logService.AddBackend(slackLogger)
+	}
 
 	m.HTTPServerAPI.LogService = logService
 
@@ -142,7 +151,7 @@ func (m *Main) Run(ctx context.Context) error {
 		}()
 	}
 
-	m.HTTPServerAPI.LogService.ReportInfo(context.Background(), fmt.Sprintf("Starting application on: %s", m.HTTPServerAPI.URL()))
+	m.HTTPServerAPI.LogService.ReportInfo(context.Background(), fmt.Sprintf("Starting application %s", m.HTTPServerAPI.URL()))
 
 	return nil
 }
