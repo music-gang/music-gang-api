@@ -149,9 +149,12 @@ steps:
           build {{build.number}} failed. Fix me please.
         {{/success}}
     when:
+      event:
+        exclude:
+          - pull_request
       status:
         - failure
         - success
 ---
 kind: signature
-hmac: 239737db8b50159271fb4e5c4d54795ab0ea93a340e2bec85a2162d87843de16
+hmac: c0e05de3f709dad3a3f71ae19a380cc4fe8edb2eb55d8a90c235be2733813ce5
