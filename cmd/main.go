@@ -12,6 +12,7 @@ import (
 	"github.com/music-gang/music-gang-api/auth/jwt"
 	"github.com/music-gang/music-gang-api/config"
 	"github.com/music-gang/music-gang-api/http"
+	applog "github.com/music-gang/music-gang-api/log"
 	"github.com/music-gang/music-gang-api/postgres"
 	"github.com/music-gang/music-gang-api/redis"
 )
@@ -126,6 +127,11 @@ func (m *Main) Run(ctx context.Context) error {
 	m.HTTPServerAPI.AuthService = authService
 	m.HTTPServerAPI.JWTService = jwtService
 
+	logService := &applog.Logger{}
+	logService.AddBackend(applog.NewStdOutputLogger())
+
+	m.HTTPServerAPI.LogService = logService
+
 	if err := m.HTTPServerAPI.Open(); err != nil {
 		return err
 	}
@@ -136,7 +142,7 @@ func (m *Main) Run(ctx context.Context) error {
 		}()
 	}
 
-	log.Printf("running: url=%q ", m.HTTPServerAPI.URL())
+	m.HTTPServerAPI.LogService.ReportInfo(context.Background(), fmt.Sprintf("Starting application on: %s", m.HTTPServerAPI.URL()))
 
 	return nil
 }
