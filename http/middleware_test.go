@@ -168,3 +168,53 @@ func TestMiddleware_JWT(t *testing.T) {
 		}
 	})
 }
+
+func TestMiddleware_ReportPanic(t *testing.T) {
+
+	t.Run("OK", func(t *testing.T) {
+
+		s := MustOpenServerAPI(t)
+		defer MustCloseServerAPI(t, s)
+
+		// call simple endpoint, for example /v1/build/info
+
+		req, err := http.NewRequest(http.MethodGet, s.URL()+"/v1/build/info", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("error, expected %d, got %d", http.StatusOK, resp.StatusCode)
+		}
+	})
+
+	t.Run("Panic", func(t *testing.T) {
+
+		s := MustOpenServerAPI(t)
+		defer MustCloseServerAPI(t, s)
+
+		// call /user endpoint, but omit AuthService and JWTService to simulate panic, it should recover panicking and return 500
+
+		s.AuthService = nil
+		s.JWTService = nil
+
+		req, err := http.NewRequest(http.MethodGet, s.URL()+"/v1/user", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if resp.StatusCode != http.StatusInternalServerError {
+			t.Fatalf("error, expected %d, got %d", http.StatusInternalServerError, resp.StatusCode)
+		}
+	})
+}

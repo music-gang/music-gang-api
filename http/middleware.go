@@ -36,6 +36,21 @@ func (s *ServerAPI) JWTVerifyMiddleware(next echo.HandlerFunc) echo.HandlerFunc 
 	}
 }
 
+// RecoverPanicMiddleware is the middleware for handling panics.
+func (s *ServerAPI) RecoverPanicMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+
+		defer func() {
+			if r := recover(); r != nil {
+				err := apperr.Errorf(apperr.EUNKNOWN, "panic: %s", r)
+				ErrorResponseJSON(c, err, nil)
+			}
+		}()
+
+		return next(c)
+	}
+}
+
 // authUser returns the current authenticated user from the context.
 // Returns EUNAUTHORIZED error if no user is found in the context.
 func authUser(c echo.Context) (*entity.User, error) {

@@ -54,7 +54,8 @@ func NewServerAPI() *ServerAPI {
 	s.server.Handler = s.handler
 
 	// Base Middleware
-	s.handler.Use(middleware.Recover())
+	s.handler.Use(middleware.Secure())
+	s.handler.Use(s.RecoverPanicMiddleware)
 
 	// Register routes for the API v1.
 	v1Group := s.handler.Group("/v1")
