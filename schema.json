@@ -35,6 +35,9 @@
                         }
                     ]
                 },
+                "slack": {
+                    "$ref": "#/definitions/Slack"
+                },
                 "redis": {
                     "$ref": "#/definitions/Redis"
                 },
@@ -194,6 +197,18 @@
                 "secret",
                 "expiresIn",
                 "refreshExpiresIn"
+            ]
+        },
+        "Slack": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "webhook": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "webhook"
             ]
         }
     }

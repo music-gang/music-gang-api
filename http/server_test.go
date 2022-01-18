@@ -1,12 +1,16 @@
 package http_test
 
 import (
+	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"testing"
 
 	"github.com/music-gang/music-gang-api/app"
+	"github.com/music-gang/music-gang-api/app/service"
 	apphttp "github.com/music-gang/music-gang-api/http"
+	"github.com/music-gang/music-gang-api/mock"
 )
 
 func TestServerAPI_Open(t *testing.T) {
@@ -97,6 +101,8 @@ func MustOpenServerAPI(tb testing.TB) *apphttp.ServerAPI {
 		tb.Fatal(err)
 	}
 
+	initFakeLogger(tb, server)
+
 	return server
 }
 
@@ -106,5 +112,28 @@ func MustCloseServerAPI(tb testing.TB, server *apphttp.ServerAPI) {
 
 	if err := server.Close(); err != nil {
 		tb.Fatal(err)
+	}
+}
+
+func initFakeLogger(tb testing.TB, server *apphttp.ServerAPI) {
+
+	tb.Helper()
+
+	server.LogService = &mock.LogService{
+		FormatFn: func() string {
+			return service.FormatStandard
+		},
+		LevelFn: func() int {
+			return service.LevelAll
+		},
+		OutputFn: func() io.Writer {
+			return io.Discard
+		},
+		ReportDebugFn:   func(ctx context.Context, msg string) {},
+		ReportErrorFn:   func(ctx context.Context, err error) {},
+		ReportFatalFn:   func(ctx context.Context, err error) {},
+		ReportInfoFn:    func(ctx context.Context, info string) {},
+		ReportPanicFn:   func(ctx context.Context, err interface{}) {},
+		ReportWarningFn: func(ctx context.Context, warning string) {},
 	}
 }
