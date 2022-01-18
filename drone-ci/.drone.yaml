@@ -70,7 +70,7 @@ steps:
       repo:
         from_secret: docker_repo
       tags:
-        - ${DRONE_DEPLOY_TO}
+        - ${DRONE_DEPLOY_TO}-${DRONE_BUILD_NUMBER}
       username:
         from_secret: docker_username
       password:
@@ -119,7 +119,7 @@ steps:
       SSH_KEY:
         from_secret: ssh_key
       IMAGES: iacopomelani/music-gang-api
-      IMAGE_TAG: ${DRONE_DEPLOY_TO}
+      IMAGE_TAG: ${DRONE_DEPLOY_TO}-${DRONE_BUILD_NUMBER}
       MANIFEST_HOST: github.com
       MANIFEST_USER: music-gang
       MANIFEST_REPO: music-gang-api-manifest
@@ -153,4 +153,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: f5cfbd81389315ecdbfc57c5aca830a70eb889bdb808c76771f2df7d59480114
+hmac: 9013d9e84bd62700196833ac8b09a135cd2a43000229f3a5c73c5401a292ab75
