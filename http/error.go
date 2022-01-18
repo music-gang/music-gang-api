@@ -8,33 +8,29 @@ import (
 )
 
 const (
-	DefaultInternalErrorMessage = "Internal Server Error"
-	GenericErrorMessage         = "An error occurred"
+	GenericErrorMessage = "An error occurred"
 )
 
 // codes represents an HTTP status code.
 var codes = map[string]int{
 	apperr.ECONFLICT:       http.StatusConflict,
 	apperr.EFORBIDDEN:      http.StatusForbidden,
-	apperr.EINTERNAL:       http.StatusInternalServerError,
 	apperr.EINVALID:        http.StatusBadRequest,
 	apperr.ENOTFOUND:       http.StatusNotFound,
 	apperr.ENOTIMPLEMENTED: http.StatusNotImplemented,
 	apperr.EUNAUTHORIZED:   http.StatusUnauthorized,
+	apperr.EINTERNAL:       http.StatusInternalServerError,
+	apperr.EUNKNOWN:        http.StatusInternalServerError,
 }
 
 // MessageFromErr returns the message for the given app error.
-// EINTERNAL message is obscured by HTTP response.
+// EINTERNAL & EUNKNOWN message is obscured by HTTP response.
 func MessageFromErr(err error) string {
 
 	appErrMessage := apperr.ErrorMessage(err)
 	appErrCode := apperr.ErrorCode(err)
 
-	if appErrCode == apperr.EINTERNAL {
-		return DefaultInternalErrorMessage
-	}
-
-	if appErrMessage == "" {
+	if appErrMessage == "" || appErrCode == apperr.EINTERNAL || appErrCode == apperr.EUNKNOWN {
 		return GenericErrorMessage
 	}
 

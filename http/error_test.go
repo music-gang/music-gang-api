@@ -27,8 +27,15 @@ func TestError_MessageFromErr(t *testing.T) {
 
 	t.Run("ErrInternal", func(t *testing.T) {
 
-		if err := http.MessageFromErr(apperr.Errorf(apperr.EINTERNAL, "internal error")); err != http.DefaultInternalErrorMessage {
-			t.Errorf("error, expected: %s", http.DefaultInternalErrorMessage)
+		if err := http.MessageFromErr(apperr.Errorf(apperr.EINTERNAL, "internal error")); err != http.GenericErrorMessage {
+			t.Errorf("error, expected: %s", http.GenericErrorMessage)
+		}
+	})
+
+	t.Run("ErrUnknown", func(t *testing.T) {
+
+		if err := http.MessageFromErr(apperr.Errorf(apperr.EUNKNOWN, "unknown")); err != http.GenericErrorMessage {
+			t.Errorf("error, expected: %s", http.GenericErrorMessage)
 		}
 	})
 }
@@ -74,6 +81,12 @@ func TestError_StatusCodeFromErr(t *testing.T) {
 	t.Run("Unauthorized", func(t *testing.T) {
 		if code := http.StatusCodeFromErr(apperr.Errorf(apperr.EUNAUTHORIZED, "unauthorized")); code != http.Codes[apperr.EUNAUTHORIZED] {
 			t.Errorf("error, expected: %d", http.Codes[apperr.EUNAUTHORIZED])
+		}
+	})
+
+	t.Run("Unknown", func(t *testing.T) { // mapped to internal errror
+		if code := http.StatusCodeFromErr(apperr.Errorf(apperr.EUNKNOWN, "unknown")); code != http.Codes[apperr.EUNKNOWN] {
+			t.Errorf("error, expected: %d", http.Codes[apperr.EUNKNOWN])
 		}
 	})
 

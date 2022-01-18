@@ -17,6 +17,7 @@ const (
 	ENOTFOUND       = "not_found"       // resource not found
 	ENOTIMPLEMENTED = "not_implemented" // feature not implemented
 	EUNAUTHORIZED   = "unauthorized"    // access denied
+	EUNKNOWN        = "unknown"         // unknown error
 	EFORBIDDEN      = "forbidden"       // access forbidden
 )
 
