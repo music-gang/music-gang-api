@@ -40,6 +40,9 @@ type ServerAPI struct {
 	AuthService service.AuthService
 	UserService service.UserService
 	JWTService  service.JWTService
+
+	// loggin service used by HTTP Server.
+	LogService service.LogService
 }
 
 // NewServerAPI creates a new API server.

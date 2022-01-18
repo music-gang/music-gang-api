@@ -18,18 +18,30 @@ type JWTService struct {
 }
 
 func (s *JWTService) Exchange(ctx context.Context, auth *entity.Auth) (*entity.TokenPair, error) {
+	if s.ExchangeFn == nil {
+		panic("ExchangeFn not defined")
+	}
 	return s.ExchangeFn(ctx, auth)
 }
 
 func (s *JWTService) Invalidate(ctx context.Context, token string, expiration time.Duration) error {
+	if s.InvalidateFn == nil {
+		panic("InvalidateFn not defined")
+	}
 	return s.InvalidateFn(ctx, token, expiration)
 }
 
 func (s *JWTService) Parse(ctx context.Context, token string) (*entity.AppClaims, error) {
+	if s.ParseFn == nil {
+		panic("ParseFn not defined")
+	}
 	return s.ParseFn(ctx, token)
 }
 
 func (s *JWTService) Refresh(ctx context.Context, refreshToken string) (*entity.TokenPair, error) {
+	if s.RefreshFn == nil {
+		panic("RefreshFn not defined")
+	}
 	return s.RefreshFn(ctx, refreshToken)
 }
 
@@ -41,9 +53,15 @@ type JWTBlacklistService struct {
 }
 
 func (s *JWTBlacklistService) Invalidate(ctx context.Context, token string, expiration time.Duration) error {
+	if s.InvalidateFn == nil {
+		panic("InvalidateFn not defined")
+	}
 	return s.InvalidateFn(ctx, token, expiration)
 }
 
 func (s *JWTBlacklistService) IsBlacklisted(ctx context.Context, token string) (bool, error) {
+	if s.IsBlacklistedFn == nil {
+		panic("IsBlacklistedFn not defined")
+	}
 	return s.IsBlacklistedFn(ctx, token)
 }
