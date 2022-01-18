@@ -59,6 +59,7 @@ func authUser(c echo.Context) (*entity.User, error) {
 		return claims.Auth.User, nil
 	}
 
+	// this should never happen
 	return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "no auth user found in context")
 }
 

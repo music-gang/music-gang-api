@@ -138,6 +138,7 @@ func handleAuthLogin(c echo.Context, server *ServerAPI, params LoginParams) erro
 		if apperr.ErrorCode(err) == apperr.ENOTFOUND {
 			return ErrorResponseJSON(c, apperr.Errorf(apperr.EUNAUTHORIZED, "wrong credentials"), nil)
 		}
+		server.LogService.ReportError(c.Request().Context(), err)
 		return ErrorResponseJSON(c, err, nil)
 	}
 
@@ -147,6 +148,7 @@ func handleAuthLogin(c echo.Context, server *ServerAPI, params LoginParams) erro
 
 	pair, err := server.JWTService.Exchange(c.Request().Context(), auth)
 	if err != nil {
+		server.LogService.ReportError(c.Request().Context(), err)
 		return ErrorResponseJSON(c, err, nil)
 	}
 
@@ -158,12 +160,14 @@ func handleAuthLogout(c echo.Context, server *ServerAPI, pair *entity.TokenPair)
 
 	if pair.AccessToken != "" {
 		if err := server.JWTService.Invalidate(c.Request().Context(), pair.AccessToken, entity.AccessTokenExpiration); err != nil {
+			server.LogService.ReportError(c.Request().Context(), err)
 			return ErrorResponseJSON(c, err, nil)
 		}
 	}
 
 	if pair.RefreshToken != "" {
 		if err := server.JWTService.Invalidate(c.Request().Context(), pair.RefreshToken, entity.RefreshTokenExpiration); err != nil {
+			server.LogService.ReportError(c.Request().Context(), err)
 			return ErrorResponseJSON(c, err, nil)
 		}
 	}
@@ -180,6 +184,7 @@ func handleAuthRefresh(c echo.Context, server *ServerAPI, pair *entity.TokenPair
 
 	pair, err := server.JWTService.Refresh(c.Request().Context(), pair.RefreshToken)
 	if err != nil {
+		server.LogService.ReportError(c.Request().Context(), err)
 		return ErrorResponseJSON(c, err, nil)
 	}
 
@@ -192,6 +197,7 @@ func handleAuthRegister(c echo.Context, server *ServerAPI, params RegisterParams
 
 	passwordhashed, err := util.HashPassword(params.Password)
 	if err != nil {
+		server.LogService.ReportError(c.Request().Context(), err)
 		return ErrorResponseJSON(c, err, nil)
 	}
 
@@ -203,6 +209,7 @@ func handleAuthRegister(c echo.Context, server *ServerAPI, params RegisterParams
 			Password: null.StringFrom(string(passwordhashed)),
 		},
 	}); err != nil {
+		server.LogService.ReportError(c.Request().Context(), err)
 		return ErrorResponseJSON(c, err, nil)
 	}
 
