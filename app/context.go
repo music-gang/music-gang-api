@@ -14,11 +14,35 @@ type contextKey int
 const (
 	// stores the user logged in
 	userContextKey = contextKey(iota + 1)
+	tagContextKey
+
+	ContextTagGeneric = "generic"
+	ContextTagHTTP    = "HTTP"
+	ContextTagCLI     = "CLI"
 )
 
 // NewContextWithUser returns a new context with the provided user attached.
 func NewContextWithUser(ctx context.Context, user *entity.User) context.Context {
 	return context.WithValue(ctx, userContextKey, user)
+}
+
+// NewContextWithTag returns a new context with the provided tag attached.
+// This can be useful during logging to define in which context a log entry was created, for example, HTTP, cron, CLI, etc.
+func NewContextWithTags(ctx context.Context, tags []string) context.Context {
+	return context.WithValue(ctx, tagContextKey, tags)
+}
+
+// TagsFromContext returns the tags stored in the provided context.
+// If no tags are stored in the context, a slice with a single generic tag is returned.
+func TagsFromContext(ctx context.Context) []string {
+	if ctx == nil {
+		return []string{ContextTagGeneric}
+	}
+	tags, ok := ctx.Value(tagContextKey).([]string)
+	if !ok {
+		return []string{ContextTagGeneric}
+	}
+	return tags
 }
 
 // UserFromContext returns the user stored in the provided context.

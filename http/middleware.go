@@ -11,6 +11,14 @@ const (
 	claimsContextParam = "claims"
 )
 
+// HTTPContextMiddleware is the middleware for setting the HTTP tag in the context.
+func (s *ServerAPI) HTTPContextMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		setHTTPTagInContext(c)
+		return next(c)
+	}
+}
+
 // JWTVerifyMiddleware is the middleware for validating JWT tokens.
 // It is used for all routes that require authentication.
 // Once the token is successfully parsed, checks if user exists with the auth stored in the claims.
@@ -61,6 +69,16 @@ func authUser(c echo.Context) (*entity.User, error) {
 
 	// this should never happen
 	return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "no auth user found in context")
+}
+
+// setHTTPTagInContext sets the HTTP tag in the context.
+// This is used for logging.
+func setHTTPTagInContext(c echo.Context) {
+	c.SetRequest(
+		c.Request().WithContext(
+			app.NewContextWithTags(c.Request().Context(), []string{app.ContextTagHTTP}),
+		),
+	)
 }
 
 // setClaimsInContext sets the claims in the context.

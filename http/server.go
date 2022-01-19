@@ -58,6 +58,7 @@ func NewServerAPI() *ServerAPI {
 
 	// Base Middleware
 	s.handler.Use(middleware.Secure())
+	s.handler.Use(s.HTTPContextMiddleware)
 	s.handler.Use(s.RecoverPanicMiddleware)
 
 	// Register routes for the API v1.

@@ -35,6 +35,8 @@ func main() {
 
 	// Create a context that is cancelled when the program is terminated
 	ctx, cancel := context.WithCancel(context.Background())
+	ctx = app.NewContextWithTags(ctx, []string{app.ContextTagCLI})
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() { <-c; cancel() }()
@@ -54,6 +56,8 @@ func main() {
 }
 
 type Main struct {
+	ctx context.Context
+
 	Postgres *postgres.DB
 
 	Redis *redis.DB
@@ -103,6 +107,8 @@ func (m *Main) Close() error {
 
 // Run starts the main application
 func (m *Main) Run(ctx context.Context) error {
+
+	m.ctx = ctx
 
 	if err := m.Postgres.Open(); err != nil {
 		return err
