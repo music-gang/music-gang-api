@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/music-gang/music-gang-api/app"
 	"github.com/music-gang/music-gang-api/app/service"
 	"github.com/slack-go/slack"
 )
@@ -68,7 +69,7 @@ func (s *SlackLogger) Output() io.Writer {
 // ReportDebug logs a message at level Debug.
 func (s *SlackLogger) ReportDebug(ctx context.Context, msg string) {
 	if s.Level() <= service.LevelDebug {
-		if err := s.sendToWebhook(service.FormatOutputForReportFunc(service.LevelDebug, msg, s.Format()), service.LevelDebug); err != nil && s.Fallback != nil {
+		if err := s.sendToWebhook(service.FormatOutputForReportFunc(service.LevelDebug, msg, app.TagsFromContext(ctx), s.Format()), service.LevelDebug); err != nil && s.Fallback != nil {
 			// error dial with slack webhook but defined a fallback log service
 			s.Fallback.ReportDebug(ctx, msg)
 		}
@@ -78,7 +79,7 @@ func (s *SlackLogger) ReportDebug(ctx context.Context, msg string) {
 // ReportError logs an error.
 func (s *SlackLogger) ReportError(ctx context.Context, err error) {
 	if s.Level() <= service.LevelError {
-		if err := s.sendToWebhook(service.FormatOutputForReportFunc(service.LevelError, err, s.Format()), service.LevelError); err != nil && s.Fallback != nil {
+		if err := s.sendToWebhook(service.FormatOutputForReportFunc(service.LevelError, err, app.TagsFromContext(ctx), s.Format()), service.LevelError); err != nil && s.Fallback != nil {
 			// error dial with slack webhook but defined a fallback log service
 			s.Fallback.ReportError(ctx, err)
 		}
@@ -88,7 +89,7 @@ func (s *SlackLogger) ReportError(ctx context.Context, err error) {
 // ReportFatal logs a fatal error.
 func (s *SlackLogger) ReportFatal(ctx context.Context, err error) {
 	if s.Level() <= service.LevelFatal {
-		if err := s.sendToWebhook(service.FormatOutputForReportFunc(service.LevelFatal, err, s.Format()), service.LevelFatal); err != nil && s.Fallback != nil {
+		if err := s.sendToWebhook(service.FormatOutputForReportFunc(service.LevelFatal, err, app.TagsFromContext(ctx), s.Format()), service.LevelFatal); err != nil && s.Fallback != nil {
 			// error dial with slack webhook but defined a fallback log service
 			s.Fallback.ReportFatal(ctx, err)
 		}
@@ -98,7 +99,7 @@ func (s *SlackLogger) ReportFatal(ctx context.Context, err error) {
 // ReportInfo logs an info.
 func (s *SlackLogger) ReportInfo(ctx context.Context, info string) {
 	if s.Level() <= service.LevelInfo {
-		if err := s.sendToWebhook(service.FormatOutputForReportFunc(service.LevelInfo, info, s.Format()), service.LevelInfo); err != nil && s.Fallback != nil {
+		if err := s.sendToWebhook(service.FormatOutputForReportFunc(service.LevelInfo, info, app.TagsFromContext(ctx), s.Format()), service.LevelInfo); err != nil && s.Fallback != nil {
 			// error dial with slack webhook but defined a fallback log service
 			s.Fallback.ReportInfo(ctx, info)
 		}
@@ -108,7 +109,7 @@ func (s *SlackLogger) ReportInfo(ctx context.Context, info string) {
 // ReportPanic logs a panic.
 func (s *SlackLogger) ReportPanic(ctx context.Context, err interface{}) {
 	if s.Level() <= service.LevelPanic {
-		if err := s.sendToWebhook(service.FormatOutputForReportFunc(service.LevelPanic, err, s.Format()), service.LevelPanic); err != nil && s.Fallback != nil {
+		if err := s.sendToWebhook(service.FormatOutputForReportFunc(service.LevelPanic, err, app.TagsFromContext(ctx), s.Format()), service.LevelPanic); err != nil && s.Fallback != nil {
 			// error dial with slack webhook but defined a fallback log service
 			s.Fallback.ReportPanic(ctx, err)
 		}
@@ -118,7 +119,7 @@ func (s *SlackLogger) ReportPanic(ctx context.Context, err interface{}) {
 // ReportWarning logs a warning.
 func (s *SlackLogger) ReportWarning(ctx context.Context, warning string) {
 	if s.Level() <= service.LevelWarn {
-		if err := s.sendToWebhook(service.FormatOutputForReportFunc(service.LevelWarn, warning, s.Format()), service.LevelWarn); err != nil && s.Fallback != nil {
+		if err := s.sendToWebhook(service.FormatOutputForReportFunc(service.LevelWarn, warning, app.TagsFromContext(ctx), s.Format()), service.LevelWarn); err != nil && s.Fallback != nil {
 			// error dial with slack webhook but defined a fallback log service
 			s.Fallback.ReportWarning(ctx, warning)
 		}

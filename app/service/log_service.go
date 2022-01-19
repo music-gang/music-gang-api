@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -27,9 +28,9 @@ const (
 	CodeFatal = "FATAL"
 	CodePanic = "PANIC"
 
-	FormatStandard = "[%s][%s] %s func=%s file=%s:%d"                                                           // [2006-01-02 13:14:15][DEBUG] hello world func=main.main file=main.go:12
-	FormatMinimal  = "[%s][%s] %s"                                                                              // [2006-01-02 13:14:15][DEBUG] hello world
-	FormatJSON     = "{\"time\":\"%s\",\"level\":\"%s\",\"message\":\"%s\",\"func\":\"%s\",\"file\":\"%s:%d\"}" // {"time":"2006-01-02T15:04:05Z07:00","level":"DEBUG","message":"hello world","func":"main.main","file":"main.go:12"}
+	FormatStandard = "[%s][%s][%s] %s func=%s file=%s:%d"                                                                          // [2006-01-02 13:14:15][DEBUG][HTTP] hello world func=main.main file=main.go:12
+	FormatMinimal  = "[%s][%s][%s] %s"                                                                                             // [2006-01-02 13:14:15][DEBUG][HTTP] hello world
+	FormatJSON     = "{\"time\":\"%s\",\"level\":\"%s\",\"context\":\"%s\",\"message\":\"%s\",\"func\":\"%s\",\"file\":\"%s:%d\"}" // {"time":"2006-01-02T15:04:05Z07:00","level":"DEBUG","context":"HTTP","message":"hello world","func":"main.main","file":"main.go:12"}
 )
 
 var (
@@ -95,7 +96,7 @@ func LogLevel(code string) int {
 // FormatOutputForReportFunc formats the output for the given log level and message.
 // Accepted types for toReport: string, error, fmt.Stringer, nil.
 // format is the format of the log message, use one of the Format* constants inside this package.
-func FormatOutputForReportFunc(level int, toReport interface{}, format string) string {
+func FormatOutputForReportFunc(level int, toReport interface{}, tags []string, format string) string {
 
 	var output string
 
@@ -120,5 +121,10 @@ func FormatOutputForReportFunc(level int, toReport interface{}, format string) s
 		return ""
 	}
 
-	return fmt.Sprintf(format, time.Now().UTC().Format("2006-01-02 15:04:05"), LogCode(level), output, details.Name(), filename, line)
+	implodedTags := ""
+	if len(tags) > 0 {
+		implodedTags = strings.Join(tags, ", ")
+	}
+
+	return fmt.Sprintf(format, time.Now().UTC().Format("2006-01-02 15:04:05"), LogCode(level), implodedTags, output, details.Name(), filename, line)
 }
