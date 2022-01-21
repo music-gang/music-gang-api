@@ -4,7 +4,7 @@
 class TokenPair
   include Jsonizable
 
-  attr_reader :access_token, :refresh_token, :token_type, :expires_in
+  attr_accessor :access_token, :refresh_token, :token_type, :expires_in
 
   def initialize(access_token, refresh_token, token_type, expires_in)
     @access_token = access_token
@@ -22,7 +22,13 @@ class TokenPair
     }
   end
 
-  def self.from_hash(hash)
-    TokenPair.new hash[:access_token], hash[:refresh_token], hash[:token_type], hash[:expires_in]
+  class << self
+    def empty_token_pairs
+      TokenPair.new '', '', 'Bearer', 0
+    end
+
+    def from_hash(hash)
+      TokenPair.new hash[:access_token], hash[:refresh_token], hash[:token_type], hash[:expires_in]
+    end
   end
 end

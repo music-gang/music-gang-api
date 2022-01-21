@@ -17,3 +17,6 @@ config.yaml
 
 # sqltools
 sqltools*
+
+# ruby files
+/tests/.bundle
