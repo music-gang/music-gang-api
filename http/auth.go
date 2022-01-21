@@ -225,5 +225,6 @@ func tokenPairToEchoMap(pair *entity.TokenPair) echo.Map {
 		"access_token":  pair.AccessToken,
 		"refresh_token": pair.RefreshToken,
 		"expires_in":    pair.Expiry,
+		"token_type":    pair.TokenType,
 	}
 }
