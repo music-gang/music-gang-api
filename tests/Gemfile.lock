@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/faker-ruby/faker.git
-  revision: 869641999b268ef154e6e112dd21cb7b2ba9a09e
+  revision: 58236835c2bd87b5f353a9f887a134b430631bab
   branch: master
   specs:
     faker (2.19.0)
@@ -8,7 +8,7 @@ GIT
 
 GIT
   remote: https://github.com/rspec/rspec-core.git
-  revision: e3bda9da1e625a428fd005f0d1a633531f5da749
+  revision: 56f9edf78e63ef5971679e31328949fe87a661f7
   branch: main
   specs:
     rspec-core (3.11.0.pre)
@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: https://github.com/rspec/rspec-expectations.git
-  revision: d9fd9a5589e3914bcd25d66560eccadd75493727
+  revision: a91e8129d15fb38bdf3aeeb0ee5cb59d3dd56d64
   branch: main
   specs:
     rspec-expectations (3.11.0.pre)
@@ -25,7 +25,7 @@ GIT
 
 GIT
   remote: https://github.com/rspec/rspec-mocks.git
-  revision: 17cf86ab61544b93232c4e9ca9784ab212dccbf6
+  revision: 3636483d903a17153abcf5cbc6c3731760e46eae
   branch: main
   specs:
     rspec-mocks (3.11.0.pre)
@@ -34,7 +34,7 @@ GIT
 
 GIT
   remote: https://github.com/rspec/rspec-support.git
-  revision: 321dc7227df43cd682c293fa31fa427b94b2ea74
+  revision: cdf6067629781c1bf4364b68189148c75a2c424c
   branch: main
   specs:
     rspec-support (3.11.0.pre)
@@ -65,32 +65,35 @@ GEM
       rexml
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
-    nokogiri (1.12.5-x64-mingw32)
+    mini_portile2 (2.7.1)
+    nokogiri (1.13.1)
+      mini_portile2 (~> 2.7.0)
       racc (~> 1.4)
-    nokogiri (1.12.5-x86_64-linux)
+    nokogiri (1.13.1-x64-mingw32)
       racc (~> 1.4)
     parallel (1.21.0)
-    parser (3.0.3.2)
+    parser (3.1.0.0)
       ast (~> 2.4.1)
     racc (1.6.0)
-    rainbow (3.0.0)
+    rainbow (3.1.1)
+    rake (13.0.6)
     regexp_parser (2.2.0)
     reverse_markdown (2.1.1)
       nokogiri
     rexml (3.2.5)
-    rubocop (1.24.0)
+    rubocop (1.25.0)
       parallel (~> 1.10)
-      parser (>= 3.0.0.0)
+      parser (>= 3.1.0.0)
       rainbow (>= 2.2.2, < 4.0)
       regexp_parser (>= 1.8, < 3.0)
       rexml
-      rubocop-ast (>= 1.15.0, < 2.0)
+      rubocop-ast (>= 1.15.1, < 2.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 1.4.0, < 3.0)
-    rubocop-ast (1.15.0)
+    rubocop-ast (1.15.1)
       parser (>= 3.0.1.1)
     ruby-progressbar (1.11.0)
-    solargraph (0.44.2)
+    solargraph (0.44.3)
       backport (~> 1.2)
       benchmark
       bundler (>= 1.17.2)
@@ -105,7 +108,7 @@ GEM
       thor (~> 1.0)
       tilt (~> 2.0)
       yard (~> 0.9, >= 0.9.24)
-    thor (1.1.0)
+    thor (1.2.1)
     tilt (2.0.10)
     unicode-display_width (2.1.0)
     webrick (1.7.0)
@@ -113,11 +116,12 @@ GEM
       webrick (~> 1.7.0)
 
 PLATFORMS
+  ruby
   x64-mingw32
-  x86_64-linux
 
 DEPENDENCIES
   faker!
+  rake
   rspec!
   rspec-core!
   rspec-expectations!

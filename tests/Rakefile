@@ -1,0 +1,7 @@
+# frozen_string_literal: true
+
+task default: :integration_tests
+
+task :integration_tests do
+  exec 'bundle exec rspec --format doc'
+end

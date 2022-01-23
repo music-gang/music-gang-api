@@ -35,8 +35,29 @@ steps:
     image: golang:1.17
     commands:
       - sleep 15
-      - mv drone-ci/config.drone.yaml config.yaml
+      - cp drone-ci/config.drone.yaml config.yaml
       - go test ./... -timeout 120s -race -coverprofile=coverage.txt -covermode=atomic
+
+  # BUILD AND RUN
+  - name: build-and-run
+    image: golang:1.17
+    detach: true
+    commands:
+      - go build -o mg-api cmd/main.go
+      - 'sed -i ''s/http: {}/http: { "addr": ":8888" }/g'' config.yaml'
+      - ./mg-api
+
+  # FLOW TESTING
+  - name: flow-test
+    image: ruby:2.7
+    environment:
+      MUSICGANG_SERVICE_URL: build-and-run:8888/v1
+    commands:
+      - sleep 30
+      - gem install bundler:2.2.29
+      - cd tests
+      - bundle install
+      - bundle exec rspec --format doc
 
   # TAGGED DOCKER IMAGE BUILD
   - name: publish-docker-image
@@ -157,4 +178,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: c0e05de3f709dad3a3f71ae19a380cc4fe8edb2eb55d8a90c235be2733813ce5
+hmac: aac25063c63c07da8e300dd5cd0a0f6a3511c021c2e61613a22c00b002ada68d
