@@ -53,10 +53,10 @@ steps:
     environment:
       MUSICGANG_SERVICE_URL: build-and-run:8888/v1
     commands:
-      - sleep 30
       - gem install bundler:2.2.29
       - cd tests
       - bundle install
+      - sleep 10
       - bundle exec rspec --format doc
 
   # TAGGED DOCKER IMAGE BUILD
@@ -178,4 +178,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: aac25063c63c07da8e300dd5cd0a0f6a3511c021c2e61613a22c00b002ada68d
+hmac: 447647fcba4ab70a2f4933204b49b423ccf961fafb06d959c3f260a533d35f34
