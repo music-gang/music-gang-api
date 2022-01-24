@@ -134,6 +134,26 @@ steps:
       target:
         - production
 
+  # UPDATE STAGING MANIFEST
+  - name: update-manifest-staging
+    image: minghsu0107/update-kustomization:v1.0.3
+    environment:
+      SSH_KEY:
+        from_secret: ssh_key
+      IMAGES: iacopomelani/music-gang-api
+      IMAGE_TAG: ${DRONE_TAG}
+      MANIFEST_HOST: github.com
+      MANIFEST_USER: music-gang
+      MANIFEST_REPO: music-gang-api-manifest
+      MANIFEST_BRANCH: master
+      KUSTOMIZATION: overlays/stage
+    when:
+      event:
+        - promote
+        - rollback
+      target:
+        - staging
+
   # UPDATE DEV MANIFEST
   - name: update-manifest-dev-${DRONE_DEPLOY_TO}
     image: minghsu0107/update-kustomization:v1.0.3
@@ -178,4 +198,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: 447647fcba4ab70a2f4933204b49b423ccf961fafb06d959c3f260a533d35f34
+hmac: ddc0fe5d58d133bcc29c8eb042c649c609de403aed6be43240b56c39c18e80c2
