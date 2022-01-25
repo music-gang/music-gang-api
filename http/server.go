@@ -58,6 +58,7 @@ func NewServerAPI() *ServerAPI {
 
 	// Base Middleware
 	s.handler.Use(middleware.Secure())
+	s.handler.Use(middleware.CORS())
 	s.handler.Use(s.HTTPContextMiddleware)
 	s.handler.Use(s.RecoverPanicMiddleware)
 
