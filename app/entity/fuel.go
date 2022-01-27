@@ -1,12 +1,17 @@
 package entity
 
 import (
+	"strconv"
 	"time"
 )
 
 // Fuel is a virtual unit of measure for the power consuption of the MusicGang VM.
 // Like the real world, the fuel is limited, so the VM will stop if the fuel usage reaches the max capacity.
 type Fuel uint64
+
+func (f Fuel) MarshalBinary() (data []byte, err error) {
+	return strconv.AppendUint(nil, uint64(f), 10), nil
+}
 
 // Fuel*ActionCost rappresents the cost of an action.
 // Greater is the execution time, greater is the cost.
