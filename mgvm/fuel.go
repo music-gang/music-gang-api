@@ -35,10 +35,6 @@ type FuelTank struct {
 
 	LockService service.LockService
 
-	// localFuelCap is the max capacity of the fuel tank.
-	// It should used only in case the sync is not required.
-	localFuelCap entity.Fuel
-
 	// localFuelUsed is the amount of fuel used locally.
 	// It should used only in case the sync is not required.
 	localFuelUsed entity.Fuel
@@ -54,11 +50,6 @@ func (ft *FuelTank) Burn(ctx context.Context, fuel entity.Fuel) error {
 	return burn(ctx, ft, fuel)
 }
 
-// Cap returns the max capacity of the fuel tank.
-func (ft *FuelTank) Cap(ctx context.Context) (entity.Fuel, error) {
-	return cap(ctx, ft, false)
-}
-
 // Fuel returns the current amount of fuel used.
 func (ft *FuelTank) Fuel(ctx context.Context) (entity.Fuel, error) {
 	return fuel(ctx, ft, false)
@@ -66,13 +57,6 @@ func (ft *FuelTank) Fuel(ctx context.Context) (entity.Fuel, error) {
 
 func (ft *FuelTank) Refuel(ctx context.Context, fuelToRefill entity.Fuel) error {
 	return refuel(ctx, ft, fuelToRefill)
-}
-
-// localCap returns the max capacity of the fuel tank from the local counter.
-// It should used only in case the sync is not required.
-// It is thread-safe.
-func (ft *FuelTank) localCap() entity.Fuel {
-	return entity.Fuel(atomic.LoadUint64((*uint64)(&ft.localFuelCap)))
 }
 
 // localFuel returns the current amount of fuel used from the local counter.
@@ -98,13 +82,8 @@ func burn(ctx context.Context, ft *FuelTank, fuel entity.Fuel) error {
 		return err
 	}
 
-	cap, err := ft.Cap(ctx)
-	if err != nil {
-		return err
-	}
-
 	// third, we need to check if the current fuel used + the passed fuel is greater than the max fuel tank capacity
-	if fuelUsed+fuel > cap {
+	if fuelUsed+fuel > entity.FuelTankCapacity {
 		return service.ErrFuelTankNotEnough
 	}
 
@@ -115,18 +94,8 @@ func burn(ctx context.Context, ft *FuelTank, fuel entity.Fuel) error {
 
 	// five, we need to update the local fuel tank and capacity
 	atomic.AddUint64((*uint64)(&ft.localFuelUsed), uint64(fuel))
-	atomic.StoreUint64((*uint64)(&ft.localFuelCap), uint64(cap))
 
 	return nil
-}
-
-// cap returns the max capacity of the fuel tank.
-// If local is true, it returns the max capacity from the local counter, otherwise it returns the max capacity from the remote service.
-func cap(ctx context.Context, ft *FuelTank, local bool) (entity.Fuel, error) {
-	if local {
-		return ft.localCap(), nil
-	}
-	return ft.FuelTankService.Cap(ctx)
 }
 
 // fuel returns the current amount of fuel used.
@@ -155,11 +124,6 @@ func refuel(ctx context.Context, ft *FuelTank, refillFuel entity.Fuel) error {
 		return err
 	}
 
-	cap, err := ft.Cap(ctx)
-	if err != nil {
-		return err
-	}
-
 	// third, we need to check if the fuel to refill is not greater than fuel used, otherwise 0 is set
 
 	if refillFuel > fuelUsed {
@@ -175,7 +139,6 @@ func refuel(ctx context.Context, ft *FuelTank, refillFuel entity.Fuel) error {
 
 	// fifth, we need to update the local fuel tank and capacity
 	atomic.AddUint64((*uint64)(&ft.localFuelUsed), uint64(fuelUsedAfterRefill))
-	atomic.StoreUint64((*uint64)(&ft.localFuelCap), uint64(cap))
 
 	return nil
 }

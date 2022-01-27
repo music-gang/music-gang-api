@@ -14,8 +14,6 @@ var ErrFuelTankNotEnough = apperr.Errorf(apperr.EINTERNAL, "fuel tank is not eno
 type FuelTankService interface {
 	// Burn consumes the specified amount of fuel.
 	Burn(ctx context.Context, fuel entity.Fuel) error
-	// Cap returns the max capacity of the fuel tank.
-	Cap(ctx context.Context) (entity.Fuel, error)
 	// Fuel returns the current amount of fuel used.
 	Fuel(ctx context.Context) (entity.Fuel, error)
 	// Refuel refills the fuel tank by the specified amount.
