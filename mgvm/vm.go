@@ -1,12 +1,12 @@
 package mgvm
 
-// MGVM is a virtual machine for the Mg language.
-type MGVM struct {
-	ft *FuelTank
+// MusicGangVM is a virtual machine for the Mg language.
+type MusicGangVM struct {
+	FuelTank *FuelTank
 }
 
-// NewMGVM creates a new MGVM.
+// MusicGangVM creates a new MusicGangVM.
 // It should be called only once.
-func NewMGVM() *MGVM {
-	return &MGVM{}
+func NewMusicGangVM() *MusicGangVM {
+	return &MusicGangVM{}
 }
