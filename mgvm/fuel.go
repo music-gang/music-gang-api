@@ -1,95 +1,181 @@
 package mgvm
 
 import (
+	"context"
 	"sync/atomic"
-	"time"
 
-	"github.com/music-gang/music-gang-api/app/apperr"
+	"github.com/music-gang/music-gang-api/app/entity"
+	"github.com/music-gang/music-gang-api/app/service"
 )
 
-// Fuel is a virtual unit of measure for the power consuption of the MusicGang VM.
-// Like the real world, the fuel is limited, so the VM will stop if the fuel is low.
-type Fuel uint64
-
-// Fuel*ActionCost rappresents the cost of an action.
-// Greater is the execution time, greater is the cost.
-const (
-	FuelQuickActionCost   = Fuel(2)
-	FuelFastestActionCost = Fuel(3)
-	FuelFastActionCost    = Fuel(5)
-	FuelMidActionCost     = Fuel(8)
-	FuelSlowActionCost    = Fuel(10)
-	GasExtremeActionCost  = Fuel(20)
-)
-
-var (
-	// fuelCostTable is a grid of fuel costs based on the execution time.
-	fuelCostTable = map[time.Duration]Fuel{
-		time.Millisecond * 200:  FuelQuickActionCost,
-		time.Millisecond * 500:  FuelFastestActionCost,
-		time.Millisecond * 750:  FuelFastActionCost,
-		time.Millisecond * 1200: FuelMidActionCost,
-		time.Millisecond * 2000: FuelSlowActionCost,
-		time.Millisecond * 3000: GasExtremeActionCost,
-	}
-)
-
-// FuelCost returns the cost of an action based only on the execution time.
-func FuelCost(execution time.Duration) Fuel {
-	for k, v := range fuelCostTable {
-		if execution < k {
-			return v
-		}
-	}
-	return GasExtremeActionCost
-}
-
-// ErrFuelTankCapacity is returned when the initial capacity is greater than the max capacity.
-var ErrFuelTankCapacity = apperr.Errorf(apperr.EINTERNAL, "fuel tank capacity is less than initial capacity")
-var ErrFuelTankFull = apperr.Errorf(apperr.EINTERNAL, "fuel tank is full")
-var ErrFuelTankEmpty = apperr.Errorf(apperr.EINTERNAL, "fuel tank is empty")
-var ErrFuelTankNotEnough = apperr.Errorf(apperr.EINTERNAL, "fuel tank is not enough")
+var _ service.FuelTankService = (*FuelTank)(nil)
 
 // FuelTank is the fuel tank of the MusicGang VM.
+//
+// His purpose in to manage the fuel usage by the VM.
+// Implements the FuelTankService interface for local counter and delegate the synchronized counter to internal.
+// It is thread-safe.
+//
+// The goal is to have a local counter and a remote counter.
+// The local counter is used when the sync is not required, maybe in a read-only operation.
+// The remote counter is used when the sync is required, maybe in a write operation to keep the consistency between various instances.
+// The goal is to have this virtual fuel tank where one property is his capacity and the other is his fuel used.
+// The capacity rappresent the max fuel used by the virtual fuel tank.
+// If the capacity is reached, the virtual fuel tank is not able to consume more fuel, in this case the virtual fuel tank needs to be refilled.
+// The fuel used rappresent the current fuel used by the virtual fuel tank and it should be in the range [0, capacity].
+// Is legal to have the fuel used greater than the capacity, but in this case the MusicGang VM will stop until the fuel tank is refilled.
+// In this cases the virtual fuel tank is not able to consume more fuel (capacity reached or more).
+//
+// To refill the virtual fuel tank is required to call the Refuel method.
+// FuelTank is not able to refill itself automatically, this workload is delegated to MusicGang VM.
 type FuelTank struct {
-	fuel    Fuel
-	fuelMax Fuel
+	// FuelTankService is the service for managing the fuel tank.
+	// FuelTank delegates to this service to achieve scalability.
+	FuelTankService service.FuelTankService
+
+	LockService service.LockService
+
+	// localFuelCap is the max capacity of the fuel tank.
+	// It should used only in case the sync is not required.
+	localFuelCap entity.Fuel
+
+	// localFuelUsed is the amount of fuel used locally.
+	// It should used only in case the sync is not required.
+	localFuelUsed entity.Fuel
 }
 
 // NewFuelTank creates a new FuelTank.
-func NewFuelTank(maxCap, initialCap Fuel) (*FuelTank, error) {
-
-	if maxCap < initialCap {
-		return nil, ErrFuelTankCapacity
-	}
-
-	ft := &FuelTank{
-		fuel:    initialCap,
-		fuelMax: maxCap,
-	}
-
-	return ft, nil
+func NewFuelTank() *FuelTank {
+	return &FuelTank{}
 }
 
-// Consume consumes the specified amount of fuel.
+// Burn consumes the specified amount of fuel.
+func (ft *FuelTank) Burn(ctx context.Context, fuel entity.Fuel) error {
+	return burn(ctx, ft, fuel)
+}
+
+// Cap returns the max capacity of the fuel tank.
+func (ft *FuelTank) Cap(ctx context.Context) (entity.Fuel, error) {
+	return cap(ctx, ft, false)
+}
+
+// Fuel returns the current amount of fuel used.
+func (ft *FuelTank) Fuel(ctx context.Context) (entity.Fuel, error) {
+	return fuel(ctx, ft, false)
+}
+
+func (ft *FuelTank) Refuel(ctx context.Context, fuelToRefill entity.Fuel) error {
+	return refuel(ctx, ft, fuelToRefill)
+}
+
+// localCap returns the max capacity of the fuel tank from the local counter.
+// It should used only in case the sync is not required.
 // It is thread-safe.
-func (ft *FuelTank) Consume(fuel Fuel) error {
+func (ft *FuelTank) localCap() entity.Fuel {
+	return entity.Fuel(atomic.LoadUint64((*uint64)(&ft.localFuelCap)))
+}
 
-	if fuel == 0 {
-		return ErrFuelTankEmpty
+// localFuel returns the current amount of fuel used from the local counter.
+// It should used only in case the sync is not required.
+// It is thread-safe.
+func (ft *FuelTank) localFuel() entity.Fuel {
+	return entity.Fuel(atomic.LoadUint64((*uint64)(&ft.localFuelUsed)))
+}
+
+// burn consumes the specified amount of fuel.
+// It sync the fuel tank between the local counter and the remote service.
+func burn(ctx context.Context, ft *FuelTank, fuel entity.Fuel) error {
+
+	// first, we need to aquire the lock
+
+	ft.LockService.Lock(ctx)
+	defer ft.LockService.Unlock(ctx)
+
+	// second, we need to retrive the current fuel tank capacity and the current fuel used
+
+	fuelUsed, err := ft.Fuel(ctx)
+	if err != nil {
+		return err
 	}
 
-	if ft.Fuel() < fuel {
-		return ErrFuelTankNotEnough
+	cap, err := ft.Cap(ctx)
+	if err != nil {
+		return err
 	}
 
-	atomic.AddUint64((*uint64)(&ft.fuel), ^uint64(fuel-1))
+	// third, we need to check if the current fuel used + the passed fuel is greater than the max fuel tank capacity
+	if fuelUsed+fuel > cap {
+		return service.ErrFuelTankNotEnough
+	}
+
+	// fourth, we need to update the synchronized fuel tank
+	if err := ft.FuelTankService.Burn(ctx, fuel); err != nil {
+		return err
+	}
+
+	// five, we need to update the local fuel tank and capacity
+	atomic.AddUint64((*uint64)(&ft.localFuelUsed), uint64(fuel))
+	atomic.StoreUint64((*uint64)(&ft.localFuelCap), uint64(cap))
 
 	return nil
 }
 
-// Fuel returns the current amount of fuel.
-// It is thread-safe.
-func (ft *FuelTank) Fuel() Fuel {
-	return Fuel(atomic.LoadUint64((*uint64)(&ft.fuel)))
+// cap returns the max capacity of the fuel tank.
+// If local is true, it returns the max capacity from the local counter, otherwise it returns the max capacity from the remote service.
+func cap(ctx context.Context, ft *FuelTank, local bool) (entity.Fuel, error) {
+	if local {
+		return ft.localCap(), nil
+	}
+	return ft.FuelTankService.Cap(ctx)
+}
+
+// fuel returns the current amount of fuel used.
+// If local is true, it returns the current fuel used from the local counter, otherwise it returns the current fuel used from the remote service.
+func fuel(ctx context.Context, ft *FuelTank, local bool) (entity.Fuel, error) {
+	if local {
+		return ft.localFuel(), nil
+	}
+	return ft.FuelTankService.Fuel(ctx)
+}
+
+// refuel refills the fuel tank by the specified amount.
+// It sync the fuel tank between the local counter and the remote service.
+// If the passed fuel to refill is greater then actual fuel used, it sets fuel used to 0.
+func refuel(ctx context.Context, ft *FuelTank, refillFuel entity.Fuel) error {
+
+	// first, we need to aquire the lock
+
+	ft.LockService.Lock(ctx)
+	defer ft.LockService.Unlock(ctx)
+
+	// second, we need to retrive the current fuel tank capacity and the current fuel used
+
+	fuelUsed, err := ft.Fuel(ctx)
+	if err != nil {
+		return err
+	}
+
+	cap, err := ft.Cap(ctx)
+	if err != nil {
+		return err
+	}
+
+	// third, we need to check if the fuel to refill is not greater than fuel used, otherwise 0 is set
+
+	if refillFuel > fuelUsed {
+		refillFuel = fuelUsed
+	}
+
+	fuelUsedAfterRefill := fuelUsed - refillFuel
+
+	// fourth, we need to update the synchronized fuel tank
+	if err := ft.FuelTankService.Refuel(ctx, refillFuel); err != nil {
+		return err
+	}
+
+	// fifth, we need to update the local fuel tank and capacity
+	atomic.AddUint64((*uint64)(&ft.localFuelUsed), uint64(fuelUsedAfterRefill))
+	atomic.StoreUint64((*uint64)(&ft.localFuelCap), uint64(cap))
+
+	return nil
 }
