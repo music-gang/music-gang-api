@@ -36,7 +36,7 @@ func (s *JWTBlacklistService) IsBlacklisted(ctx context.Context, token string) (
 func invalidate(ctx context.Context, db *DB, token string, expiration time.Duration) error {
 
 	if err := db.client.Set(ctx, token, true, expiration).Err(); err != nil {
-		return err
+		return apperr.Errorf(apperr.EINTERNAL, "failed to invalidate token: %v", err)
 	}
 
 	return nil
