@@ -19,6 +19,7 @@ const (
 	EUNAUTHORIZED   = "unauthorized"    // access denied
 	EUNKNOWN        = "unknown"         // unknown error
 	EFORBIDDEN      = "forbidden"       // access forbidden
+	EEXISTS         = "exists"          // resource already exists
 )
 
 // Error represents an application-specific error. Application errors can be
