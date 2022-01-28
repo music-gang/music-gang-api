@@ -10,6 +10,10 @@ import (
 
 var _ service.FuelTankService = (*FuelTank)(nil)
 
+// useRemoteFuel is a flag that indicates if the fuel tank should be synchronized with the remote service.
+// TODO: this should be dynamic, maybe based on context param.
+var useRemoteFuel = true
+
 // FuelTank is the fuel tank of the MusicGang VM.
 //
 // His purpose in to manage the fuel usage by the VM.
@@ -52,7 +56,7 @@ func (ft *FuelTank) Burn(ctx context.Context, fuel entity.Fuel) error {
 
 // Fuel returns the current amount of fuel used.
 func (ft *FuelTank) Fuel(ctx context.Context) (entity.Fuel, error) {
-	return fuel(ctx, ft, false)
+	return fuel(ctx, ft, !useRemoteFuel)
 }
 
 func (ft *FuelTank) Refuel(ctx context.Context, fuelToRefill entity.Fuel) error {
