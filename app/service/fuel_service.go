@@ -8,7 +8,7 @@ import (
 )
 
 // ErrFuelTankCapacity is returned when the initial capacity is greater than the max capacity.
-var ErrFuelTankNotEnough = apperr.Errorf(apperr.EINTERNAL, "fuel tank is not enough")
+var ErrFuelTankNotEnough = apperr.Errorf(apperr.EMGVMFUELNOTENOUGH, "fuel tank is not enough")
 
 // FuelTanker is the interface for the fuel tank.
 type FuelTankService interface {

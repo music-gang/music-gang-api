@@ -18,6 +18,7 @@ const (
 
 	ContextTagGeneric = "generic"
 	ContextTagHTTP    = "HTTP"
+	ContextTagMGVM    = "MGVM"
 	ContextTagCLI     = "CLI"
 )
 
