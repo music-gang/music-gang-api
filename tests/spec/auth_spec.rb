@@ -6,7 +6,7 @@ require_relative '../services/lib'
 
 container = service_container
 
-name = Faker::Name.name
+name = Faker::Internet.username
 email = Faker::Internet.email name: name, separators: '.'
 password = 'Password123!'
 

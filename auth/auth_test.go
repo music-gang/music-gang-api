@@ -63,7 +63,7 @@ func TestAuth_TestLocalProvider(t *testing.T) {
 
 		s := NewAuth()
 
-		name := "Jane Doe"
+		name := "JaneDoe"
 		email := "jane.done@test.com"
 		password := "123456"
 
@@ -102,8 +102,8 @@ func TestAuth_TestLocalProvider(t *testing.T) {
 			},
 		}); err != nil {
 			t.Errorf("Expected no error, got %v", err)
-		} else if auth.User.Name != "Jane Doe" {
-			t.Errorf("Expected user name to be 'Jane Doe', got %v", auth.User.Name)
+		} else if auth.User.Name != "JaneDoe" {
+			t.Errorf("Expected user name to be 'JaneDoe', got %v", auth.User.Name)
 		}
 	})
 
@@ -135,7 +135,7 @@ func TestAuth_TestLocalProvider(t *testing.T) {
 
 		s := NewAuth()
 
-		name := "Jane Doe"
+		name := "JaneDoe"
 		email := "jane.done@test.com"
 		password := "123456"
 
@@ -219,8 +219,8 @@ func TestAuth_TestGithubProvider(t *testing.T) {
 			AuthCode: &fakeAuthCode,
 		}); err != nil {
 			t.Errorf("Expected no error, got %v", err)
-		} else if auth.User.Name != "Jane Doe" {
-			t.Errorf("Expected user name to be 'Jane Doe', got %v", auth.User.Name)
+		} else if auth.User.Name != "JaneDoe" {
+			t.Errorf("Expected user name to be 'JaneDoe', got %v", auth.User.Name)
 		}
 	})
 }

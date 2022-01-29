@@ -32,7 +32,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
 			User: &entity.User{
-				Name:  "Jane Doe",
+				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.done@test.com"),
 			},
 		}
@@ -76,7 +76,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
 			User: &entity.User{
-				Name:  "Jane Doe",
+				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
 			},
 		})
@@ -116,7 +116,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
 			User: &entity.User{
-				Name:  "Jane Doe",
+				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
 			},
 		}
@@ -143,7 +143,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
 			User: &entity.User{
-				Name:  "Jane Doe",
+				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
 			},
 		}
@@ -195,7 +195,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
 			User: &entity.User{
-				Name:  "Jane Doe",
+				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
 			},
 		}
@@ -223,7 +223,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			RefreshToken: null.StringFrom(""),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
 			User: &entity.User{
-				Name:  "Jane Doe",
+				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
 			},
 		}
@@ -247,7 +247,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 		auth := &entity.Auth{
 			Source: entity.AuthSourceLocal,
 			User: &entity.User{
-				Name:     "Jane Doe",
+				Name:     "JaneDoe",
 				Email:    null.StringFrom("jane.doe@test.com"),
 				Password: null.StringFrom("123456"),
 			},
@@ -289,7 +289,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
 			User: &entity.User{
-				Name:  "Jane Doe",
+				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
 			},
 		}
@@ -301,7 +301,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 		localAuth := &entity.Auth{
 			Source: entity.AuthSourceGitHub,
 			User: &entity.User{
-				Name:  "Jane Doe",
+				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
 			},
 		}
@@ -325,7 +325,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 		localAuth := &entity.Auth{
 			Source: entity.AuthSourceLocal,
 			User: &entity.User{
-				Name:     "Jane Doe",
+				Name:     "JaneDoe",
 				Email:    null.StringFrom("jane.doe@test.com"),
 				Password: null.StringFrom("123456"),
 			},
@@ -342,7 +342,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
 			User: &entity.User{
-				Name:  "Jane Doe",
+				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
 			},
 		}
@@ -381,7 +381,7 @@ func TestAuthService_DeleteAuth(t *testing.T) {
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
 			User: &entity.User{
-				Name: "Jane Doe",
+				Name: "JaneDoe",
 			},
 		})
 
@@ -416,7 +416,7 @@ func TestAuthService_DeleteAuth(t *testing.T) {
 		s := postgres.NewAuthService(db)
 
 		user, _ := MustCreateUser(t, context.Background(), db, &entity.User{
-			Name: "Jane Doe",
+			Name: "JaneDoe",
 		})
 
 		auth, ctx := MustCreateAuth(t, context.Background(), db, &entity.Auth{
@@ -425,6 +425,7 @@ func TestAuthService_DeleteAuth(t *testing.T) {
 			AccessToken:  null.StringFromPtr(nil),
 			RefreshToken: null.StringFromPtr(nil),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			UserID:       user.ID,
 			User:         user,
 		})
 
@@ -451,7 +452,7 @@ func TestAuthService_DeleteAuth(t *testing.T) {
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
 			User: &entity.User{
-				Name: "Jane Doe",
+				Name: "JaneDoe",
 			},
 		})
 
@@ -462,7 +463,7 @@ func TestAuthService_DeleteAuth(t *testing.T) {
 			RefreshToken: null.StringFrom("REFRESHTOKEN-1"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
 			User: &entity.User{
-				Name: "Bob Doe",
+				Name: "BobDoe",
 			},
 		})
 
@@ -492,7 +493,7 @@ func TestAuthService_FindAuthByID(t *testing.T) {
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
 			Expiry:       null.TimeFrom(util.AppNowUTC()),
 			User: &entity.User{
-				Name: "Jane Doe",
+				Name: "JaneDoe",
 			},
 		})
 

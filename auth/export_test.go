@@ -19,8 +19,8 @@ func (p *GithubProvider) MockUserFn() {
 	p.userFn = func(ctx context.Context, client *github.Client) (*github.User, *github.Response, error) {
 		return &github.User{
 			ID:    github.Int64(1),
-			Login: github.String("Jane Doe"),
-			Name:  github.String("Jane Doe"),
+			Login: github.String("JaneDoe"),
+			Name:  github.String("JaneDoe"),
 			Email: github.String("jane.doe@test.com"),
 		}, &github.Response{}, nil
 	}

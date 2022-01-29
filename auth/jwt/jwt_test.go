@@ -25,7 +25,7 @@ func TestJWT_Exchange(t *testing.T) {
 			UserID: 1,
 			Source: entity.AuthSourceLocal,
 			User: &entity.User{
-				Name: "Jane Doe",
+				Name: "JaneDoe",
 			},
 		}
 
@@ -50,7 +50,7 @@ func TestJWT_Exchange(t *testing.T) {
 			Source: entity.AuthSourceLocal,
 			User: &entity.User{
 				ID:   1,
-				Name: "Jane Doe",
+				Name: "JaneDoe",
 			},
 		}
 
@@ -83,7 +83,7 @@ func TestJWT_Parse(t *testing.T) {
 			Source: entity.AuthSourceLocal,
 			User: &entity.User{
 				ID:   1,
-				Name: "Jane Doe",
+				Name: "JaneDoe",
 			},
 		}
 
@@ -138,7 +138,7 @@ func TestJWT_Parse(t *testing.T) {
 			Source: entity.AuthSourceLocal,
 			User: &entity.User{
 				ID:   1,
-				Name: "Jane Doe",
+				Name: "JaneDoe",
 			},
 		}
 
@@ -170,7 +170,7 @@ func TestJWT_Parse(t *testing.T) {
 			Source: entity.AuthSourceLocal,
 			User: &entity.User{
 				ID:   1,
-				Name: "Jane Doe",
+				Name: "JaneDoe",
 			},
 		}
 
@@ -200,7 +200,7 @@ func TestJWT_Parse(t *testing.T) {
 			Source: entity.AuthSourceLocal,
 			User: &entity.User{
 				ID:   1,
-				Name: "Jane Doe",
+				Name: "JaneDoe",
 			},
 		}
 
@@ -241,7 +241,7 @@ func TestJWT_Invalidate(t *testing.T) {
 			Source: entity.AuthSourceLocal,
 			User: &entity.User{
 				ID:   1,
-				Name: "Jane Doe",
+				Name: "JaneDoe",
 			},
 		}
 
@@ -283,7 +283,7 @@ func TestJWT_Refresh(t *testing.T) {
 			Source: entity.AuthSourceLocal,
 			User: &entity.User{
 				ID:   1,
-				Name: "Jane Doe",
+				Name: "JaneDoe",
 			},
 		}
 
@@ -320,7 +320,7 @@ func TestJWT_Refresh(t *testing.T) {
 			Source: entity.AuthSourceLocal,
 			User: &entity.User{
 				ID:   1,
-				Name: "Jane Doe",
+				Name: "JaneDoe",
 			},
 		}
 

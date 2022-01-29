@@ -44,7 +44,7 @@ func TestAuth_Login(t *testing.T) {
 					Source: entity.AuthSourceLocal,
 					User: &entity.User{
 						ID:       1,
-						Name:     "Jane Doe",
+						Name:     "JaneDoe",
 						Email:    null.StringFrom("jane.doe@test.com"),
 						Password: null.StringFrom("123456"),
 						Auths:    []*entity.Auth{},
@@ -231,7 +231,7 @@ func TestAuth_Login(t *testing.T) {
 					Source: entity.AuthSourceLocal,
 					User: &entity.User{
 						ID:       1,
-						Name:     "Jane Doe",
+						Name:     "JaneDoe",
 						Email:    null.StringFrom("jane.doe@test.com"),
 						Password: null.StringFrom("123456"),
 					},
@@ -563,7 +563,7 @@ func TestAuth_Register(t *testing.T) {
 
 		registerParam := apphttp.RegisterParams{
 			Email:           "jane.doe@test.com",
-			Name:            "Jane Doe",
+			Name:            "JaneDoe",
 			Password:        validPassword,
 			ConfirmPassword: validPassword,
 		}
@@ -615,7 +615,7 @@ func TestAuth_Register(t *testing.T) {
 		defer MustCloseServerAPI(t, s)
 
 		registerParam := apphttp.RegisterParams{
-			Name:            "Jane Doe",
+			Name:            "JaneDoe",
 			Password:        validPassword,
 			ConfirmPassword: validPassword,
 		}
@@ -646,7 +646,7 @@ func TestAuth_Register(t *testing.T) {
 
 		registerParam := apphttp.RegisterParams{
 			Email:           "jane.doe.com",
-			Name:            "Jane Doe",
+			Name:            "JaneDoe",
 			Password:        validPassword,
 			ConfirmPassword: validPassword,
 		}
@@ -707,7 +707,7 @@ func TestAuth_Register(t *testing.T) {
 
 		registerParam := apphttp.RegisterParams{
 			Email: "jane.doe@test.com",
-			Name:  "Jane Doe",
+			Name:  "JaneDoe",
 		}
 
 		jsonValue := MustMarshalJSON(t, registerParam)
@@ -736,7 +736,7 @@ func TestAuth_Register(t *testing.T) {
 
 		registerParam := apphttp.RegisterParams{
 			Email:    "jane.doe@test.com",
-			Name:     "Jane Doe",
+			Name:     "JaneDoe",
 			Password: "not-secure-password",
 		}
 
@@ -766,7 +766,7 @@ func TestAuth_Register(t *testing.T) {
 
 		registerParam := apphttp.RegisterParams{
 			Email:           "jane.doe@test.com",
-			Name:            "Jane Doe",
+			Name:            "JaneDoe",
 			Password:        validPassword,
 			ConfirmPassword: "not-matching-password",
 		}
@@ -803,7 +803,7 @@ func TestAuth_Register(t *testing.T) {
 
 		registerParam := apphttp.RegisterParams{
 			Email:           "jane.doe@test.com",
-			Name:            "Jane Doe",
+			Name:            "JaneDoe",
 			Password:        validPassword,
 			ConfirmPassword: validPassword,
 		}

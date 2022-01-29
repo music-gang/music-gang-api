@@ -1,10 +1,16 @@
 package entity
 
 import (
+	"strings"
 	"time"
 
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"gopkg.in/guregu/null.v4"
+)
+
+const (
+	// UserNameInvalidCharacters defines all invalid characters for a user name.
+	UserNameInvalidCharacters = "!@#$%^&*()+=[]{}|\\;:'\"<>,/?`~"
 )
 
 // User represents a user in the system. Users are typically created via OAuth
@@ -31,6 +37,16 @@ func (u *User) Validate() error {
 
 	if u.Name == "" {
 		return apperr.Errorf(apperr.EINVALID, "name is required")
+	}
+
+	// check if name contains whitespaces. This is not allowed.
+	if strings.Contains(u.Name, " ") {
+		return apperr.Errorf(apperr.EINVALID, "name cannot contain whitespaces")
+	}
+
+	// check if name contains invalid characters. This is not allowed.
+	if strings.ContainsAny(u.Name, UserNameInvalidCharacters) {
+		return apperr.Errorf(apperr.EINVALID, "name cannot contain invalid characters")
 	}
 
 	if u.Email.Valid && u.Email.String == "" {

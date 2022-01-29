@@ -2,6 +2,7 @@ package postgres_test
 
 import (
 	"context"
+	"math/rand"
 	"reflect"
 	"testing"
 
@@ -28,7 +29,7 @@ func TestUserService_CreateUser(t *testing.T) {
 		// user with email and password
 		u1 := &entity.User{
 			Email:    null.StringFrom("test.user@domain.com"),
-			Name:     "Test User",
+			Name:     "TestUser",
 			Password: null.StringFrom("password"),
 		}
 
@@ -68,6 +69,48 @@ func TestUserService_CreateUser(t *testing.T) {
 		s := postgres.NewUserService(db)
 
 		if err := s.CreateUser(context.Background(), &entity.User{}); err == nil {
+			t.Fatal("expected error")
+		} else if apperr.ErrorCode(err) != apperr.EINVALID {
+			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.EINVALID)
+		}
+	})
+
+	t.Run("ErrNameNoWhiteSpaces", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		MustTruncateTable(t, db, "users")
+
+		s := postgres.NewUserService(db)
+
+		if err := s.CreateUser(context.Background(), &entity.User{Name: "John Doe"}); err == nil {
+			t.Fatal("expected error")
+		} else if apperr.ErrorCode(err) != apperr.EINVALID {
+			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.EINVALID)
+		}
+	})
+
+	t.Run("ErrNameInvalidCharacters", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		MustTruncateTable(t, db, "users")
+
+		s := postgres.NewUserService(db)
+
+		invalidCharacters := entity.UserNameInvalidCharacters
+
+		invalidCharactersChoosed := ""
+
+		// pick 5 random characters
+
+		for i := 0; i < 2; i++ {
+			invalidCharactersChoosed += string(invalidCharacters[rand.Intn(len(invalidCharacters))])
+		}
+
+		if err := s.CreateUser(context.Background(), &entity.User{Name: "JohnDoe" + invalidCharactersChoosed}); err == nil {
 			t.Fatal("expected error")
 		} else if apperr.ErrorCode(err) != apperr.EINVALID {
 			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.EINVALID)
@@ -126,7 +169,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 
 		user0, ctx0 := MustCreateUser(t, context.Background(), db, &entity.User{Name: "Jane"})
 
-		newName := "Jane Doe"
+		newName := "JaneDoe"
 
 		uu, err := s.UpdateUser(ctx0, user0.ID, service.UserUpdate{Name: &newName})
 		if err != nil {
@@ -156,7 +199,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 		user0, _ := MustCreateUser(t, context.Background(), db, &entity.User{Name: "Jane"})
 		_, ctx1 := MustCreateUser(t, context.Background(), db, &entity.User{Name: "Bob"})
 
-		newName := "Jane Doe"
+		newName := "JaneDoe"
 
 		if _, err := s.UpdateUser(ctx1, user0.ID, service.UserUpdate{Name: &newName}); err == nil {
 			t.Fatal("expected error")
@@ -177,7 +220,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 
 		user0, ctx0 := MustCreateUser(t, context.Background(), db, &entity.User{Name: "Jane"})
 
-		newName := "Jane Doe"
+		newName := "JaneDoe"
 
 		if _, err := s.UpdateUser(ctx0, user0.ID+1, service.UserUpdate{Name: &newName}); err == nil {
 			t.Fatal("expected error")
@@ -198,7 +241,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 
 		user0, ctx0 := MustCreateUser(t, context.Background(), db, &entity.User{Name: "Jane"})
 
-		newName := "Jane Doe"
+		newName := "JaneDoe"
 
 		ctxToCancel, cancel := context.WithCancel(ctx0)
 
