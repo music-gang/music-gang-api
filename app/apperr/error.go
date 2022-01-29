@@ -20,6 +20,13 @@ const (
 	EUNKNOWN        = "unknown"         // unknown error
 	EFORBIDDEN      = "forbidden"       // access forbidden
 	EEXISTS         = "exists"          // resource already exists
+
+	// MusicGang VM Err codes
+
+	// fuel tank has no enough fuel
+	EMGVMFUELNOTENOUGH = "mgvm_fuel_not_enough"
+	// scheduler queue is empty
+	EMGVMQUEUEEMPTY = "mgvm_scheduler_queue_empty"
 )
 
 // Error represents an application-specific error. Application errors can be
