@@ -16,12 +16,12 @@ func (f Fuel) MarshalBinary() (data []byte, err error) {
 // Fuel*ActionCost rappresents the cost of an action.
 // Greater is the execution time, greater is the cost.
 const (
-	FuelQuickActionAmount   = Fuel(2)
-	FuelFastestActionAmount = Fuel(3)
-	FuelFastActionAmount    = Fuel(5)
-	FuelMidActionAmount     = Fuel(8)
-	FuelSlowActionAmount    = Fuel(10)
-	GasExtremeActionAmount  = Fuel(20)
+	FuelQuickActionAmount   = Fuel(200)
+	FuelFastestActionAmount = Fuel(300)
+	FuelFastActionAmount    = Fuel(500)
+	FuelMidActionAmount     = Fuel(800)
+	FuelSlowActionAmount    = Fuel(1000)
+	GasExtremeActionAmount  = Fuel(2000)
 )
 
 // vFuel rappresents the virtual units of measure for the power consuption of the MusicGang VM.
@@ -31,9 +31,14 @@ const (
 	vMFuel = vKFuel << 10
 	vGFuel = vMFuel << 10
 	vTFuel = vGFuel << 10
-
-	FuelTankCapacity = vTFuel
 )
+
+// FuelRefillAmount retruns how much fuel is refilled at a time.
+var FuelRefillAmount = FuelAmount(time.Second)
+
+// FuelTankCapacity is the maximum capacity of the fuel tank.
+// TODO: this should be a configurable value.
+var FuelTankCapacity = 10 * vKFuel
 
 var (
 	// fuelAmountTable is a grid of fuel costs based on the execution time.
