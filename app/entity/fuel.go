@@ -34,11 +34,12 @@ const (
 )
 
 // FuelRefillAmount retruns how much fuel is refilled at a time.
-var FuelRefillAmount = FuelAmount(time.Second)
+// It is equivalent to 5% of the capacity of the fuel tank.
+const FuelRefillAmount = Fuel(FuelTankCapacity * 5 / 100)
 
 // FuelTankCapacity is the maximum capacity of the fuel tank.
 // TODO: this should be a configurable value.
-var FuelTankCapacity = 10 * vKFuel
+const FuelTankCapacity = 100 * vKFuel
 
 var (
 	// fuelAmountTable is a grid of fuel costs based on the execution time.
