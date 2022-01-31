@@ -13,6 +13,7 @@ import (
 	"github.com/music-gang/music-gang-api/config"
 	"github.com/music-gang/music-gang-api/http"
 	applog "github.com/music-gang/music-gang-api/log"
+	"github.com/music-gang/music-gang-api/mgvm"
 	"github.com/music-gang/music-gang-api/postgres"
 	"github.com/music-gang/music-gang-api/redis"
 )
@@ -58,6 +59,8 @@ func main() {
 type Main struct {
 	ctx context.Context
 
+	VM *mgvm.MusicGangVM
+
 	Postgres *postgres.DB
 
 	Redis *redis.DB
@@ -78,6 +81,7 @@ func NewMain() *Main {
 		Postgres:      postgres.NewDB(config.BuildDSNFromDatabaseConfigForPostgres(config.GetConfig().APP.Databases.Postgres)),
 		Redis:         redis.NewDB(redisAddr, redisPassword),
 		HTTPServerAPI: http.NewServerAPI(),
+		VM:            mgvm.NewMusicGangVM(),
 	}
 }
 
@@ -143,6 +147,20 @@ func (m *Main) Run(ctx context.Context) error {
 		slackLogger := applog.NewSlackLogger(config.GetConfig().APP.Slack.Webhook)
 		slackLogger.Fallback = stdOutLogger
 		logService.AddBackend(slackLogger)
+	}
+
+	fuelTankService := mgvm.NewFuelTank()
+	fuelTankService.LockService = redis.NewLockService(m.Redis, "fuel-tank")
+	fuelTankService.FuelTankService = redis.NewFuelTankService(m.Redis)
+
+	m.VM.LogService = logService
+	m.VM.FuelTank = fuelTankService
+	m.VM.Scheduler = &mgvm.Scheduler{}
+
+	vmCtx := app.NewContextWithTags(ctx, []string{app.ContextTagMGVM})
+
+	if err := m.VM.Run(vmCtx); err != nil {
+		return err
 	}
 
 	m.HTTPServerAPI.LogService = logService
