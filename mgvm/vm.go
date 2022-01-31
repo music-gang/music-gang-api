@@ -7,6 +7,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/robertkrimen/otto"
+
+	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
 	"github.com/music-gang/music-gang-api/app/util"
@@ -45,16 +48,6 @@ func (mg *MusicGangVM) Run(ctx context.Context) error {
 	go mg.AutoRefuel()
 	go mg.ReadActions()
 	go mg.FuelChecker()
-
-	go func() {
-		for {
-
-			mg.Scheduler.Push(NewAction(mg.ctx, nil))
-
-			time.Sleep(900 * time.Millisecond)
-		}
-
-	}()
 
 	return nil
 }
@@ -150,6 +143,13 @@ func (vm *MusicGangVM) ReadActions() {
 				action := <-vm.actionsChan
 
 				go func(a *Action) {
+
+					defer func() {
+						if r := recover(); r != nil {
+							vm.LogService.ReportPanic(vm.ctx, r)
+						}
+					}()
+
 					if err := vm.ExecAction(action); err != nil {
 						vm.LogService.ReportFatal(vm.ctx, err)
 					}
@@ -163,12 +163,6 @@ func (vm *MusicGangVM) ReadActions() {
 
 func (vm *MusicGangVM) ExecAction(action *Action) error {
 
-	done := make(chan bool, 1)
-	ticker := time.NewTicker(200 * time.Millisecond)
-	timeoutTicker := time.NewTicker(10 * time.Second)
-
-	defer ticker.Stop()
-	defer timeoutTicker.Stop()
 	defer func() {
 		if r := recover(); r != nil {
 			if r == "timeout" {
@@ -179,42 +173,71 @@ func (vm *MusicGangVM) ExecAction(action *Action) error {
 				vm.LogService.ReportWarning(vm.ctx, "Fuel out while executing action")
 				return
 			}
-			vm.LogService.ReportPanic(vm.ctx, r)
+			if r == "halt" {
+				vm.LogService.ReportWarning(vm.ctx, "HALT!")
+			}
+			panic(r)
 		}
 	}()
 
-	lastFuelCheck := time.Now()
+	ticker := time.NewTicker(200 * time.Millisecond)
+	timeoutTicker := time.NewTicker(10 * time.Second)
 
-	go func(a *Action) {
+	defer ticker.Stop()
+	defer timeoutTicker.Stop()
 
-		time.Sleep(600 * time.Millisecond)
+	ottoVm := otto.New()
+	ottoVm.Interrupt = make(chan func(), 1)
 
-		// run contract
-
-		println("WORKING")
-
-		a.res <- util.Ok("ok")
-
-		done <- true
-		close(done)
-
-	}(action)
-
-loop:
-	for {
-		select {
-		case <-ticker.C:
-			fuelConsumed := entity.FuelAmount(time.Since(lastFuelCheck))
-			lastFuelCheck = time.Now()
-			if err := vm.FuelTank.Burn(vm.ctx, fuelConsumed); err != nil {
-				panic("fuel-out")
+	go func() {
+		lastFuelCheck := time.Now()
+		for {
+			select {
+			case <-ticker.C:
+				fuelConsumed := entity.FuelAmount(time.Since(lastFuelCheck))
+				lastFuelCheck = time.Now()
+				if err := vm.FuelTank.Burn(vm.ctx, fuelConsumed); err != nil {
+					ottoVm.Interrupt <- func() { panic("fuel-out") }
+				}
+			case <-timeoutTicker.C:
+				ottoVm.Interrupt <- func() { panic("timeout") }
 			}
-		case <-timeoutTicker.C:
-			panic("timeout")
-		case <-done:
-			break loop
 		}
+
+	}()
+
+	script, err := ottoVm.Compile("", "")
+	if err != nil {
+		action.res <- util.Err(apperr.Errorf(apperr.EINTERNAL, "Error compiling script: %s", err))
+		vm.LogService.ReportWarning(vm.ctx, fmt.Sprintf("Error compiling script: %s", err.Error()))
+		return err
 	}
+
+	_, err = ottoVm.Run(script)
+
+	if err != nil {
+		action.res <- util.Err(apperr.Errorf(apperr.EINTERNAL, "Error while executing action: %s", err.Error()))
+		vm.LogService.ReportWarning(vm.ctx, fmt.Sprintf("Error while executing action: %s", err.Error()))
+		return err
+	}
+
+	value, err := ottoVm.Get("result")
+	if err != nil {
+		action.res <- util.Err(apperr.Errorf(apperr.EINTERNAL, "Error while retrieving result: %s", err.Error()))
+		vm.LogService.ReportWarning(vm.ctx, fmt.Sprintf("Error while retrieving result: %s", err.Error()))
+		return err
+	}
+
+	str, err := value.ToString()
+	if err != nil {
+		action.res <- util.Err(apperr.Errorf(apperr.EINTERNAL, "Error while parsing action result: %s", err.Error()))
+		vm.LogService.ReportWarning(vm.ctx, fmt.Sprintf("Error while executing action: %s", err.Error()))
+		return err
+	}
+
+	println(str)
+
+	action.res <- util.Ok(str)
 
 	return nil
 }
