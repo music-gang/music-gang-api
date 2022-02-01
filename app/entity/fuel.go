@@ -62,3 +62,11 @@ func FuelAmount(execution time.Duration) Fuel {
 	}
 	return GasExtremeActionAmount
 }
+
+// FuelStats represents the statistics of the fuel tank.
+type FuelStat struct {
+	FuelCapacity    Fuel      `json:"fuel_capacity"`
+	FuelUsed        Fuel      `json:"fuel_used"`
+	LastRefuelAmout Fuel      `json:"last_refuel_amount"`
+	LastRefuelAt    time.Time `json:"last_refuel_at"`
+}

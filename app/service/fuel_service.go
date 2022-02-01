@@ -32,3 +32,9 @@ type FuelStationService interface {
 	// If the FuelStation is not running, it will return an error.
 	StopRefueling(ctx context.Context) error
 }
+
+type FuelMeterService interface {
+	Above(ctx context.Context, fuel entity.Fuel) (bool, error)
+	Below(ctx context.Context, fuel entity.Fuel) (bool, error)
+	Stats(ctx context.Context) (entity.FuelStat, error)
+}

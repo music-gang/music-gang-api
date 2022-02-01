@@ -10,6 +10,8 @@ import (
 	"github.com/music-gang/music-gang-api/app/service"
 )
 
+var _ service.FuelStationService = (*FuelStation)(nil)
+
 // FuelStation is a fuel station that can be used to refuel the fuel tank.
 // FuelStation is responsible for starting and stopping the refueling of the fuel tank.
 type FuelStation struct {
