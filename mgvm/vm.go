@@ -50,6 +50,17 @@ func (vm *MusicGangVM) Run() error {
 	vm.FuelStation.ResumeRefueling(vm.ctx)
 	go vm.ReadActions()
 	go vm.FuelChecker()
+
+	go func() {
+
+		for {
+
+			vm.ExecAction(NewAction(vm.ctx, nil))
+
+			time.Sleep(100 * time.Millisecond)
+		}
+	}()
+
 	return nil
 }
 
@@ -178,7 +189,11 @@ func (vm *MusicGangVM) ExecAction(action *Action) error {
 
 	}()
 
-	script, err := ottoVm.Compile("", "")
+	script, err := ottoVm.Compile("", `
+		function sum(a, b) {
+			return a+b;
+		}
+	`)
 	if err != nil {
 		action.res <- util.Err(apperr.Errorf(apperr.EINTERNAL, "Error compiling script: %s", err))
 		vm.LogService.ReportWarning(vm.ctx, fmt.Sprintf("Error compiling script: %s", err.Error()))
@@ -265,7 +280,6 @@ func (s *Scheduler) StreamActions(ctx context.Context, actionsChan chan<- *Actio
 				// send action to actionsChan
 				actionsChan <- action
 			}
-
 			s.muxQ.Unlock()
 		}
 
