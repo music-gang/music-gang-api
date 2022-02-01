@@ -25,9 +25,10 @@ type MusicGangVM struct {
 	actionsChan chan *Action
 	streamCtrl  chan bool
 
-	LogService service.LogService
-	FuelTank   service.FuelTankService
-	Scheduler  *Scheduler
+	LogService  service.LogService
+	FuelTank    service.FuelTankService
+	FuelStation service.FuelStationService
+	Scheduler   *Scheduler
 }
 
 // MusicGangVM creates a new MusicGangVM.
@@ -43,17 +44,17 @@ func NewMusicGangVM() *MusicGangVM {
 	}
 }
 
-func (mg *MusicGangVM) Run() error {
-	mg.Resume()
-	go mg.Scheduler.StreamActions(mg.ctx, mg.actionsChan, mg.streamCtrl)
-	go mg.AutoRefuel()
-	go mg.ReadActions()
-	go mg.FuelChecker()
-
+func (vm *MusicGangVM) Run() error {
+	vm.Resume()
+	go vm.Scheduler.StreamActions(vm.ctx, vm.actionsChan, vm.streamCtrl)
+	vm.FuelStation.ResumeRefueling(vm.ctx)
+	go vm.ReadActions()
+	go vm.FuelChecker()
 	return nil
 }
 
 func (mg *MusicGangVM) Close() error {
+	mg.FuelStation.StopRefueling(mg.ctx)
 	mg.cancel()
 	return nil
 }
@@ -92,36 +93,6 @@ func (vm *MusicGangVM) FuelChecker() {
 			} else if float64(currentFuel)/float64(entity.FuelTankCapacity) > 0.95 {
 				vm.LogService.ReportWarning(vm.ctx, "Fuel tank is above 95%, stopping the vm")
 				vm.Pause()
-			}
-		}()
-	}
-}
-
-func (vm *MusicGangVM) AutoRefuel() {
-
-	tickerToRefuel := time.NewTicker(1 * time.Second)
-	for range tickerToRefuel.C {
-
-		func() {
-
-			defer func() {
-				if r := recover(); r != nil {
-					vm.LogService.ReportPanic(vm.ctx, r)
-				}
-			}()
-
-			if err := vm.FuelTank.Refuel(vm.ctx, entity.FuelRefillAmount); err != nil {
-				vm.LogService.ReportFatal(vm.ctx, err)
-			}
-
-			fuel, err := vm.FuelTank.Fuel(vm.ctx)
-			if err != nil {
-				vm.LogService.ReportError(vm.ctx, err)
-			}
-			fmt.Printf("Cap: %d\n", entity.FuelTankCapacity)
-			fmt.Printf("Fuel: %d\n", fuel)
-			if float64(fuel)/float64(entity.FuelTankCapacity) < 0.65 {
-				vm.Resume()
 			}
 		}()
 	}
