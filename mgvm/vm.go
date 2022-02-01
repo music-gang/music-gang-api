@@ -9,6 +9,7 @@ import (
 
 	"github.com/robertkrimen/otto"
 
+	"github.com/music-gang/music-gang-api/app"
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
@@ -32,18 +33,18 @@ type MusicGangVM struct {
 // MusicGangVM creates a new MusicGangVM.
 // It should be called only once.
 func NewMusicGangVM() *MusicGangVM {
+	ctx := app.NewContextWithTags(context.Background(), []string{app.ContextTagMGVM})
+	ctx, cancel := context.WithCancel(ctx)
 	return &MusicGangVM{
-		ctx:         context.Background(),
+		ctx:         ctx,
+		cancel:      cancel,
 		actionsChan: make(chan *Action, 10),
 		streamCtrl:  make(chan bool, 1),
 	}
 }
 
-func (mg *MusicGangVM) Run(ctx context.Context) error {
-	mg.ctx = ctx
-
+func (mg *MusicGangVM) Run() error {
 	mg.Resume()
-
 	go mg.Scheduler.StreamActions(mg.ctx, mg.actionsChan, mg.streamCtrl)
 	go mg.AutoRefuel()
 	go mg.ReadActions()

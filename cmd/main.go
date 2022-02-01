@@ -106,6 +106,12 @@ func (m *Main) Close() error {
 		}
 	}
 
+	if m.VM != nil {
+		if err := m.VM.Close(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -157,9 +163,7 @@ func (m *Main) Run(ctx context.Context) error {
 	m.VM.FuelTank = fuelTankService
 	m.VM.Scheduler = &mgvm.Scheduler{}
 
-	vmCtx := app.NewContextWithTags(ctx, []string{app.ContextTagMGVM})
-
-	if err := m.VM.Run(vmCtx); err != nil {
+	if err := m.VM.Run(); err != nil {
 		return err
 	}
 
