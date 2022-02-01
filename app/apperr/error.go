@@ -21,12 +21,7 @@ const (
 	EFORBIDDEN      = "forbidden"       // access forbidden
 	EEXISTS         = "exists"          // resource already exists
 
-	// MusicGang VM Err codes
-
-	// fuel tank has no enough fuel
-	EMGVMFUELNOTENOUGH = "mgvm_fuel_not_enough"
-	// scheduler queue is empty
-	EMGVMQUEUEEMPTY = "mgvm_scheduler_queue_empty"
+	EMGVM = "mgvm" // error code prefix for music gang virtual machine, it is assimilated to EINTERNAL
 )
 
 // Error represents an application-specific error. Application errors can be
