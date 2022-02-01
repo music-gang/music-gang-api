@@ -8,7 +8,7 @@ import (
 )
 
 // ErrFuelTankCapacity is returned when the initial capacity is greater than the max capacity.
-var ErrFuelTankNotEnough = apperr.Errorf(apperr.EMGVMFUELNOTENOUGH, "fuel tank is not enough")
+var ErrFuelTankNotEnough = apperr.Errorf(apperr.EMGVM, "fuel tank is not enough")
 
 // FuelTanker is the interface for the fuel tank.
 type FuelTankService interface {
@@ -18,4 +18,17 @@ type FuelTankService interface {
 	Fuel(ctx context.Context) (entity.Fuel, error)
 	// Refuel refills the fuel tank by the specified amount.
 	Refuel(ctx context.Context, fuelToRefill entity.Fuel) error
+}
+
+// FuelStationService is the interface for the fuel station.
+type FuelStationService interface {
+	// IsRunning returns true if the FuelStation is running
+	IsRunning() bool
+	// ResumeRefueling starts the FuelStation.
+	// It will start refueling the fuel tank every FuelRefillRate.
+	// If the FuelStation is already running, it will return an error.
+	ResumeRefueling(ctx context.Context) error
+	// StopRefueling stops the FuelStation.
+	// If the FuelStation is not running, it will return an error.
+	StopRefueling(ctx context.Context) error
 }

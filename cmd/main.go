@@ -6,8 +6,10 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/music-gang/music-gang-api/app"
+	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/auth"
 	"github.com/music-gang/music-gang-api/auth/jwt"
 	"github.com/music-gang/music-gang-api/config"
@@ -159,8 +161,15 @@ func (m *Main) Run(ctx context.Context) error {
 	fuelTankService.LockService = redis.NewLockService(m.Redis, "fuel-tank")
 	fuelTankService.FuelTankService = redis.NewFuelTankService(m.Redis)
 
+	fuelStationService := mgvm.NewFuelStation()
+	fuelStationService.FuelTankService = fuelTankService
+	fuelStationService.LogService = logService
+	fuelStationService.FuelRefillAmount = entity.FuelRefillAmount
+	fuelStationService.FuelRefillRate = 1 * time.Second
+
 	m.VM.LogService = logService
 	m.VM.FuelTank = fuelTankService
+	m.VM.FuelStation = fuelStationService
 	m.VM.Scheduler = &mgvm.Scheduler{}
 
 	if err := m.VM.Run(); err != nil {
