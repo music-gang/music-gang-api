@@ -2,8 +2,6 @@ package mgvm
 
 import (
 	"context"
-	"fmt"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -21,14 +19,11 @@ type MusicGangVM struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	running     int32
-	actionsChan chan *Action
-	streamCtrl  chan bool
+	state State
 
 	LogService  service.LogService
 	FuelTank    service.FuelTankService
 	FuelStation service.FuelStationService
-	Scheduler   *Scheduler
 }
 
 // MusicGangVM creates a new MusicGangVM.
@@ -37,25 +32,24 @@ func NewMusicGangVM() *MusicGangVM {
 	ctx := app.NewContextWithTags(context.Background(), []string{app.ContextTagMGVM})
 	ctx, cancel := context.WithCancel(ctx)
 	return &MusicGangVM{
-		ctx:         ctx,
-		cancel:      cancel,
-		actionsChan: make(chan *Action, 10),
-		streamCtrl:  make(chan bool, 1),
+		ctx:    ctx,
+		cancel: cancel,
 	}
 }
 
 func (vm *MusicGangVM) Run() error {
 	vm.Resume()
-	go vm.Scheduler.StreamActions(vm.ctx, vm.actionsChan, vm.streamCtrl)
 	vm.FuelStation.ResumeRefueling(vm.ctx)
-	go vm.ReadActions()
-	go vm.FuelChecker()
 
 	go func() {
 
 		for {
 
-			vm.ExecAction(NewAction(vm.ctx, nil))
+			if err := vm.ExecAction(NewAction(vm.ctx, &entity.Contract{
+				MaxFuel: entity.Fuel(3000),
+			})); err != nil {
+				vm.LogService.ReportError(vm.ctx, err)
+			}
 
 			time.Sleep(100 * time.Millisecond)
 		}
@@ -67,162 +61,96 @@ func (vm *MusicGangVM) Run() error {
 func (mg *MusicGangVM) Close() error {
 	mg.FuelStation.StopRefueling(mg.ctx)
 	mg.cancel()
+	atomic.StoreInt32((*int32)(&mg.state), int32(StateClosed))
 	return nil
 }
 
 func (mg *MusicGangVM) Pause() {
-	atomic.StoreInt32(&mg.running, 0)
-	// pause stream to actionsChan
-	mg.streamCtrl <- false
+	atomic.StoreInt32((*int32)(&mg.state), int32(StatePaused))
 }
 
 func (mg *MusicGangVM) Resume() {
-	atomic.StoreInt32(&mg.running, 1)
-	// open stream to actionsChan
-	mg.streamCtrl <- true
+	atomic.StoreInt32((*int32)(&mg.state), int32(StateRunning))
 }
 
 func (mg *MusicGangVM) IsRunning() bool {
-	return atomic.LoadInt32(&mg.running) == 1
+	return atomic.LoadInt32((*int32)(&mg.state)) == int32(StateRunning)
 }
 
-func (vm *MusicGangVM) FuelChecker() {
-
-	ticker := time.NewTicker(1 * time.Second)
-	for range ticker.C {
-
-		func() {
-
-			defer func() {
-				if r := recover(); r != nil {
-					vm.LogService.ReportPanic(vm.ctx, r)
-				}
-			}()
-
-			if currentFuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
-				vm.LogService.ReportError(vm.ctx, err)
-			} else if float64(currentFuel)/float64(entity.FuelTankCapacity) > 0.95 {
-				vm.LogService.ReportWarning(vm.ctx, "Fuel tank is above 95%, stopping the vm")
-				vm.Pause()
-			}
-		}()
-	}
-}
-
-func (vm *MusicGangVM) ReadActions() {
-
-	for {
-
-		func() {
-
-			defer func() {
-				if r := recover(); r != nil {
-					vm.LogService.ReportPanic(vm.ctx, r)
-				}
-			}()
-
-			if vm.IsRunning() {
-
-				action := <-vm.actionsChan
-
-				go func(a *Action) {
-
-					defer func() {
-						if r := recover(); r != nil {
-							vm.LogService.ReportPanic(vm.ctx, r)
-						}
-					}()
-
-					if err := vm.ExecAction(action); err != nil {
-						vm.LogService.ReportFatal(vm.ctx, err)
-					}
-				}(action)
-			}
-
-			time.Sleep(10 * time.Millisecond)
-		}()
-	}
-}
-
-func (vm *MusicGangVM) ExecAction(action *Action) error {
+func (vm *MusicGangVM) ExecAction(action *Action) (err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
 			if r == "timeout" {
-				vm.LogService.ReportWarning(vm.ctx, "Timeout while executing action")
+				err = apperr.Errorf(apperr.EMGVM, "Timeout while executing action")
 				return
 			}
-			if r == "fuel-out" {
-				vm.LogService.ReportWarning(vm.ctx, "Fuel out while executing action")
-				return
-			}
-			if r == "halt" {
-				vm.LogService.ReportWarning(vm.ctx, "HALT!")
-			}
-			panic(r)
+
+			err = apperr.Errorf(apperr.EMGVM, "Panic while executing action")
 		}
 	}()
 
-	ticker := time.NewTicker(200 * time.Millisecond)
-	timeoutTicker := time.NewTicker(10 * time.Second)
+	if err := vm.FuelTank.Burn(vm.ctx, action.ContractMG.MaxFuel); err != nil {
+		return err
+	}
 
-	defer ticker.Stop()
+	timeoutTicker := time.NewTicker(entity.MaxExecutionTime)
 	defer timeoutTicker.Stop()
 
 	ottoVm := otto.New()
 	ottoVm.Interrupt = make(chan func(), 1)
 
 	go func() {
-		lastFuelCheck := time.Now()
-		for {
-			select {
-			case <-ticker.C:
-				fuelConsumed := entity.FuelAmount(time.Since(lastFuelCheck))
-				lastFuelCheck = time.Now()
-				if err := vm.FuelTank.Burn(vm.ctx, fuelConsumed); err != nil {
-					ottoVm.Interrupt <- func() { panic("fuel-out") }
-				}
-			case <-timeoutTicker.C:
-				ottoVm.Interrupt <- func() { panic("timeout") }
-			}
+		<-timeoutTicker.C
+		ottoVm.Interrupt <- func() {
+			panic("timeout")
 		}
-
 	}()
+
+	startActionTime := time.Now()
 
 	script, err := ottoVm.Compile("", `
 		function sum(a, b) {
 			return a+b;
 		}
+		var result = sum(1, 2);
 	`)
 	if err != nil {
 		action.res <- util.Err(apperr.Errorf(apperr.EINTERNAL, "Error compiling script: %s", err))
-		vm.LogService.ReportWarning(vm.ctx, fmt.Sprintf("Error compiling script: %s", err.Error()))
 		return err
 	}
 
 	_, err = ottoVm.Run(script)
+	close(ottoVm.Interrupt)
 
 	if err != nil {
 		action.res <- util.Err(apperr.Errorf(apperr.EINTERNAL, "Error while executing action: %s", err.Error()))
-		vm.LogService.ReportWarning(vm.ctx, fmt.Sprintf("Error while executing action: %s", err.Error()))
 		return err
 	}
 
 	value, err := ottoVm.Get("result")
 	if err != nil {
 		action.res <- util.Err(apperr.Errorf(apperr.EINTERNAL, "Error while retrieving result: %s", err.Error()))
-		vm.LogService.ReportWarning(vm.ctx, fmt.Sprintf("Error while retrieving result: %s", err.Error()))
 		return err
 	}
 
 	str, err := value.ToString()
 	if err != nil {
 		action.res <- util.Err(apperr.Errorf(apperr.EINTERNAL, "Error while parsing action result: %s", err.Error()))
-		vm.LogService.ReportWarning(vm.ctx, fmt.Sprintf("Error while executing action: %s", err.Error()))
 		return err
 	}
 
-	println(str)
+	elapsed := time.Since(startActionTime)
+
+	effectiveFuelAmount := entity.FuelAmount(elapsed)
+
+	fuelRecovered := action.ContractMG.MaxFuel - effectiveFuelAmount
+
+	if fuelRecovered > 0 {
+		if err := vm.FuelTank.Refuel(vm.ctx, fuelRecovered); err != nil {
+			return err
+		}
+	}
 
 	action.res <- util.Ok(str)
 
@@ -240,49 +168,5 @@ func NewAction(ctx context.Context, contract *entity.Contract) *Action {
 		ctx:        ctx,
 		res:        make(chan util.Result, 1),
 		ContractMG: contract,
-	}
-}
-
-type Scheduler struct {
-	muxQ  sync.Mutex
-	queue []*Action
-}
-
-func (s *Scheduler) Push(action *Action) <-chan util.Result {
-	s.muxQ.Lock()
-	defer s.muxQ.Unlock()
-	s.queue = append(s.queue, action)
-	return action.res
-}
-
-func (s *Scheduler) StreamActions(ctx context.Context, actionsChan chan<- *Action, streamControl <-chan bool) {
-
-	streamOpen := true
-
-	for {
-
-		select {
-		case <-ctx.Done():
-			return
-		case sc := <-streamControl:
-			streamOpen = sc
-		default:
-		}
-
-		if streamOpen {
-			// remove first action from queue
-			s.muxQ.Lock()
-			if len(s.queue) > 0 {
-
-				action := s.queue[0]
-				s.queue = s.queue[1:]
-
-				// send action to actionsChan
-				actionsChan <- action
-			}
-			s.muxQ.Unlock()
-		}
-
-		time.Sleep(10 * time.Millisecond)
 	}
 }

@@ -1,8 +1,6 @@
 package entity
 
 import (
-	"time"
-
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"gopkg.in/guregu/null.v4"
 )
@@ -35,13 +33,12 @@ type Contracts []*Contract
 // The contract is a cloud function that is executed on a server, deployed by users;
 // The contract can have multiple revisions.
 type Contract struct {
-	ID           int64         `json:"id"`
-	Name         string        `json:"name"`
-	Description  null.String   `json:"description"`
-	LastFuelUsed Fuel          `json:"last_fuel_used"`
-	LastDuration time.Duration `json:"last_duration"`
-	UserID       null.Int      `json:"user_id"`
-	Visibility   Visibility    `json:"visibility"`
+	ID          int64       `json:"id"`
+	Name        string      `json:"name"`
+	Description null.String `json:"description"`
+	UserID      null.Int    `json:"user_id"`
+	Visibility  Visibility  `json:"visibility"`
+	MaxFuel     Fuel        `json:"max_fuel"` // The maximum amount of fuel that can be burned from the contract.
 
 	LastRevision *Revision `json:"last_revision"`
 	User         *User     `json:"user"`

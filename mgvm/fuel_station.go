@@ -93,12 +93,11 @@ func stopRefueling(ctx context.Context, fs *FuelStation) error {
 }
 
 // internalRefueler refuels the fuel tank.
-func internalRefueler(ctx context.Context, fs *FuelStation) error {
+func internalRefueler(ctx context.Context, fs *FuelStation) (err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			fs.LogService.ReportPanic(ctx, r)
-			return
+			err = apperr.Errorf(apperr.EMGVM, "internal refueler panic: %v", r)
 		}
 	}()
 

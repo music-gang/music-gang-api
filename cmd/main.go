@@ -158,7 +158,7 @@ func (m *Main) Run(ctx context.Context) error {
 	}
 
 	fuelTankService := mgvm.NewFuelTank()
-	fuelTankService.LockService = redis.NewLockService(m.Redis, "fuel-tank")
+	fuelTankService.LockService = redis.NewLockService(m.Redis, "fuel-tank-lock")
 	fuelTankService.FuelTankService = redis.NewFuelTankService(m.Redis)
 
 	fuelStationService := mgvm.NewFuelStation()
@@ -170,7 +170,6 @@ func (m *Main) Run(ctx context.Context) error {
 	m.VM.LogService = logService
 	m.VM.FuelTank = fuelTankService
 	m.VM.FuelStation = fuelStationService
-	m.VM.Scheduler = &mgvm.Scheduler{}
 
 	if err := m.VM.Run(); err != nil {
 		return err

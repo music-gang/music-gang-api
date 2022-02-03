@@ -16,6 +16,7 @@ func (f Fuel) MarshalBinary() (data []byte, err error) {
 // Fuel*ActionCost rappresents the cost of an action.
 // Greater is the execution time, greater is the cost.
 const (
+	FuelInstantActionAmount = Fuel(50)
 	FuelQuickActionAmount   = Fuel(200)
 	FuelFastestActionAmount = Fuel(300)
 	FuelFastActionAmount    = Fuel(500)
@@ -41,9 +42,14 @@ const FuelRefillAmount = Fuel(FuelTankCapacity * 5 / 100)
 // TODO: this should be a configurable value.
 const FuelTankCapacity = 100 * vKFuel
 
+// MaxExecutionTime returns the maximum execution time of an action.
+// TODO: this should be a configurable value.
+const MaxExecutionTime = 7 * time.Second
+
 var (
 	// fuelAmountTable is a grid of fuel costs based on the execution time.
 	fuelAmountTable = map[time.Duration]Fuel{
+		time.Millisecond * 0:    FuelInstantActionAmount,
 		time.Millisecond * 100:  FuelQuickActionAmount,
 		time.Millisecond * 200:  FuelFastestActionAmount,
 		time.Millisecond * 450:  FuelFastActionAmount,
