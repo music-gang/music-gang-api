@@ -2,16 +2,13 @@ package mgvm
 
 import (
 	"context"
-	"sync/atomic"
+	"sync"
 	"time"
-
-	"github.com/robertkrimen/otto"
 
 	"github.com/music-gang/music-gang-api/app"
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
-	"github.com/music-gang/music-gang-api/app/util"
 )
 
 // MusicGangVM is a virtual machine for the Mg language(nodeJS for now).
@@ -19,11 +16,12 @@ type MusicGangVM struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	state State
+	*sync.Cond
 
-	LogService  service.LogService
-	FuelTank    service.FuelTankService
-	FuelStation service.FuelStationService
+	LogService    service.LogService
+	EngineService service.VmService
+	FuelTank      service.FuelTankService
+	FuelStation   service.FuelStationService
 }
 
 // MusicGangVM creates a new MusicGangVM.
@@ -34,139 +32,161 @@ func NewMusicGangVM() *MusicGangVM {
 	return &MusicGangVM{
 		ctx:    ctx,
 		cancel: cancel,
+		Cond:   sync.NewCond(&sync.Mutex{}),
 	}
 }
 
+// Run starts the vm.
 func (vm *MusicGangVM) Run() error {
-	vm.Resume()
 	vm.FuelStation.ResumeRefueling(vm.ctx)
+	vm.Resume()
+	go func() {
+
+		for {
+
+			ctx, cancel := context.WithTimeout(vm.ctx, time.Second*1)
+
+			vm.ExecContract(ctx, &service.ContractCall{
+				Contract: &entity.Contract{
+					MaxFuel: entity.FuelExtremeActionAmount,
+					LastRevision: &entity.Revision{
+						Code: `
+							function sum(a, b) {
+								return a+b;
+							}
+							var result = sum(1, 2);
+						`,
+					},
+				},
+			})
+
+			cancel()
+
+			time.Sleep(10 * time.Millisecond)
+		}
+	}()
 
 	go func() {
 
 		for {
 
-			if err := vm.ExecAction(NewAction(vm.ctx, &entity.Contract{
-				MaxFuel: entity.Fuel(3000),
-			})); err != nil {
-				vm.LogService.ReportError(vm.ctx, err)
+			if vm.State() == service.StatePaused {
+				if fuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
+					vm.LogService.ReportError(vm.ctx, err)
+				} else if float64(fuel) < float64(entity.FuelTankCapacity)*0.65 {
+					vm.Resume()
+					vm.LogService.ReportInfo(vm.ctx, "Resume engine")
+				}
 			}
 
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 		}
 	}()
 
 	return nil
 }
 
+// Close closes the vm.
 func (mg *MusicGangVM) Close() error {
+	mg.EngineService.Stop()
 	mg.FuelStation.StopRefueling(mg.ctx)
 	mg.cancel()
-	atomic.StoreInt32((*int32)(&mg.state), int32(StateClosed))
 	return nil
 }
 
-func (mg *MusicGangVM) Pause() {
-	atomic.StoreInt32((*int32)(&mg.state), int32(StatePaused))
-}
+// ExecContract executes the contract.
+// This func is a wrapper for the Engine.ExecContract.
+func (vm *MusicGangVM) ExecContract(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
 
-func (mg *MusicGangVM) Resume() {
-	atomic.StoreInt32((*int32)(&mg.state), int32(StateRunning))
-}
-
-func (mg *MusicGangVM) IsRunning() bool {
-	return atomic.LoadInt32((*int32)(&mg.state)) == int32(StateRunning)
-}
-
-func (vm *MusicGangVM) ExecAction(action *Action) (err error) {
+	select {
+	case <-ctx.Done():
+		return nil, apperr.Errorf(apperr.EMGVM, "Timeout while executing contract")
+	default:
+		func() {
+			vm.L.Lock()
+			for !vm.IsRunning() {
+				vm.LogService.ReportInfo(vm.ctx, "Wait for engine to resume")
+				vm.Wait()
+			}
+			vm.L.Unlock()
+		}()
+	}
 
 	defer func() {
+		// handle engine timeout or panic
 		if r := recover(); r != nil {
-			if r == "timeout" {
-				err = apperr.Errorf(apperr.EMGVM, "Timeout while executing action")
+			if r == EngineExecutionTimeoutPanic {
+				err = apperr.Errorf(apperr.EMGVM, "Timeout while executing contract")
 				return
 			}
-
-			err = apperr.Errorf(apperr.EMGVM, "Panic while executing action")
+			err = apperr.Errorf(apperr.EMGVM, "Panic while executing contract")
 		}
 	}()
 
-	if err := vm.FuelTank.Burn(vm.ctx, action.ContractMG.MaxFuel); err != nil {
-		return err
-	}
-
-	timeoutTicker := time.NewTicker(entity.MaxExecutionTime)
-	defer timeoutTicker.Stop()
-
-	ottoVm := otto.New()
-	ottoVm.Interrupt = make(chan func(), 1)
-
-	go func() {
-		<-timeoutTicker.C
-		ottoVm.Interrupt <- func() {
-			panic("timeout")
+	// burn the max fuel consumed by the contract.
+	if err := vm.FuelTank.Burn(vm.ctx, contractRef.Contract.MaxFuel); err != nil {
+		if err == service.ErrFuelTankNotEnough {
+			vm.LogService.ReportInfo(vm.ctx, "Not enough fuel to execute contract, pause engine")
+			vm.Pause()
 		}
-	}()
-
-	startActionTime := time.Now()
-
-	script, err := ottoVm.Compile("", `
-		function sum(a, b) {
-			return a+b;
-		}
-		var result = sum(1, 2);
-	`)
-	if err != nil {
-		action.res <- util.Err(apperr.Errorf(apperr.EINTERNAL, "Error compiling script: %s", err))
-		return err
+		return nil, err
 	}
 
-	_, err = ottoVm.Run(script)
-	close(ottoVm.Interrupt)
+	startContractTime := time.Now()
 
+	// pass the contract to the engine.
+	res, err = vm.EngineService.ExecContract(ctx, contractRef)
 	if err != nil {
-		action.res <- util.Err(apperr.Errorf(apperr.EINTERNAL, "Error while executing action: %s", err.Error()))
-		return err
+		vm.LogService.ReportError(vm.ctx, err)
+		return nil, err
 	}
 
-	value, err := ottoVm.Get("result")
-	if err != nil {
-		action.res <- util.Err(apperr.Errorf(apperr.EINTERNAL, "Error while retrieving result: %s", err.Error()))
-		return err
-	}
+	// log the contract execution time.
+	elapsed := time.Since(startContractTime)
 
-	str, err := value.ToString()
-	if err != nil {
-		action.res <- util.Err(apperr.Errorf(apperr.EINTERNAL, "Error while parsing action result: %s", err.Error()))
-		return err
-	}
-
-	elapsed := time.Since(startActionTime)
-
+	// calculate the fuel consumed effectively.
 	effectiveFuelAmount := entity.FuelAmount(elapsed)
 
-	fuelRecovered := action.ContractMG.MaxFuel - effectiveFuelAmount
+	// calculate the fuel saved.
+	fuelRecovered := contractRef.Contract.MaxFuel - effectiveFuelAmount
 
+	// if fuel saved is greater than 0, refuel the tank.
 	if fuelRecovered > 0 {
 		if err := vm.FuelTank.Refuel(vm.ctx, fuelRecovered); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	action.res <- util.Ok(str)
-
-	return nil
+	return res, nil
 }
 
-type Action struct {
-	ctx        context.Context
-	res        chan util.Result
-	ContractMG *entity.Contract
+// IsRunning returns true if the engine is running.
+// Delegates to the engine service.
+func (vm *MusicGangVM) IsRunning() bool {
+	return vm.EngineService.IsRunning()
 }
 
-func NewAction(ctx context.Context, contract *entity.Contract) *Action {
-	return &Action{
-		ctx:        ctx,
-		res:        make(chan util.Result, 1),
-		ContractMG: contract,
-	}
+// Pause pauses the engine.
+// Delegates to the engine service.
+func (vm *MusicGangVM) Pause() {
+	vm.EngineService.Pause()
+}
+
+// Resume resumes the engine.
+// Delegates to the engine service.
+func (vm *MusicGangVM) Resume() {
+	vm.EngineService.Resume()
+	vm.Broadcast()
+}
+
+// State returns the state of the engine.
+// Delegates to the engine service.
+func (vm *MusicGangVM) State() service.State {
+	return vm.EngineService.State()
+}
+
+// Stop stops the engine.
+// Delegates to the engine service.
+func (vm *MusicGangVM) Stop() {
+	vm.EngineService.Stop()
 }

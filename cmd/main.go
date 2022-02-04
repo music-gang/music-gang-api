@@ -90,6 +90,12 @@ func NewMain() *Main {
 // Close closes the main application
 func (m *Main) Close() error {
 
+	if m.VM != nil {
+		if err := m.VM.Close(); err != nil {
+			return err
+		}
+	}
+
 	if m.HTTPServerAPI != nil {
 		if err := m.HTTPServerAPI.Close(); err != nil {
 			return err
@@ -104,12 +110,6 @@ func (m *Main) Close() error {
 
 	if m.Redis != nil {
 		if err := m.Redis.Close(); err != nil {
-			return err
-		}
-	}
-
-	if m.VM != nil {
-		if err := m.VM.Close(); err != nil {
 			return err
 		}
 	}
@@ -165,11 +165,14 @@ func (m *Main) Run(ctx context.Context) error {
 	fuelStationService.FuelTankService = fuelTankService
 	fuelStationService.LogService = logService
 	fuelStationService.FuelRefillAmount = entity.FuelRefillAmount
-	fuelStationService.FuelRefillRate = 1 * time.Second
+	fuelStationService.FuelRefillRate = 400 * time.Millisecond
+
+	engineService := mgvm.NewEngine()
 
 	m.VM.LogService = logService
 	m.VM.FuelTank = fuelTankService
 	m.VM.FuelStation = fuelStationService
+	m.VM.EngineService = engineService
 
 	if err := m.VM.Run(); err != nil {
 		return err
