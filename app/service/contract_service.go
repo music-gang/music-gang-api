@@ -58,3 +58,19 @@ type ContractUpdate struct {
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
 }
+
+// ContractCall rappresents a request from an user to call a contract.
+type ContractCall struct {
+	ctx      context.Context
+	Contract *entity.Contract `json:"contract"`
+	Caller   *entity.User     `json:"caller"`
+}
+
+// NewContractCall creates a new ContractCall.
+func NewContractCall(ctx context.Context, contract *entity.Contract, caller *entity.User) *ContractCall {
+	return &ContractCall{
+		ctx:      ctx,
+		Contract: contract,
+		Caller:   caller,
+	}
+}

@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"time"
+
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"gopkg.in/guregu/null.v4"
 )
@@ -60,4 +62,15 @@ func (c *Contract) Validate() error {
 	}
 
 	return nil
+}
+
+// MaxExecutionTime returns the maximum execution time of the contract.
+// MaxExecutionTime is based on max fuel compared with fuelAmountTable.
+func (c *Contract) MaxExecutionTime() time.Duration {
+	for t, fuel := range fuelAmountTable {
+		if c.MaxFuel <= fuel {
+			return t + MinExecutionTime
+		}
+	}
+	return time.Duration(0)
 }

@@ -22,7 +22,7 @@ const (
 	FuelFastActionAmount    = Fuel(500)
 	FuelMidActionAmount     = Fuel(800)
 	FuelSlowActionAmount    = Fuel(1000)
-	GasExtremeActionAmount  = Fuel(2000)
+	FuelExtremeActionAmount = Fuel(2000)
 )
 
 // vFuel rappresents the virtual units of measure for the power consuption of the MusicGang VM.
@@ -46,6 +46,10 @@ const FuelTankCapacity = 100 * vKFuel
 // TODO: this should be a configurable value.
 const MaxExecutionTime = 7 * time.Second
 
+// MinExecutionTime returns the minimum execution time of an action.
+// In fact, action can be executed in less than the minimum execution time.
+const MinExecutionTime = time.Millisecond * 100
+
 var (
 	// fuelAmountTable is a grid of fuel costs based on the execution time.
 	fuelAmountTable = map[time.Duration]Fuel{
@@ -55,7 +59,7 @@ var (
 		time.Millisecond * 450:  FuelFastActionAmount,
 		time.Millisecond * 1000: FuelMidActionAmount,
 		time.Millisecond * 2000: FuelSlowActionAmount,
-		time.Millisecond * 3000: GasExtremeActionAmount,
+		time.Millisecond * 3000: FuelExtremeActionAmount,
 	}
 )
 
@@ -66,7 +70,7 @@ func FuelAmount(execution time.Duration) Fuel {
 			return v
 		}
 	}
-	return GasExtremeActionAmount
+	return FuelExtremeActionAmount
 }
 
 // FuelStats represents the statistics of the fuel tank.
