@@ -1,13 +1,14 @@
 package log
 
 import (
+	"context"
 	"io"
 
 	"github.com/slack-go/slack"
 )
 
 func init() {
-	PostWebhook = func(url string, msg *slack.WebhookMessage) error {
+	PostWebhookWithContext = func(ctx context.Context, url string, msg *slack.WebhookMessage) error {
 		return nil
 	}
 }

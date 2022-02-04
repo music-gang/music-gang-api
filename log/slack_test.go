@@ -57,7 +57,7 @@ func TestSlack(t *testing.T) {
 
 		ctx := context.Background()
 
-		log.PostWebhook = func(url string, msg *slack.WebhookMessage) error {
+		log.PostWebhookWithContext = func(ctx context.Context, url string, msg *slack.WebhookMessage) error {
 			return apperr.Errorf(apperr.EINTERNAL, "test")
 		}
 

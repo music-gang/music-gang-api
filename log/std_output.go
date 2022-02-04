@@ -78,6 +78,11 @@ func (s *StdOutputLogger) ReportDebug(ctx context.Context, msg string) {
 
 // ReportError logs an error.
 func (s *StdOutputLogger) ReportError(ctx context.Context, err error) {
+	select {
+	case <-ctx.Done():
+		s.ReportDebug(ctx, err.Error())
+	default:
+	}
 	if s.Level() <= service.LevelError {
 		fmt.Fprintln(s.out, service.FormatOutputForReportFunc(service.LevelError, err.Error(), app.TagsFromContext(ctx), s.Fmt))
 	}

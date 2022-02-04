@@ -76,6 +76,18 @@ func TestStdOutput(t *testing.T) {
 			}()
 		})
 
+		t.Run("ReportErrCtxCancel", func(t *testing.T) {
+
+			logService := log.NewStdOutputLoggerWithConfig(log.StdOutputLoggerOptions{
+				Level: service.LevelOff,
+			})
+
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+
+			logService.ReportError(ctx, apperr.Errorf(apperr.EINTERNAL, "test"))
+		})
+
 		t.Run("CustomFormat", func(t *testing.T) {
 
 			logService := log.NewStdOutputLoggerWithConfig(log.StdOutputLoggerOptions{
