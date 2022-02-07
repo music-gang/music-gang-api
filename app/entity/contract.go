@@ -69,8 +69,9 @@ func (c *Contract) Validate() error {
 func (c *Contract) MaxExecutionTime() time.Duration {
 	for t, fuel := range fuelAmountTable {
 		if c.MaxFuel <= fuel {
-			return t + MinExecutionTime
+			return t
 		}
 	}
-	return time.Duration(0)
+
+	return MaxExecutionTime
 }
