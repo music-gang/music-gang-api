@@ -284,3 +284,90 @@ func TestFuel_Refuel(t *testing.T) {
 		}
 	})
 }
+
+func TestFuel_Stats(t *testing.T) {
+
+	t.Run("OK", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		ctx := context.Background()
+
+		if err := db.FlushAll(ctx); err != nil {
+			t.Fatal(err)
+		}
+
+		fuelTankService := redis.NewFuelTankService(db)
+
+		if err := fuelTankService.Burn(ctx, entity.Fuel(100)); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := fuelTankService.Refuel(ctx, entity.Fuel(50)); err != nil {
+			t.Fatal(err)
+		}
+
+		stats, err := fuelTankService.Stats(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if stats.FuelUsed != entity.Fuel(50) {
+			t.Errorf("got %d, want %d", stats.FuelUsed, entity.Fuel(50))
+		}
+
+		if stats.LastRefuelAmout != entity.Fuel(50) {
+			t.Errorf("got %d, want %d", stats.LastRefuelAmout, entity.Fuel(50))
+		}
+	})
+
+	t.Run("InitialStateStats", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		ctx := context.Background()
+
+		if err := db.FlushAll(ctx); err != nil {
+			t.Fatal(err)
+		}
+
+		fuelTankService := redis.NewFuelTankService(db)
+
+		stats, err := fuelTankService.Stats(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if stats.FuelUsed != entity.Fuel(0) {
+			t.Errorf("got %d, want %d", stats.FuelUsed, entity.Fuel(0))
+		}
+
+		if stats.LastRefuelAmout != entity.Fuel(0) {
+			t.Errorf("got %d, want %d", stats.LastRefuelAmout, entity.Fuel(0))
+		}
+	})
+
+	t.Run("CancelContext", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		ctx, cancel := context.WithCancel(context.Background())
+
+		if err := db.FlushAll(ctx); err != nil {
+			t.Fatal(err)
+		}
+
+		fuelTankService := redis.NewFuelTankService(db)
+
+		cancel()
+
+		if _, err := fuelTankService.Stats(ctx); err == nil {
+			t.Fatal("got nil, want error")
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINTERNAL {
+			t.Errorf("got %v, want %v", errCode, apperr.EINTERNAL)
+		}
+	})
+}
