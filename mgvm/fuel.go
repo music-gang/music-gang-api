@@ -3,6 +3,7 @@ package mgvm
 import (
 	"context"
 	"sync/atomic"
+	"time"
 
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
@@ -36,9 +37,14 @@ type FuelTank struct {
 	// FuelTankService is the service for managing the fuel tank.
 	// FuelTank delegates to this service to achieve scalability.
 	FuelTankService service.FuelTankService
+	LockService     service.LockService
 
-	LockService service.LockService
-
+	// lastRefuelAmount is the last amount of fuel used to refill the virtual fuel tank.
+	// It should be used only in case the sync is not required.
+	lastRefuelAmount entity.Fuel
+	// LastRefuelAt is the last time the virtual fuel tank was refilled.
+	// It should be used only in case the sync is not required.
+	LastRefuelAt int64
 	// localFuelUsed is the amount of fuel used locally.
 	// It should used only in case the sync is not required.
 	localFuelUsed entity.Fuel
@@ -59,8 +65,14 @@ func (ft *FuelTank) Fuel(ctx context.Context) (entity.Fuel, error) {
 	return fuel(ctx, ft, !useRemoteFuel)
 }
 
+// Refuel refills the virtual fuel tank with the specified amount of fuel.
 func (ft *FuelTank) Refuel(ctx context.Context, fuelToRefill entity.Fuel) error {
 	return refuel(ctx, ft, fuelToRefill)
+}
+
+// Stats returns the current amount of fuel used.
+func (ft *FuelTank) Stats(ctx context.Context) (*entity.FuelStat, error) {
+	return stats(ctx, ft, useRemoteFuel)
 }
 
 // localFuel returns the current amount of fuel used from the local counter.
@@ -142,7 +154,33 @@ func refuel(ctx context.Context, ft *FuelTank, refillFuel entity.Fuel) error {
 	}
 
 	// fifth, we need to update the local fuel tank and capacity
-	atomic.AddUint64((*uint64)(&ft.localFuelUsed), uint64(fuelUsedAfterRefill))
+	atomic.StoreUint64((*uint64)(&ft.localFuelUsed), uint64(fuelUsedAfterRefill))
+	atomic.StoreUint64((*uint64)(&ft.lastRefuelAmount), uint64(refillFuel))
+	atomic.StoreInt64((*int64)(&ft.LastRefuelAt), time.Now().Unix())
 
 	return nil
+}
+
+// Stats returns the current amount of fuel used.
+func stats(ctx context.Context, ft *FuelTank, useRemoteFuel bool) (*entity.FuelStat, error) {
+
+	if useRemoteFuel {
+		ft.LockService.Lock(ctx)
+		defer ft.LockService.Unlock(ctx)
+		return ft.FuelTankService.Stats(ctx)
+	}
+
+	fuel := ft.localFuel()
+
+	lastRefuelAmout := entity.Fuel(atomic.LoadUint64((*uint64)(&ft.lastRefuelAmount)))
+	lastRefuelAt := atomic.LoadInt64(&ft.LastRefuelAt)
+
+	stats := &entity.FuelStat{
+		FuelCapacity:    entity.FuelTankCapacity,
+		FuelUsed:        fuel,
+		LastRefuelAmout: lastRefuelAmout,
+		LastRefuelAt:    time.Unix(lastRefuelAt, 0),
+	}
+
+	return stats, nil
 }

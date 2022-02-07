@@ -290,6 +290,39 @@ func TestFuelTank_Refuel(t *testing.T) {
 		} else if cf != 0 {
 			t.Fatalf("unexpected currentFuel, got: %v, want: %v", cf, currentFuel)
 		}
+
+		// local refuel
+
+		mgvm.SwitchToLocalFuel()
+		defer mgvm.SwitchToRemoteFuel()
+
+		if err := fuelTank.Burn(ctx, entity.Fuel(50)); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		} else if cf, err := fuelTank.Fuel(ctx); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		} else if cf != 50 {
+			t.Fatalf("unexpected currentFuel, got: %v, want: %v", cf, currentFuel)
+		} else if err := fuelTank.Refuel(ctx, entity.Fuel(30)); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		} else if cf, err := fuelTank.Fuel(ctx); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		} else if cf != 20 {
+			t.Fatalf("unexpected currentFuel, got: %v, want: %v", cf, currentFuel)
+		}
+
+		remoteFuel, err := mgvm.Fuel(ctx, fuelTank, false)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		localFuel, err := mgvm.Fuel(ctx, fuelTank, true)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if remoteFuel != localFuel {
+			t.Fatalf("unexpected fuel, got: %v, want: %v", remoteFuel, localFuel)
+		}
 	})
 
 	t.Run("RefuelErr", func(t *testing.T) {
@@ -396,6 +429,84 @@ func TestFuelTank_Refuel(t *testing.T) {
 			t.Fatalf("unexpected error code, got: %v, want: %v", errCode, apperr.EINTERNAL)
 		} else if errMsg := apperr.ErrorMessage(err); errMsg != "fuel-mock" {
 			t.Fatalf("unexpected error message, got: %v, want: %v", errMsg, "fuel-mock")
+		}
+	})
+}
+
+func TestFuelTank_Stats(t *testing.T) {
+
+	t.Run("OK", func(t *testing.T) {
+
+		fuelTank := mgvm.NewFuelTank()
+
+		ctx := context.Background()
+
+		currentFuel := entity.Fuel(0)
+
+		now := time.Now()
+
+		time.Sleep(1 * time.Second)
+
+		fuelTank.FuelTankService = &mock.FuelTankService{
+			FuelFn: func(ctx context.Context) (entity.Fuel, error) {
+				return currentFuel, nil
+			},
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				currentFuel += fuel
+				return nil
+			},
+			RefuelFn: func(ctx context.Context, fuelToRefill entity.Fuel) error {
+				currentFuel -= fuelToRefill
+				return nil
+			},
+			StatsFn: func(ctx context.Context) (*entity.FuelStat, error) {
+				return &entity.FuelStat{
+					FuelCapacity:    entity.FuelTankCapacity,
+					FuelUsed:        entity.Fuel(10),
+					LastRefuelAmout: entity.Fuel(5),
+					LastRefuelAt:    time.Now(),
+				}, nil
+			},
+		}
+
+		fuelTank.LockService = &mock.LockService{
+			LockFn:   func(ctx context.Context) {},
+			NameFn:   func() string { return "lock-mock" },
+			UnlockFn: func(ctx context.Context) {},
+		}
+
+		if err := fuelTank.Burn(ctx, entity.Fuel(15)); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if err := fuelTank.Refuel(ctx, entity.Fuel(5)); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if stats, err := fuelTank.Stats(ctx); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		} else if stats.FuelCapacity != entity.FuelTankCapacity {
+			t.Fatalf("unexpected fuelCapacity, got: %v, want: %v", stats.FuelCapacity, entity.FuelTankCapacity)
+		} else if stats.FuelUsed != 10 {
+			t.Fatalf("unexpected fuelUsed, got: %v, want: %v", stats.FuelUsed, 10)
+		} else if stats.LastRefuelAmout != 5 {
+			t.Fatalf("unexpected lastRefuelAmout, got: %v, want: %v", stats.LastRefuelAmout, 5)
+		} else if stats.LastRefuelAt.Unix() == now.Unix() {
+			t.Fatalf("unexpected lastRefuelAt value, should be different from %v", now)
+		}
+
+		mgvm.SwitchToLocalFuel()
+
+		if stats, err := fuelTank.Stats(ctx); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		} else if stats.FuelCapacity != entity.FuelTankCapacity {
+			t.Fatalf("unexpected fuelCapacity, got: %v, want: %v", stats.FuelCapacity, entity.FuelTankCapacity)
+		} else if stats.FuelUsed != 10 {
+			t.Fatalf("unexpected fuelUsed, got: %v, want: %v", stats.FuelUsed, 10)
+		} else if stats.LastRefuelAmout != 5 {
+			t.Fatalf("unexpected lastRefuelAmout, got: %v, want: %v", stats.LastRefuelAmout, 5)
+		} else if stats.LastRefuelAt.Unix() == now.Unix() {
+			t.Fatalf("unexpected lastRefuelAt value, should be different from %v", now)
 		}
 	})
 }
