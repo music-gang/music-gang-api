@@ -11,6 +11,9 @@ import (
 	"github.com/music-gang/music-gang-api/app/service"
 )
 
+var _ service.VmService = (*MusicGangVM)(nil)
+var _ service.FuelMeterService = (*MusicGangVM)(nil)
+
 // MusicGangVM is a virtual machine for the Mg language(nodeJS for now).
 type MusicGangVM struct {
 	ctx    context.Context
@@ -66,22 +69,7 @@ func (vm *MusicGangVM) Run() error {
 		}
 	}()
 
-	go func() {
-
-		for {
-
-			if vm.State() == service.StatePaused {
-				if fuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
-					vm.LogService.ReportError(vm.ctx, err)
-				} else if float64(fuel) < float64(entity.FuelTankCapacity)*0.65 {
-					vm.Resume()
-					vm.LogService.ReportInfo(vm.ctx, "Resume engine")
-				}
-			}
-
-			time.Sleep(500 * time.Millisecond)
-		}
-	}()
+	go vm.meter()
 
 	return nil
 }
@@ -185,8 +173,45 @@ func (vm *MusicGangVM) State() service.State {
 	return vm.EngineService.State()
 }
 
+// Stats returns the stats of fuel tank usage.
+func (vm *MusicGangVM) Stats(ctx context.Context) (*entity.FuelStat, error) {
+	return vm.FuelTank.Stats(ctx)
+}
+
 // Stop stops the engine.
 // Delegates to the engine service.
 func (vm *MusicGangVM) Stop() {
 	vm.EngineService.Stop()
+}
+
+// meter measures the fuel consumption of the engine.
+func (vm *MusicGangVM) meter() {
+
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+
+		select {
+		case <-vm.ctx.Done():
+			return
+		case <-ticker.C:
+		}
+
+		if vm.State() == service.StatePaused {
+			if fuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
+				vm.LogService.ReportError(vm.ctx, err)
+			} else if float64(fuel) < float64(entity.FuelTankCapacity)*0.65 {
+				vm.Resume()
+				vm.LogService.ReportInfo(vm.ctx, "Resume engine")
+			}
+		} else if vm.State() == service.StateRunning {
+			if fuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
+				vm.LogService.ReportError(vm.ctx, err)
+			} else if float64(fuel) > float64(entity.FuelTankCapacity)*0.95 {
+				vm.Pause()
+				vm.LogService.ReportInfo(vm.ctx, "Pause engine")
+			}
+		}
+	}
 }

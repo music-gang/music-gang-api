@@ -15,6 +15,8 @@ type FuelTankService struct {
 	FuelFn func(ctx context.Context) (entity.Fuel, error)
 
 	RefuelFn func(ctx context.Context, fuelToRefill entity.Fuel) error
+
+	StatsFn func(ctx context.Context) (*entity.FuelStat, error)
 }
 
 func (ft *FuelTankService) Burn(ctx context.Context, fuel entity.Fuel) error {
@@ -36,4 +38,11 @@ func (ft *FuelTankService) Refuel(ctx context.Context, fuelToRefill entity.Fuel)
 		panic("RefuelFn is not defined")
 	}
 	return ft.RefuelFn(ctx, fuelToRefill)
+}
+
+func (ft *FuelTankService) Stats(ctx context.Context) (*entity.FuelStat, error) {
+	if ft.StatsFn == nil {
+		panic("StatsFn is not defined")
+	}
+	return ft.StatsFn(ctx)
 }
