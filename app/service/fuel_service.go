@@ -12,6 +12,9 @@ var ErrFuelTankNotEnough = apperr.Errorf(apperr.EMGVM, "fuel tank is not enough"
 
 // FuelTanker is the interface for the fuel tank.
 type FuelTankService interface {
+	// FuelTankService can implements the FuelMeterService
+	FuelMeterService
+
 	// Burn consumes the specified amount of fuel.
 	Burn(ctx context.Context, fuel entity.Fuel) error
 	// Fuel returns the current amount of fuel used.
@@ -33,8 +36,9 @@ type FuelStationService interface {
 	StopRefueling(ctx context.Context) error
 }
 
+// FuelMeterService is the interface for the fuel meter.
+// FuelMeterService returns the current amount of fuel used.
 type FuelMeterService interface {
-	Above(ctx context.Context, fuel entity.Fuel) (bool, error)
-	Below(ctx context.Context, fuel entity.Fuel) (bool, error)
-	Stats(ctx context.Context) (entity.FuelStat, error)
+	// Stats returns the current amount of fuel used.
+	Stats(ctx context.Context) (*entity.FuelStat, error)
 }
