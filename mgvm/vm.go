@@ -22,7 +22,7 @@ type MusicGangVM struct {
 	*sync.Cond
 
 	LogService    service.LogService
-	EngineService service.VmService
+	EngineService service.EngineService
 	FuelTank      service.FuelTankService
 	FuelStation   service.FuelStationService
 }
@@ -47,11 +47,11 @@ func (vm *MusicGangVM) Run() error {
 
 		for {
 
-			ctx, cancel := context.WithTimeout(vm.ctx, time.Second*1)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
 
 			vm.ExecContract(ctx, &service.ContractCall{
 				Contract: &entity.Contract{
-					MaxFuel: entity.FuelExtremeActionAmount,
+					MaxFuel: entity.FuelLongActionAmount,
 					LastRevision: &entity.Revision{
 						Code: `
 							function sum(a, b) {
@@ -65,7 +65,7 @@ func (vm *MusicGangVM) Run() error {
 
 			cancel()
 
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 	}()
 
@@ -76,9 +76,9 @@ func (vm *MusicGangVM) Run() error {
 
 // Close closes the vm.
 func (mg *MusicGangVM) Close() error {
+	mg.cancel()
 	mg.EngineService.Stop()
 	mg.FuelStation.StopRefueling(mg.ctx)
-	mg.cancel()
 	return nil
 }
 
@@ -201,16 +201,16 @@ func (vm *MusicGangVM) meter() {
 		if vm.State() == service.StatePaused {
 			if fuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
 				vm.LogService.ReportError(vm.ctx, err)
-			} else if float64(fuel) < float64(entity.FuelTankCapacity)*0.65 {
+			} else if float64(fuel) <= float64(entity.FuelTankCapacity)*0.65 {
 				vm.Resume()
-				vm.LogService.ReportInfo(vm.ctx, "Resume engine")
+				vm.LogService.ReportInfo(vm.ctx, "Resume engine due to reaching safe fuel level")
 			}
 		} else if vm.State() == service.StateRunning {
 			if fuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
 				vm.LogService.ReportError(vm.ctx, err)
-			} else if float64(fuel) > float64(entity.FuelTankCapacity)*0.95 {
+			} else if float64(fuel) >= float64(entity.FuelTankCapacity)*0.95 {
 				vm.Pause()
-				vm.LogService.ReportInfo(vm.ctx, "Pause engine")
+				vm.LogService.ReportInfo(vm.ctx, "Pause engine due to excessive fuel consumption")
 			}
 		}
 	}
