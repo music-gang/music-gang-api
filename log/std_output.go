@@ -81,6 +81,7 @@ func (s *StdOutputLogger) ReportError(ctx context.Context, err error) {
 	select {
 	case <-ctx.Done():
 		s.ReportDebug(ctx, err.Error())
+		return
 	default:
 	}
 	if s.Level() <= service.LevelError {
