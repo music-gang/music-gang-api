@@ -31,8 +31,8 @@ func (s State) String() string {
 	}
 }
 
-// VmService is a service for the engine of the MusicGang VM.
-type VmService interface {
+// EngineService is the interface for the engine service.
+type EngineService interface {
 	// ExecContract executes a contract.
 	ExecContract(ctx context.Context, contractRef *ContractCall) (res interface{}, err error)
 	// IsRunning returns true if the engine is running.
@@ -45,4 +45,10 @@ type VmService interface {
 	State() State
 	// Stop stops the engine.
 	Stop()
+}
+
+// VmService is a service for the engine of the MusicGang VM.
+type VmService interface {
+	FuelMeterService
+	EngineService
 }

@@ -179,6 +179,7 @@ func (m *Main) Run(ctx context.Context) error {
 	}
 
 	m.HTTPServerAPI.LogService = logService
+	m.HTTPServerAPI.FuelMeterService = m.VM
 
 	if err := m.HTTPServerAPI.Open(); err != nil {
 		return err

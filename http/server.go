@@ -41,6 +41,9 @@ type ServerAPI struct {
 	UserService service.UserService
 	JWTService  service.JWTService
 
+	// MusicGang VM service api
+	FuelMeterService service.FuelMeterService
+
 	// loggin service used by HTTP Server.
 	LogService service.LogService
 }
@@ -143,6 +146,9 @@ func (s *ServerAPI) registerRoutes(g *echo.Group) {
 
 	userGroup := g.Group("/user", s.JWTVerifyMiddleware)
 	s.registerUserRoutes(userGroup)
+
+	vmGroup := g.Group("/vm")
+	s.registerVmRoutes(vmGroup)
 }
 
 // registerAuthRoutes registers all routes for the API group auth.
@@ -160,6 +166,11 @@ func (s *ServerAPI) registerAuthRoutes(g *echo.Group) {
 func (s *ServerAPI) registerUserRoutes(g *echo.Group) {
 	g.GET("", s.UserHandler)
 	g.PUT("", s.UserUpdateHandler)
+}
+
+// registerVmRoutes registers all routes for the API group vm.
+func (s *ServerAPI) registerVmRoutes(g *echo.Group) {
+	g.GET("/stats", s.VmStatsHandler)
 }
 
 // SuccessResponseJSON returns a JSON response with the given status code and data.

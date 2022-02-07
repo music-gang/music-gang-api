@@ -10,7 +10,7 @@ import (
 	"github.com/robertkrimen/otto"
 )
 
-var _ service.VmService = (*Engine)(nil)
+var _ service.EngineService = (*Engine)(nil)
 
 const (
 	// EngineExecutionTimeoutPanic is the panic message when the engine execution time is exceeded.
@@ -77,8 +77,6 @@ func (e *Engine) ExecContract(ctx context.Context, contractRef *service.Contract
 	if err != nil {
 		return nil, apperr.Errorf(apperr.EMGVM, "Error while parsing contract result: %s", err.Error())
 	}
-
-	println(str)
 
 	return str, nil
 }
