@@ -38,13 +38,13 @@ type EngineService interface {
 	// IsRunning returns true if the engine is running.
 	IsRunning() bool
 	// Pause pauses the engine.
-	Pause()
+	Pause() error
 	// Resume resumes the engine.
-	Resume()
+	Resume() error
 	// State returns the state of the engine.
 	State() State
 	// Stop stops the engine.
-	Stop()
+	Stop() error
 }
 
 // VmService is a service for the engine of the MusicGang VM.

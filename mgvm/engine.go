@@ -87,13 +87,23 @@ func (e *Engine) IsRunning() bool {
 }
 
 // Pause pauses the engine.
-func (e *Engine) Pause() {
+func (e *Engine) Pause() error {
+	// It is not possible to pause the engine if is stopped or already paused.
+	if e.State() == service.StateStopped || e.State() == service.StatePaused {
+		return apperr.Errorf(apperr.EMGVM, "engine is not running")
+	}
 	atomic.StoreInt32((*int32)(&e.state), int32(service.StatePaused))
+	return nil
 }
 
 // Resume resumes the engine.
-func (e *Engine) Resume() {
+func (e *Engine) Resume() error {
+	// it is not possible to resume the engine if is already running.
+	if e.IsRunning() {
+		return apperr.Errorf(apperr.EMGVM, "engine is already running")
+	}
 	atomic.StoreInt32((*int32)(&e.state), int32(service.StateRunning))
+	return nil
 }
 
 // State returns the state of the engine.
@@ -102,6 +112,11 @@ func (e *Engine) State() service.State {
 }
 
 // Stop stops the engine.
-func (e *Engine) Stop() {
+func (e *Engine) Stop() error {
+	// It is not possible to stop the engine if is already stopped.
+	if e.State() == service.StateStopped {
+		return apperr.Errorf(apperr.EMGVM, "engine is already stopped")
+	}
 	atomic.StoreInt32((*int32)(&e.state), int32(service.StateStopped))
+	return nil
 }
