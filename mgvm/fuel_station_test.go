@@ -1,4 +1,4 @@
-package mgvm
+package mgvm_test
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
+	"github.com/music-gang/music-gang-api/mgvm"
 	"github.com/music-gang/music-gang-api/mock"
 )
 
@@ -18,7 +19,7 @@ func TestFuelStation_ResumeRefueling(t *testing.T) {
 
 		defer cancel()
 
-		fuelStation := NewFuelStation()
+		fuelStation := mgvm.NewFuelStation()
 		fuelStation.FuelRefillRate = time.Second
 		fuelStation.FuelRefillAmount = entity.Fuel(0)
 
@@ -50,7 +51,7 @@ func TestFuelStation_ResumeRefueling(t *testing.T) {
 
 		defer cancel()
 
-		fuelStation := NewFuelStation()
+		fuelStation := mgvm.NewFuelStation()
 		fuelStation.FuelRefillRate = 500 * time.Millisecond
 		fuelStation.FuelRefillAmount = entity.Fuel(0)
 
@@ -89,7 +90,7 @@ func TestFuelStation_ResumeRefueling(t *testing.T) {
 
 		defer cancel()
 
-		fuelStation := NewFuelStation()
+		fuelStation := mgvm.NewFuelStation()
 		fuelStation.FuelRefillRate = 500 * time.Millisecond
 		fuelStation.FuelRefillAmount = entity.Fuel(0)
 
@@ -116,7 +117,7 @@ func TestFuelStation_ResumeRefueling(t *testing.T) {
 
 		defer cancel()
 
-		fuelStation := NewFuelStation()
+		fuelStation := mgvm.NewFuelStation()
 		fuelStation.FuelRefillRate = 500 * time.Millisecond
 		fuelStation.FuelRefillAmount = entity.Fuel(0)
 
@@ -150,7 +151,7 @@ func TestFuelStation_StopRefueling(t *testing.T) {
 
 		defer cancel()
 
-		fuelStation := NewFuelStation()
+		fuelStation := mgvm.NewFuelStation()
 		fuelStation.FuelRefillRate = 500 * time.Millisecond
 		fuelStation.FuelRefillAmount = entity.Fuel(0)
 
@@ -180,7 +181,7 @@ func TestFuelStation_StopRefueling(t *testing.T) {
 
 		defer cancel()
 
-		fuelStation := NewFuelStation()
+		fuelStation := mgvm.NewFuelStation()
 		fuelStation.FuelRefillRate = 500 * time.Millisecond
 		fuelStation.FuelRefillAmount = entity.Fuel(0)
 
