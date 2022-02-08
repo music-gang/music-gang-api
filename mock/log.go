@@ -83,3 +83,24 @@ func (l *LogService) ReportWarning(ctx context.Context, warning string) {
 	}
 	l.ReportWarningFn(ctx, warning)
 }
+
+type LogServiceNoOp struct{}
+
+func (l *LogServiceNoOp) Format() string {
+	return ""
+}
+
+func (l *LogServiceNoOp) Level() int {
+	return 0
+}
+
+func (l *LogServiceNoOp) Output() io.Writer {
+	return io.Discard
+}
+
+func (l *LogServiceNoOp) ReportDebug(ctx context.Context, msg string)       {}
+func (l *LogServiceNoOp) ReportError(ctx context.Context, err error)        {}
+func (l *LogServiceNoOp) ReportFatal(ctx context.Context, err error)        {}
+func (l *LogServiceNoOp) ReportInfo(ctx context.Context, info string)       {}
+func (l *LogServiceNoOp) ReportPanic(ctx context.Context, err interface{})  {}
+func (l *LogServiceNoOp) ReportWarning(ctx context.Context, warning string) {}

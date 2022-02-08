@@ -46,3 +46,21 @@ func (ft *FuelTankService) Stats(ctx context.Context) (*entity.FuelStat, error) 
 	}
 	return ft.StatsFn(ctx)
 }
+
+type FuelTankServiceNoOp struct{}
+
+func (ft *FuelTankServiceNoOp) Burn(ctx context.Context, fuel entity.Fuel) error {
+	return nil
+}
+
+func (ft *FuelTankServiceNoOp) Fuel(ctx context.Context) (entity.Fuel, error) {
+	return entity.Fuel(0), nil
+}
+
+func (ft *FuelTankServiceNoOp) Refuel(ctx context.Context, fuelToRefill entity.Fuel) error {
+	return nil
+}
+
+func (ft *FuelTankServiceNoOp) Stats(ctx context.Context) (*entity.FuelStat, error) {
+	return &entity.FuelStat{}, nil
+}
