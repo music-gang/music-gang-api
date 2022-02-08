@@ -192,26 +192,35 @@ func (vm *MusicGangVM) meter() {
 
 	for {
 
-		select {
-		case <-vm.ctx.Done():
-			return
-		case <-ticker.C:
-		}
+		func() {
 
-		if vm.State() == service.StatePaused {
-			if fuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
-				vm.LogService.ReportError(vm.ctx, err)
-			} else if float64(fuel) <= float64(entity.FuelTankCapacity)*0.65 {
-				vm.Resume()
-				vm.LogService.ReportInfo(vm.ctx, "Resume engine due to reaching safe fuel level")
+			defer func() {
+				if r := recover(); r != nil && vm.ctx.Err() == nil {
+					vm.LogService.ReportPanic(vm.ctx, r)
+				}
+			}()
+
+			select {
+			case <-vm.ctx.Done():
+				return
+			case <-ticker.C:
 			}
-		} else if vm.State() == service.StateRunning {
-			if fuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
-				vm.LogService.ReportError(vm.ctx, err)
-			} else if float64(fuel) >= float64(entity.FuelTankCapacity)*0.95 {
-				vm.Pause()
-				vm.LogService.ReportInfo(vm.ctx, "Pause engine due to excessive fuel consumption")
+
+			if vm.State() == service.StatePaused {
+				if fuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
+					vm.LogService.ReportError(vm.ctx, err)
+				} else if float64(fuel) <= float64(entity.FuelTankCapacity)*0.65 {
+					vm.Resume()
+					vm.LogService.ReportInfo(vm.ctx, "Resume engine due to reaching safe fuel level")
+				}
+			} else if vm.State() == service.StateRunning {
+				if fuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
+					vm.LogService.ReportError(vm.ctx, err)
+				} else if float64(fuel) >= float64(entity.FuelTankCapacity)*0.95 {
+					vm.Pause()
+					vm.LogService.ReportInfo(vm.ctx, "Pause engine due to excessive fuel consumption")
+				}
 			}
-		}
+		}()
 	}
 }
