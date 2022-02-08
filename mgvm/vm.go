@@ -156,15 +156,18 @@ func (vm *MusicGangVM) IsRunning() bool {
 
 // Pause pauses the engine.
 // Delegates to the engine service.
-func (vm *MusicGangVM) Pause() {
-	vm.EngineService.Pause()
+func (vm *MusicGangVM) Pause() error {
+	return vm.EngineService.Pause()
 }
 
 // Resume resumes the engine.
 // Delegates to the engine service.
-func (vm *MusicGangVM) Resume() {
-	vm.EngineService.Resume()
+func (vm *MusicGangVM) Resume() error {
+	if err := vm.EngineService.Resume(); err != nil {
+		return err
+	}
 	vm.Broadcast()
+	return nil
 }
 
 // State returns the state of the engine.
@@ -180,8 +183,8 @@ func (vm *MusicGangVM) Stats(ctx context.Context) (*entity.FuelStat, error) {
 
 // Stop stops the engine.
 // Delegates to the engine service.
-func (vm *MusicGangVM) Stop() {
-	vm.EngineService.Stop()
+func (vm *MusicGangVM) Stop() error {
+	return vm.EngineService.Stop()
 }
 
 // meter measures the fuel consumption of the engine.
