@@ -31,6 +31,7 @@ func NewEngine() *Engine {
 }
 
 // ExecContract effectively executes the contract and returns the result.
+// If the engine goes into execution timeout, it panics with EngineExecutionTimeoutPanic.
 func (e *Engine) ExecContract(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
 
 	if !e.IsRunning() {
@@ -43,11 +44,11 @@ func (e *Engine) ExecContract(ctx context.Context, contractRef *service.Contract
 	default:
 	}
 
-	timeoutTicker := time.NewTicker(contractRef.Contract.MaxExecutionTime())
-	defer timeoutTicker.Stop()
-
 	ottoVm := otto.New()
 	ottoVm.Interrupt = make(chan func(), 1)
+
+	timeoutTicker := time.NewTicker(contractRef.Contract.MaxExecutionTime())
+	defer timeoutTicker.Stop()
 
 	go func() {
 		<-timeoutTicker.C
@@ -56,12 +57,7 @@ func (e *Engine) ExecContract(ctx context.Context, contractRef *service.Contract
 		}
 	}()
 
-	script, err := ottoVm.Compile("", contractRef.Contract.LastRevision.Code)
-	if err != nil {
-		return nil, apperr.Errorf(apperr.EMGVM, "Error compiling script: %s", err)
-	}
-
-	_, err = ottoVm.Run(script)
+	_, err = ottoVm.Run(contractRef.Contract.LastRevision.Code)
 	close(ottoVm.Interrupt)
 
 	if err != nil {
