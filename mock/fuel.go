@@ -64,3 +64,32 @@ func (ft *FuelTankServiceNoOp) Refuel(ctx context.Context, fuelToRefill entity.F
 func (ft *FuelTankServiceNoOp) Stats(ctx context.Context) (*entity.FuelStat, error) {
 	return &entity.FuelStat{}, nil
 }
+
+var _ service.FuelStationService = (*FuelStationService)(nil)
+
+type FuelStationService struct {
+	IsRunningFn       func() bool
+	ResumeRefuelingFn func(ctx context.Context) error
+	StopRefuelingFn   func(ctx context.Context) error
+}
+
+func (fs *FuelStationService) IsRunning() bool {
+	if fs.IsRunningFn == nil {
+		panic("IsRunningFn is not defined")
+	}
+	return fs.IsRunningFn()
+}
+
+func (fs *FuelStationService) ResumeRefueling(ctx context.Context) error {
+	if fs.ResumeRefuelingFn == nil {
+		panic("ResumeRefuelingFn is not defined")
+	}
+	return fs.ResumeRefuelingFn(ctx)
+}
+
+func (fs *FuelStationService) StopRefueling(ctx context.Context) error {
+	if fs.StopRefuelingFn == nil {
+		panic("StopRefuelingFn is not defined")
+	}
+	return fs.StopRefuelingFn(ctx)
+}

@@ -41,36 +41,13 @@ func NewMusicGangVM() *MusicGangVM {
 
 // Run starts the vm.
 func (vm *MusicGangVM) Run() error {
-	vm.FuelStation.ResumeRefueling(vm.ctx)
-	vm.Resume()
-	go func() {
-
-		for {
-
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
-
-			vm.ExecContract(ctx, &service.ContractCall{
-				Contract: &entity.Contract{
-					MaxFuel: entity.FuelLongActionAmount,
-					LastRevision: &entity.Revision{
-						Code: `
-							function sum(a, b) {
-								return a+b;
-							}
-							var result = sum(1, 2);
-						`,
-					},
-				},
-			})
-
-			cancel()
-
-			time.Sleep(100 * time.Millisecond)
-		}
-	}()
-
+	if err := vm.FuelStation.ResumeRefueling(vm.ctx); err != nil {
+		return err
+	}
+	if err := vm.Resume(); err != nil {
+		return err
+	}
 	go vm.meter()
-
 	return nil
 }
 
@@ -198,7 +175,7 @@ func (vm *MusicGangVM) meter() {
 		func() {
 
 			defer func() {
-				if r := recover(); r != nil && vm.ctx.Err() == nil {
+				if r := recover(); r != nil {
 					vm.LogService.ReportPanic(vm.ctx, r)
 				}
 			}()
