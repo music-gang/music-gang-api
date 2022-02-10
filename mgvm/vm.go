@@ -47,15 +47,41 @@ func (vm *MusicGangVM) Run() error {
 	if err := vm.Resume(); err != nil {
 		return err
 	}
-	go vm.meter()
+	go func() {
+		errChan := make(chan error, 1)
+		infoChan := make(chan string, 1)
+
+		go vm.meter(infoChan, errChan)
+
+		for {
+			select {
+			case <-vm.ctx.Done():
+				return
+			case err := <-errChan:
+				vm.LogService.ReportError(vm.ctx, err)
+			case info := <-infoChan:
+				vm.LogService.ReportInfo(vm.ctx, info)
+			}
+		}
+	}()
 	return nil
 }
 
 // Close closes the vm.
-func (mg *MusicGangVM) Close() error {
-	mg.cancel()
-	mg.EngineService.Stop()
-	mg.FuelStation.StopRefueling(mg.ctx)
+func (vm *MusicGangVM) Close() error {
+	if vm.State() == service.StateStopped {
+		return apperr.Errorf(apperr.EMGVM, "VM is already closed")
+	}
+	if vm.State() == service.StateInitializing {
+		return apperr.Errorf(apperr.EMGVM, "VM is still initializing")
+	}
+	vm.cancel()
+	if err := vm.EngineService.Stop(); err != nil {
+		return err
+	}
+	if err := vm.FuelStation.StopRefueling(vm.ctx); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -165,7 +191,7 @@ func (vm *MusicGangVM) Stop() error {
 }
 
 // meter measures the fuel consumption of the engine.
-func (vm *MusicGangVM) meter() {
+func (vm *MusicGangVM) meter(infoChan chan<- string, errChan chan<- error) error {
 
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
@@ -188,17 +214,17 @@ func (vm *MusicGangVM) meter() {
 
 			if vm.State() == service.StatePaused {
 				if fuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
-					vm.LogService.ReportError(vm.ctx, err)
+					errChan <- err
 				} else if float64(fuel) <= float64(entity.FuelTankCapacity)*0.65 {
 					vm.Resume()
-					vm.LogService.ReportInfo(vm.ctx, "Resume engine due to reaching safe fuel level")
+					infoChan <- "Resume engine due to reaching safe fuel level"
 				}
 			} else if vm.State() == service.StateRunning {
 				if fuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
-					vm.LogService.ReportError(vm.ctx, err)
+					errChan <- err
 				} else if float64(fuel) >= float64(entity.FuelTankCapacity)*0.95 {
 					vm.Pause()
-					vm.LogService.ReportInfo(vm.ctx, "Pause engine due to excessive fuel consumption")
+					infoChan <- "Pause engine due to excessive fuel consumption"
 				}
 			}
 		}()
