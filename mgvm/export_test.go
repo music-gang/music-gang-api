@@ -17,3 +17,11 @@ func SwitchToRemoteFuel() {
 func Fuel(ctx context.Context, ft *FuelTank, local bool) (entity.Fuel, error) {
 	return fuel(ctx, ft, local)
 }
+
+func (vm *MusicGangVM) Meter(infoChan chan<- string, errChan chan<- error) {
+	vm.meter(infoChan, errChan)
+}
+
+func (vm *MusicGangVM) Cancel() {
+	vm.cancel()
+}
