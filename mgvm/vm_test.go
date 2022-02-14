@@ -116,6 +116,180 @@ func TestVm_Run(t *testing.T) {
 			t.Errorf("Expected error")
 		}
 	})
+
+	t.Run("ListenOnInfoChan", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		vm.FuelStation = &mock.FuelStationService{
+			ResumeRefuelingFn: func(ctx context.Context) error {
+				return nil
+			},
+			IsRunningFn: func() bool {
+				return true
+			},
+			StopRefuelingFn: func(ctx context.Context) error {
+				return nil
+			},
+		}
+
+		isRunning := false
+
+		currentFuel := entity.Fuel(0)
+
+		vm.FuelTank = &mock.FuelTankService{
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				atomic.AddUint64((*uint64)(&currentFuel), uint64(fuel))
+				return nil
+			},
+			FuelFn: func(ctx context.Context) (entity.Fuel, error) {
+				return entity.Fuel(atomic.LoadUint64((*uint64)(&currentFuel))), nil
+			},
+			RefuelFn: func(ctx context.Context, fuelToRefill entity.Fuel) error {
+				atomic.AddUint64((*uint64)(&currentFuel), -uint64(fuelToRefill))
+				return nil
+			},
+		}
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				return isRunning
+			},
+			PauseFn: func() error {
+				isRunning = false
+				return nil
+			},
+			ResumeFn: func() error {
+				isRunning = true
+				return nil
+			},
+			StateFn: func() service.State {
+				return service.StateRunning
+			},
+			StopFn: func() error {
+				isRunning = false
+				return nil
+			},
+			ExecContractFn: func(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
+				return nil, nil
+			},
+		}
+
+		infoChan := make(chan string, 1)
+		testIsFail := make(chan string, 1)
+
+		vm.LogService = &mock.LogServiceNoOp{
+			ReportInfoFn: func(ctx context.Context, info string) {
+				infoChan <- info
+			},
+		}
+
+		if err := vm.Run(); err != nil {
+			t.Errorf("Unexpected error: %s", err.Error())
+		}
+
+		if err := vm.FuelTank.Burn(context.Background(), entity.Fuel(float64(entity.FuelTankCapacity)*0.96)); err != nil {
+			t.Errorf("Unexpected error: %s", err.Error())
+		}
+
+		go func(tb testing.TB) {
+			tb.Helper()
+			time.Sleep(5 * time.Second)
+			testIsFail <- "Expected info message"
+		}(t)
+
+		select {
+		case <-infoChan:
+		case err := <-testIsFail:
+			t.Errorf("Unexpected error: %s", err)
+		}
+	})
+
+	t.Run("ListenOnErrChan", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		vm.FuelStation = &mock.FuelStationService{
+			ResumeRefuelingFn: func(ctx context.Context) error {
+				return nil
+			},
+			IsRunningFn: func() bool {
+				return true
+			},
+			StopRefuelingFn: func(ctx context.Context) error {
+				return nil
+			},
+		}
+
+		isRunning := false
+
+		currentFuel := entity.Fuel(0)
+
+		vm.FuelTank = &mock.FuelTankService{
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				atomic.AddUint64((*uint64)(&currentFuel), uint64(fuel))
+				return nil
+			},
+			FuelFn: func(ctx context.Context) (entity.Fuel, error) {
+				return entity.Fuel(0), apperr.Errorf(apperr.EMGVM, "test")
+			},
+			RefuelFn: func(ctx context.Context, fuelToRefill entity.Fuel) error {
+				atomic.AddUint64((*uint64)(&currentFuel), -uint64(fuelToRefill))
+				return nil
+			},
+		}
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				return isRunning
+			},
+			PauseFn: func() error {
+				isRunning = false
+				return nil
+			},
+			ResumeFn: func() error {
+				isRunning = true
+				return nil
+			},
+			StateFn: func() service.State {
+				return service.StateRunning
+			},
+			StopFn: func() error {
+				isRunning = false
+				return nil
+			},
+			ExecContractFn: func(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
+				return nil, nil
+			},
+		}
+
+		ErrChan := make(chan error, 1)
+		testIsFail := make(chan string, 1)
+
+		vm.LogService = &mock.LogServiceNoOp{
+			ReportErrorFn: func(ctx context.Context, err error) {
+				ErrChan <- err
+			},
+		}
+
+		if err := vm.Run(); err != nil {
+			t.Errorf("Unexpected error: %s", err.Error())
+		}
+
+		if err := vm.FuelTank.Burn(context.Background(), entity.Fuel(float64(entity.FuelTankCapacity)*0.96)); err != nil {
+			t.Errorf("Unexpected error: %s", err.Error())
+		}
+
+		go func(tb testing.TB) {
+			tb.Helper()
+			time.Sleep(5 * time.Second)
+			testIsFail <- "Expected info message"
+		}(t)
+
+		select {
+		case <-ErrChan:
+		case err := <-testIsFail:
+			t.Errorf("Unexpected error: %s", err)
+		}
+	})
 }
 
 func TestVm_Close(t *testing.T) {
@@ -418,5 +592,446 @@ func TestVm_Meter(t *testing.T) {
 		go vm.Meter(infoChan, errChan)
 
 		time.Sleep(time.Second)
+	})
+
+	t.Run("FuelTankErrOnPausedState", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		vm.LogService = &mock.LogServiceNoOp{}
+		vm.EngineService = &mock.EngineService{
+			StateFn: func() service.State {
+				return service.StatePaused
+			},
+		}
+		vm.FuelTank = &mock.FuelTankService{
+			FuelFn: func(ctx context.Context) (entity.Fuel, error) {
+				return 0, apperr.Errorf(apperr.EMGVM, "test")
+			},
+		}
+
+		errChan := make(chan error, 1)
+		infoChan := make(chan string, 1)
+
+		go vm.Meter(infoChan, errChan)
+
+		time.Sleep(time.Second)
+
+		go func(tb testing.TB) {
+			time.Sleep(5 * time.Second)
+			tb.Fatal("Fuel tank error not received")
+		}(t)
+
+		err := <-errChan
+		if err == nil {
+			t.Fatal("Fuel tank error not received")
+		} else if code := apperr.ErrorCode(err); code != apperr.EMGVM {
+			t.Errorf("Unexpected error code, got: %s, want: %s", code, apperr.EMGVM)
+		}
+	})
+
+	t.Run("FuelTankErrOnRunningState", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		vm.LogService = &mock.LogServiceNoOp{}
+		vm.EngineService = &mock.EngineService{
+			StateFn: func() service.State {
+				return service.StateRunning
+			},
+		}
+		vm.FuelTank = &mock.FuelTankService{
+			FuelFn: func(ctx context.Context) (entity.Fuel, error) {
+				return 0, apperr.Errorf(apperr.EMGVM, "test")
+			},
+		}
+
+		errChan := make(chan error, 1)
+		infoChan := make(chan string, 1)
+
+		go vm.Meter(infoChan, errChan)
+
+		time.Sleep(time.Second)
+
+		go func(tb testing.TB) {
+			time.Sleep(5 * time.Second)
+			tb.Fatal("Fuel tank error not received")
+		}(t)
+
+		err := <-errChan
+		if err == nil {
+			t.Fatal("Fuel tank error not received")
+		} else if code := apperr.ErrorCode(err); code != apperr.EMGVM {
+			t.Errorf("Unexpected error code, got: %s, want: %s", code, apperr.EMGVM)
+		}
+	})
+
+	t.Run("Panic", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		vm.LogService = &mock.LogServiceNoOp{}
+		vm.EngineService = &mock.EngineService{
+			StateFn: func() service.State {
+				return service.StateRunning
+			},
+		}
+		vm.FuelTank = &mock.FuelTankService{
+			FuelFn: func(ctx context.Context) (entity.Fuel, error) {
+				panic("test")
+			},
+		}
+
+		errChan := make(chan error, 1)
+		infoChan := make(chan string, 1)
+
+		go vm.Meter(infoChan, errChan)
+
+		time.Sleep(time.Second)
+	})
+}
+
+func TestVm_ExecContract(t *testing.T) {
+
+	contractCall := &service.ContractCall{
+		Contract: &entity.Contract{
+			MaxFuel: entity.FuelLongActionAmount,
+			LastRevision: &entity.Revision{
+				Code: `
+					function sum(a, b) {
+						return a+b;
+					}
+					var result = sum(1, 2);
+				`,
+			},
+		},
+	}
+
+	t.Run("OK", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		currentState := service.StateInitializing
+
+		vm.LogService = &mock.LogServiceNoOp{}
+		vm.FuelTank = &mock.FuelTankServiceNoOp{}
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				return service.State(atomic.LoadInt32((*int32)(&currentState))) == service.StateRunning
+			},
+			PauseFn: func() error {
+				return nil
+			},
+			ResumeFn: func() error {
+				atomic.StoreInt32((*int32)(&currentState), int32(service.StateRunning))
+				return nil
+			},
+			StateFn: func() service.State {
+				return service.State(atomic.LoadInt32((*int32)(&currentState)))
+			},
+			StopFn: func() error {
+				return nil
+			},
+			ExecContractFn: func(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
+				return "contract executed", nil
+			},
+		}
+
+		go func() {
+
+			// simulate late start to mock the gorutine waiting for the engine to be running
+
+			time.Sleep(time.Second)
+
+			if err := vm.Resume(); err != nil {
+				t.Errorf("Unexpected error: %s", err.Error())
+			}
+		}()
+
+		res, err := vm.ExecContract(context.Background(), contractCall)
+		if err != nil {
+			t.Errorf("Unexpected error: %s", err.Error())
+		}
+
+		if res != "contract executed" {
+			t.Errorf("Unexpected result, got: %s, want: %s", res, "contract executed")
+		}
+	})
+
+	t.Run("ContextCancelled", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		ctx, cancel := context.WithCancel(context.Background())
+
+		cancel()
+
+		if _, err := vm.ExecContract(ctx, &service.ContractCall{}); err == nil {
+			t.Errorf("Expected error, got: %v", err)
+		}
+	})
+
+	t.Run("WaitButContextCancelled", func(t *testing.T) {
+
+		
+	})
+
+	t.Run("FuelTankErr", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		currentState := service.StateInitializing
+
+		vm.LogService = &mock.LogServiceNoOp{}
+		vm.FuelTank = &mock.FuelTankService{
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				return apperr.Errorf(apperr.EMGVM, "test")
+			},
+		}
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				return service.State(atomic.LoadInt32((*int32)(&currentState))) == service.StateRunning
+			},
+			PauseFn: func() error {
+				return nil
+			},
+			ResumeFn: func() error {
+				atomic.StoreInt32((*int32)(&currentState), int32(service.StateRunning))
+				return nil
+			},
+			StateFn: func() service.State {
+				return service.State(atomic.LoadInt32((*int32)(&currentState)))
+			},
+			StopFn: func() error {
+				return nil
+			},
+			ExecContractFn: func(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
+				return "contract executed", nil
+			},
+		}
+
+		vm.EngineService.Resume()
+
+		if _, err := vm.ExecContract(context.Background(), contractCall); err == nil {
+			t.Errorf("Expected error, got: %v", err)
+		}
+	})
+
+	t.Run("FuelTankNotEnough", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		currentState := service.StateInitializing
+
+		vm.LogService = &mock.LogServiceNoOp{}
+		vm.FuelTank = &mock.FuelTankService{
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				return service.ErrFuelTankNotEnough
+			},
+		}
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				return service.State(atomic.LoadInt32((*int32)(&currentState))) == service.StateRunning
+			},
+			PauseFn: func() error {
+				return nil
+			},
+			ResumeFn: func() error {
+				atomic.StoreInt32((*int32)(&currentState), int32(service.StateRunning))
+				return nil
+			},
+			StateFn: func() service.State {
+				return service.State(atomic.LoadInt32((*int32)(&currentState)))
+			},
+			StopFn: func() error {
+				return nil
+			},
+			ExecContractFn: func(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
+				return "contract executed", nil
+			},
+		}
+
+		vm.EngineService.Resume()
+
+		if _, err := vm.ExecContract(context.Background(), contractCall); err == nil {
+			t.Errorf("Expected error, got: %v", err)
+		} else if err != service.ErrFuelTankNotEnough {
+			t.Errorf("Unexpected error, got: %v, want: %v", err, service.ErrFuelTankNotEnough)
+		}
+	})
+
+	t.Run("RefuelErr", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		currentState := service.StateInitializing
+
+		vm.LogService = &mock.LogServiceNoOp{}
+		vm.FuelTank = &mock.FuelTankService{
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				return nil
+			},
+			RefuelFn: func(ctx context.Context, fuelToRefill entity.Fuel) error {
+				return apperr.Errorf(apperr.EMGVM, "test")
+			},
+		}
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				return service.State(atomic.LoadInt32((*int32)(&currentState))) == service.StateRunning
+			},
+			PauseFn: func() error {
+				return nil
+			},
+			ResumeFn: func() error {
+				atomic.StoreInt32((*int32)(&currentState), int32(service.StateRunning))
+				return nil
+			},
+			StateFn: func() service.State {
+				return service.State(atomic.LoadInt32((*int32)(&currentState)))
+			},
+			StopFn: func() error {
+				return nil
+			},
+			ExecContractFn: func(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
+				return "contract executed", nil
+			},
+		}
+
+		vm.EngineService.Resume()
+
+		if _, err := vm.ExecContract(context.Background(), contractCall); err == nil {
+			t.Errorf("Expected error, got: %v", err)
+		} else if code := apperr.ErrorCode(err); code != apperr.EMGVM {
+			t.Errorf("Unexpected error, got: %v, want: %v", code, apperr.EMGVM)
+		}
+	})
+
+	t.Run("ExecContractErr", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		currentState := service.StateInitializing
+
+		vm.LogService = &mock.LogServiceNoOp{}
+		vm.FuelTank = &mock.FuelTankService{
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				return nil
+			},
+		}
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				return service.State(atomic.LoadInt32((*int32)(&currentState))) == service.StateRunning
+			},
+			PauseFn: func() error {
+				return nil
+			},
+			ResumeFn: func() error {
+				atomic.StoreInt32((*int32)(&currentState), int32(service.StateRunning))
+				return nil
+			},
+			StateFn: func() service.State {
+				return service.State(atomic.LoadInt32((*int32)(&currentState)))
+			},
+			StopFn: func() error {
+				return nil
+			},
+			ExecContractFn: func(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
+				return nil, apperr.Errorf(apperr.EMGVM, "test")
+			},
+		}
+
+		vm.EngineService.Resume()
+
+		if _, err := vm.ExecContract(context.Background(), contractCall); err == nil {
+			t.Errorf("Expected error, got: %v", err)
+		} else if code := apperr.ErrorCode(err); code != apperr.EMGVM {
+			t.Errorf("Unexpected error, got: %v, want: %v", code, apperr.EMGVM)
+		}
+	})
+
+	t.Run("ExecutionTimeout", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		currentState := service.StateInitializing
+
+		vm.LogService = &mock.LogServiceNoOp{}
+		vm.FuelTank = &mock.FuelTankService{
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				return nil
+			},
+		}
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				return service.State(atomic.LoadInt32((*int32)(&currentState))) == service.StateRunning
+			},
+			PauseFn: func() error {
+				return nil
+			},
+			ResumeFn: func() error {
+				atomic.StoreInt32((*int32)(&currentState), int32(service.StateRunning))
+				return nil
+			},
+			StateFn: func() service.State {
+				return service.State(atomic.LoadInt32((*int32)(&currentState)))
+			},
+			StopFn: func() error {
+				return nil
+			},
+			ExecContractFn: func(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
+				panic(mgvm.EngineExecutionTimeoutPanic)
+			},
+		}
+
+		vm.EngineService.Resume()
+
+		if _, err := vm.ExecContract(context.Background(), contractCall); err == nil {
+			t.Errorf("Expected error, got: %v", err)
+		} else if code := apperr.ErrorCode(err); code != apperr.EMGVM {
+			t.Errorf("Unexpected error, got: %v, want: %v", code, apperr.EMGVM)
+		}
+	})
+
+	t.Run("GenericPanic", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		currentState := service.StateInitializing
+
+		vm.LogService = &mock.LogServiceNoOp{}
+		vm.FuelTank = &mock.FuelTankService{
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				return nil
+			},
+		}
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				return service.State(atomic.LoadInt32((*int32)(&currentState))) == service.StateRunning
+			},
+			PauseFn: func() error {
+				return nil
+			},
+			ResumeFn: func() error {
+				atomic.StoreInt32((*int32)(&currentState), int32(service.StateRunning))
+				return nil
+			},
+			StateFn: func() service.State {
+				return service.State(atomic.LoadInt32((*int32)(&currentState)))
+			},
+			StopFn: func() error {
+				return nil
+			},
+			ExecContractFn: func(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
+				panic("test")
+			},
+		}
+
+		vm.EngineService.Resume()
+
+		if _, err := vm.ExecContract(context.Background(), contractCall); err == nil {
+			t.Errorf("Expected error, got: %v", err)
+		} else if code := apperr.ErrorCode(err); code != apperr.EMGVM {
+			t.Errorf("Unexpected error, got: %v, want: %v", code, apperr.EMGVM)
+		}
 	})
 }

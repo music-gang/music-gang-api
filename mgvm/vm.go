@@ -191,12 +191,14 @@ func (vm *MusicGangVM) Stop() error {
 }
 
 // meter measures the fuel consumption of the engine.
-func (vm *MusicGangVM) meter(infoChan chan<- string, errChan chan<- error) error {
+func (vm *MusicGangVM) meter(infoChan chan<- string, errChan chan<- error) {
 
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
 
-	for {
+	loop := true
+
+	for loop {
 
 		func() {
 
@@ -208,6 +210,7 @@ func (vm *MusicGangVM) meter(infoChan chan<- string, errChan chan<- error) error
 
 			select {
 			case <-vm.ctx.Done():
+				loop = false
 				return
 			case <-ticker.C:
 			}
