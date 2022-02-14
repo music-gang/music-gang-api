@@ -84,7 +84,16 @@ func (l *LogService) ReportWarning(ctx context.Context, warning string) {
 	l.ReportWarningFn(ctx, warning)
 }
 
-type LogServiceNoOp struct{}
+// LogServiceNoOp is a no-op implementation of the LogService interface.
+// Eventually we will want to implement this for specific test cases.
+type LogServiceNoOp struct {
+	ReportDebugFn   func(ctx context.Context, msg string)
+	ReportErrorFn   func(ctx context.Context, err error)
+	ReportFatalFn   func(ctx context.Context, err error)
+	ReportInfoFn    func(ctx context.Context, info string)
+	ReportPanicFn   func(ctx context.Context, err interface{})
+	ReportWarningFn func(ctx context.Context, warning string)
+}
 
 func (l *LogServiceNoOp) Format() string {
 	return ""
@@ -98,9 +107,33 @@ func (l *LogServiceNoOp) Output() io.Writer {
 	return io.Discard
 }
 
-func (l *LogServiceNoOp) ReportDebug(ctx context.Context, msg string)       {}
-func (l *LogServiceNoOp) ReportError(ctx context.Context, err error)        {}
-func (l *LogServiceNoOp) ReportFatal(ctx context.Context, err error)        {}
-func (l *LogServiceNoOp) ReportInfo(ctx context.Context, info string)       {}
-func (l *LogServiceNoOp) ReportPanic(ctx context.Context, err interface{})  {}
-func (l *LogServiceNoOp) ReportWarning(ctx context.Context, warning string) {}
+func (l *LogServiceNoOp) ReportDebug(ctx context.Context, msg string) {
+	if l.ReportDebugFn != nil {
+		l.ReportDebugFn(ctx, msg)
+	}
+}
+func (l *LogServiceNoOp) ReportError(ctx context.Context, err error) {
+	if l.ReportErrorFn != nil {
+		l.ReportErrorFn(ctx, err)
+	}
+}
+func (l *LogServiceNoOp) ReportFatal(ctx context.Context, err error) {
+	if l.ReportFatalFn != nil {
+		l.ReportFatalFn(ctx, err)
+	}
+}
+func (l *LogServiceNoOp) ReportInfo(ctx context.Context, info string) {
+	if l.ReportInfoFn != nil {
+		l.ReportInfoFn(ctx, info)
+	}
+}
+func (l *LogServiceNoOp) ReportPanic(ctx context.Context, err interface{}) {
+	if l.ReportPanicFn != nil {
+		l.ReportPanicFn(ctx, err)
+	}
+}
+func (l *LogServiceNoOp) ReportWarning(ctx context.Context, warning string) {
+	if l.ReportWarningFn != nil {
+		l.ReportWarningFn(ctx, warning)
+	}
+}
