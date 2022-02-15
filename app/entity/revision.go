@@ -9,6 +9,7 @@ import (
 	"gopkg.in/guregu/null.v4"
 )
 
+// Hash represents the hash an hash.
 type Hash [32]byte
 
 // RevisionVersion indicates the version of revision management system.
@@ -37,7 +38,7 @@ type Revision struct {
 	ContractID   int64           `json:"contract_id"`
 	Note         null.String     `json:"note"`
 	Code         string          `json:"code"`
-	CompiledCode string          `json:"-"`
+	CompiledCode []byte          `json:"-"`
 	Hash         string          `json:"hash"`
 
 	Contract *Contract `json:"contract"`
