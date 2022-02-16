@@ -156,7 +156,7 @@ func refuel(ctx context.Context, ft *FuelTank, refillFuel entity.Fuel) error {
 	// fifth, we need to update the local fuel tank and capacity
 	atomic.StoreUint64((*uint64)(&ft.localFuelUsed), uint64(fuelUsedAfterRefill))
 	atomic.StoreUint64((*uint64)(&ft.lastRefuelAmount), uint64(refillFuel))
-	atomic.StoreInt64((*int64)(&ft.LastRefuelAt), time.Now().Unix())
+	atomic.StoreInt64((*int64)(&ft.LastRefuelAt), time.Now().UTC().Unix())
 
 	return nil
 }
@@ -179,7 +179,7 @@ func stats(ctx context.Context, ft *FuelTank, useRemoteFuel bool) (*entity.FuelS
 		FuelCapacity:    entity.FuelTankCapacity,
 		FuelUsed:        fuel,
 		LastRefuelAmout: lastRefuelAmout,
-		LastRefuelAt:    time.Unix(lastRefuelAt, 0),
+		LastRefuelAt:    time.Unix(lastRefuelAt, 0).UTC(),
 	}
 
 	return stats, nil
