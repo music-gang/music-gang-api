@@ -65,6 +65,10 @@ func NewServerAPI() *ServerAPI {
 	s.handler.Use(s.HTTPContextMiddleware)
 	s.handler.Use(s.RecoverPanicMiddleware)
 
+	s.handler.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Welcome to Music Gang API")
+	})
+
 	// Register routes for the API v1.
 	v1Group := s.handler.Group("/v1")
 	s.registerRoutes(v1Group)
