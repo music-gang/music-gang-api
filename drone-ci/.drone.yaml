@@ -199,4 +199,6 @@ steps:
         - success
 ---
 kind: signature
-hmac: e1c150ea1e2b6a880fb2aecc3c325e69e40dd1b310111b31f30bf379e147e5ee
+hmac: 02bcb0c55cf2ec115b2622c0988c68a70324708d20c25fda2c5454e494cb6deb
+
+...
