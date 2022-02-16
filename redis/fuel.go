@@ -158,7 +158,7 @@ func stats(ctx context.Context, ft *FuelTankService) (*entity.FuelStat, error) {
 			return nil, apperr.Errorf(apperr.EINTERNAL, "failed to parse last refill time from redis: %v", err)
 		}
 
-		lastRefillTime = time.Unix(val, 0)
+		lastRefillTime = time.Unix(val, 0).UTC()
 	}
 
 	return &entity.FuelStat{
