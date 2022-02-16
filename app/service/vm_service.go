@@ -1,9 +1,5 @@
 package service
 
-import (
-	"context"
-)
-
 // State represents the state of the MusicGangVM.
 type State int32
 
@@ -13,6 +9,11 @@ const (
 	StateRunning
 	StatePaused
 	StateStopped
+)
+
+const (
+	// EngineExecutionTimeoutPanic is the panic message when the engine execution time is exceeded.
+	EngineExecutionTimeoutPanic = "engine-execution-panic-timeout"
 )
 
 // String returns a string representation of the State.
@@ -33,8 +34,7 @@ func (s State) String() string {
 
 // EngineService is the interface for the engine service.
 type EngineService interface {
-	// ExecContract executes a contract.
-	ExecContract(ctx context.Context, contractRef *ContractCall) (res interface{}, err error)
+	ContractExecutorService
 	// IsRunning returns true if the engine is running.
 	IsRunning() bool
 	// Pause pauses the engine.
