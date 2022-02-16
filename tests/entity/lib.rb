@@ -2,3 +2,4 @@
 
 require_relative 'user'
 require_relative 'token_pair'
+require_relative 'fuel_stat'

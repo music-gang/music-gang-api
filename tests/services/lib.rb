@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
+require 'time'
+
 require_relative '../util/lib'
 require_relative '../entity/lib'
 
 require_relative 'service'
 
 require_relative 'auth'
+require_relative 'fuel'
 
 SCHEMA = ENV['MUSICGANG_SERVICE_SCHEMA'] || 'http'
 URL = ENV['MUSICGANG_SERVICE_URL'] || 'localhost:8888/v1'
@@ -14,6 +17,7 @@ URL = ENV['MUSICGANG_SERVICE_URL'] || 'localhost:8888/v1'
 def service_container
   @container = ServiceContainer.new
   @container.services[:auth] = AuthService.new SCHEMA, URL
+  @container.services[:fuel] = FuelService.new SCHEMA, URL
   @container
 end
 
