@@ -57,7 +57,7 @@ steps:
       - cd tests
       - bundle install
       - sleep 10
-      - curl -m 60 --retry 10 build-and-run:8888
+      - while ! curl -m 60 --retry 10 build-and-run:8888; do sleep 1; done
       - bundle exec rspec --format doc
 
   # TAGGED DOCKER IMAGE BUILD
@@ -200,5 +200,3 @@ steps:
 ---
 kind: signature
 hmac: e1c150ea1e2b6a880fb2aecc3c325e69e40dd1b310111b31f30bf379e147e5ee
-
-...
