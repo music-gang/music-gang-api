@@ -773,7 +773,6 @@ func TestVm_ExecContract(t *testing.T) {
 
 	t.Run("WaitButContextCancelled", func(t *testing.T) {
 
-		
 	})
 
 	t.Run("FuelTankErr", func(t *testing.T) {
@@ -979,7 +978,7 @@ func TestVm_ExecContract(t *testing.T) {
 				return nil
 			},
 			ExecContractFn: func(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
-				panic(mgvm.EngineExecutionTimeoutPanic)
+				panic(service.EngineExecutionTimeoutPanic)
 			},
 		}
 

@@ -106,7 +106,7 @@ func (vm *MusicGangVM) ExecContract(ctx context.Context, contractRef *service.Co
 	defer func() {
 		// handle engine timeout or panic
 		if r := recover(); r != nil {
-			if r == EngineExecutionTimeoutPanic {
+			if r == service.EngineExecutionTimeoutPanic {
 				err = apperr.Errorf(apperr.EMGVM, "Timeout while executing contract")
 				return
 			}

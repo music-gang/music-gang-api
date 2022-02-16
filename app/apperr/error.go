@@ -21,7 +21,8 @@ const (
 	EFORBIDDEN      = "forbidden"       // access forbidden
 	EEXISTS         = "exists"          // resource already exists
 
-	EMGVM = "mgvm" // error code prefix for music gang virtual machine, it is assimilated to EINTERNAL
+	EMGVM      = "mgvm"      // error code prefix for music gang virtual machine, it is assimilated to EINTERNAL
+	EANCHORAGE = "anchorage" // error code prefix for anchorage contract executor, it is assimilated to EINTERNAL
 )
 
 // Error represents an application-specific error. Application errors can be

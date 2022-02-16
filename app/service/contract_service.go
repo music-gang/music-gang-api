@@ -74,3 +74,9 @@ func NewContractCall(ctx context.Context, contract *entity.Contract, caller *ent
 		Caller:   caller,
 	}
 }
+
+// ContractExecutorService rapresents the contract executor service.
+type ContractExecutorService interface {
+	// ExecContract executes a contract.
+	ExecContract(ctx context.Context, contractRef *ContractCall) (res interface{}, err error)
+}

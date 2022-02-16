@@ -13,6 +13,7 @@ import (
 	"github.com/music-gang/music-gang-api/auth"
 	"github.com/music-gang/music-gang-api/auth/jwt"
 	"github.com/music-gang/music-gang-api/config"
+	"github.com/music-gang/music-gang-api/executor"
 	"github.com/music-gang/music-gang-api/http"
 	applog "github.com/music-gang/music-gang-api/log"
 	"github.com/music-gang/music-gang-api/mgvm"
@@ -167,7 +168,9 @@ func (m *Main) Run(ctx context.Context) error {
 	fuelStationService.FuelRefillAmount = entity.FuelRefillAmount
 	fuelStationService.FuelRefillRate = 400 * time.Millisecond
 
+	anchorageExecutor := executor.NewAnchorageContractExecutor()
 	engineService := mgvm.NewEngine()
+	engineService.Executor = anchorageExecutor
 
 	m.VM.LogService = logService
 	m.VM.FuelTank = fuelTankService
