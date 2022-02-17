@@ -74,24 +74,24 @@ func (db *DB) migrate() error {
 
 	sort.Strings(names)
 
-	for _, name := range names {
-		if err := db.migrateFile(name); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// migrate runs a single migration file within a transaction. On success, the
-// migration file name is saved to the "migrations" table to prevent re-running.
-func (db *DB) migrateFile(name string) error {
-
 	tx, err := db.conn.Beginx()
 	if err != nil {
 		return apperr.Errorf(apperr.EINTERNAL, "failed to begin transaction: %s", err)
 	}
-	defer tx.Rollback()
+
+	for _, name := range names {
+		if err := db.migrateFile(tx, name); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+// migrate runs a single migration file within a transaction. On success, the
+// migration file name is saved to the "migrations" table to prevent re-running.
+func (db *DB) migrateFile(tx *sqlx.Tx, name string) error {
 
 	var n int
 	if err := tx.QueryRow("SELECT COUNT(*) FROM migrations WHERE name = $1", name).Scan(&n); err != nil {
@@ -113,7 +113,7 @@ func (db *DB) migrateFile(name string) error {
 		return apperr.Errorf(apperr.EINTERNAL, "failed insert migration: %s", err)
 	}
 
-	return tx.Commit()
+	return nil
 }
 
 // BeginTx starts a transaction and returns a wrapper Tx type. This type
