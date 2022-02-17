@@ -1,0 +1,11 @@
+
+CREATE TABLE contracts (
+    id BIGSERIAL PRIMARY KEY,
+	name VARCHAR(255) NOT NULL,
+	description TEXT NOT NULL DEFAULT '',
+    user_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    visibility VARCHAR(255) NOT NULL DEFAULT 'public',
+    max_fuel INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
