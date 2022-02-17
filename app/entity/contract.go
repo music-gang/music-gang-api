@@ -9,12 +9,12 @@ import (
 
 // Visibility consts for the visibility of the contract.
 const (
-	VisibilityPrivate = iota
-	VisibilityPublic
+	VisibilityPrivate = "private"
+	VisibilityPublic  = "public"
 )
 
 // Visibility defines the visibility of a contract.
-type Visibility int
+type Visibility string
 
 // Validate validates the visibility.
 func (v Visibility) Validate() error {
@@ -41,6 +41,8 @@ type Contract struct {
 	UserID      null.Int    `json:"user_id"`
 	Visibility  Visibility  `json:"visibility"`
 	MaxFuel     Fuel        `json:"max_fuel"` // The maximum amount of fuel that can be burned from the contract.
+	CreatedAt   time.Time   `json:"created_at"`
+	UpdatedAt   time.Time   `json:"updated_at"`
 
 	LastRevision *Revision `json:"last_revision"`
 	User         *User     `json:"user"`
