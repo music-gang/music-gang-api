@@ -14,6 +14,7 @@ type ContractService interface {
 	// Return EINVALID if the contract is invalid.
 	// Return EEXISTS if the contract already exists.
 	// Return EFORBIDDEN if the user is not allowed to create a contract.
+	// Return EUNAUTHORIZED if the contract owner is not the authenticated user.
 	CreateContract(ctx context.Context, contract *entity.Contract) error
 
 	// DeleteContract deletes the contract with the given id.

@@ -31,6 +31,11 @@ type User struct {
 // Users is a list of users.
 type Users []*User
 
+// CanCreateContract returns if user is authorized to created contracts.
+func (u *User) CanCreateContract() bool {
+	return u.ID != 0
+}
+
 // Validate returns an error if the user contains invalid fields.
 // This only performs basic validation.
 func (u *User) Validate() error {
