@@ -26,9 +26,9 @@ func NewLockService(db *DB, name string) *LockService {
 	}
 }
 
-// Lock locks the lock.
-func (l *LockService) Lock(ctx context.Context) {
-	l.mux.LockContext(ctx)
+// LockContext locks the lock.
+func (l *LockService) LockContext(ctx context.Context) error {
+	return l.mux.LockContext(ctx)
 }
 
 // Name returns the name of the lock.
@@ -36,7 +36,7 @@ func (l *LockService) Name() string {
 	return l.name
 }
 
-// Unlock unlocks the lock.
-func (l *LockService) Unlock(ctx context.Context) {
-	l.mux.UnlockContext(ctx)
+// UnlockContext unlocks the lock.
+func (l *LockService) UnlockContext(ctx context.Context) (bool, error) {
+	return l.mux.UnlockContext(ctx)
 }

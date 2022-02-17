@@ -25,13 +25,19 @@ func TestLock_lock(t *testing.T) {
 
 		lockService := redis.NewLockService(db, muxName)
 
-		lockService.Lock(ctx)
+		if err := lockService.LockContext(ctx); err != nil {
+			t.Fatal(err)
+		}
 
 		if lockService.Name() != muxName {
 			t.Errorf("got %q, want %q", lockService.Name(), muxName)
 		}
 
-		lockService.Unlock(ctx)
+		if ok, err := lockService.UnlockContext(ctx); err != nil {
+			t.Fatal(err)
+		} else if !ok {
+			t.Error("got false, want true")
+		}
 	})
 
 	t.Run("CanAcquireLock", func(t *testing.T) {
@@ -54,11 +60,22 @@ func TestLock_lock(t *testing.T) {
 		lockService1 := redis.NewLockService(db1, muxName)
 		lockService2 := redis.NewLockService(db2, muxName)
 
-		lockService1.Lock(ctx1)
-		lockService1.Unlock(ctx1)
-
-		lockService2.Lock(ctx2)
-		lockService2.Unlock(ctx2)
+		if err := lockService1.LockContext(ctx1); err != nil {
+			t.Fatal(err)
+		}
+		if ok, err := lockService1.UnlockContext(ctx1); err != nil {
+			t.Fatal(err)
+		} else if !ok {
+			t.Error("got false, want true")
+		}
+		if err := lockService2.LockContext(ctx2); err != nil {
+			t.Fatal(err)
+		}
+		if ok, err := lockService2.UnlockContext(ctx2); err != nil {
+			t.Fatal(err)
+		} else if !ok {
+			t.Error("got false, want true")
+		}
 	})
 
 	t.Run("CannotAcquireLock", func(t *testing.T) {
@@ -86,10 +103,18 @@ func TestLock_lock(t *testing.T) {
 			cancel2()
 		}()
 
-		lockService1.Lock(ctx1)
+		if err := lockService1.LockContext(ctx1); err != nil {
+			t.Fatal(err)
+		}
 
-		lockService2.Lock(ctx2)
+		if err := lockService2.LockContext(ctx2); err == nil {
+			t.Error("got nil, want error")
+		}
 
-		lockService1.Unlock(ctx1)
+		if ok, err := lockService1.UnlockContext(ctx1); err != nil {
+			t.Fatal(err)
+		} else if !ok {
+			t.Error("got false, want true")
+		}
 	})
 }

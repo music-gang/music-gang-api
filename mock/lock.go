@@ -9,16 +9,16 @@ import (
 var _ service.LockService = (*LockService)(nil)
 
 type LockService struct {
-	LockFn   func(ctx context.Context)
-	NameFn   func() string
-	UnlockFn func(ctx context.Context)
+	LockContextFn   func(ctx context.Context) error
+	NameFn          func() string
+	UnlockContextFn func(ctx context.Context) (bool, error)
 }
 
-func (ls *LockService) Lock(ctx context.Context) {
-	if ls.LockFn == nil {
+func (ls *LockService) LockContext(ctx context.Context) error {
+	if ls.LockContextFn == nil {
 		panic("Lock is not defined")
 	}
-	ls.LockFn(ctx)
+	return ls.LockContextFn(ctx)
 }
 
 func (ls *LockService) Name() string {
@@ -28,9 +28,9 @@ func (ls *LockService) Name() string {
 	return ls.NameFn()
 }
 
-func (ls *LockService) Unlock(ctx context.Context) {
-	if ls.UnlockFn == nil {
+func (ls *LockService) UnlockContext(ctx context.Context) (bool, error) {
+	if ls.UnlockContextFn == nil {
 		panic("Unlock is not defined")
 	}
-	ls.UnlockFn(ctx)
+	return ls.UnlockContextFn(ctx)
 }

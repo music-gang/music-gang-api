@@ -34,9 +34,13 @@ func TestFuelTank_Burn(t *testing.T) {
 		}
 
 		fuelTank.LockService = &mock.LockService{
-			LockFn:   func(ctx context.Context) {},
-			NameFn:   func() string { return "lock-mock" },
-			UnlockFn: func(ctx context.Context) {},
+			LockContextFn: func(ctx context.Context) error {
+				return nil
+			},
+			NameFn: func() string { return "lock-mock" },
+			UnlockContextFn: func(ctx context.Context) (bool, error) {
+				return true, nil
+			},
 		}
 
 		if err := fuelTank.Burn(ctx, entity.Fuel(10)); err != nil {
@@ -75,9 +79,13 @@ func TestFuelTank_Burn(t *testing.T) {
 		}
 
 		fuelTank.LockService = &mock.LockService{
-			LockFn:   func(ctx context.Context) {},
-			NameFn:   func() string { return "lock-mock" },
-			UnlockFn: func(ctx context.Context) {},
+			LockContextFn: func(ctx context.Context) error {
+				return nil
+			},
+			NameFn: func() string { return "lock-mock" },
+			UnlockContextFn: func(ctx context.Context) (bool, error) {
+				return true, nil
+			},
 		}
 
 		if err := fuelTank.Burn(ctx, entity.Fuel(10)); err != nil {
@@ -116,9 +124,13 @@ func TestFuelTank_Burn(t *testing.T) {
 		}
 
 		fuelTank.LockService = &mock.LockService{
-			LockFn:   func(ctx context.Context) {},
-			NameFn:   func() string { return "lock-mock" },
-			UnlockFn: func(ctx context.Context) {},
+			LockContextFn: func(ctx context.Context) error {
+				return nil
+			},
+			NameFn: func() string { return "lock-mock" },
+			UnlockContextFn: func(ctx context.Context) (bool, error) {
+				return true, nil
+			},
 		}
 
 		if err := fuelTank.Burn(ctx, entity.Fuel(10)); err == nil {
@@ -148,9 +160,13 @@ func TestFuelTank_Burn(t *testing.T) {
 		}
 
 		fuelTank.LockService = &mock.LockService{
-			LockFn:   func(ctx context.Context) {},
-			NameFn:   func() string { return "lock-mock" },
-			UnlockFn: func(ctx context.Context) {},
+			LockContextFn: func(ctx context.Context) error {
+				return nil
+			},
+			NameFn: func() string { return "lock-mock" },
+			UnlockContextFn: func(ctx context.Context) (bool, error) {
+				return true, nil
+			},
 		}
 
 		if err := fuelTank.Burn(ctx, entity.Fuel(10)); err == nil {
@@ -184,9 +200,13 @@ func TestFuelTank_Fuel(t *testing.T) {
 		}
 
 		fuelTank.LockService = &mock.LockService{
-			LockFn:   func(ctx context.Context) {},
-			NameFn:   func() string { return "lock-mock" },
-			UnlockFn: func(ctx context.Context) {},
+			LockContextFn: func(ctx context.Context) error {
+				return nil
+			},
+			NameFn: func() string { return "lock-mock" },
+			UnlockContextFn: func(ctx context.Context) (bool, error) {
+				return true, nil
+			},
 		}
 
 		if cf, err := fuelTank.Fuel(ctx); err != nil {
@@ -218,9 +238,13 @@ func TestFuelTank_Fuel(t *testing.T) {
 		}
 
 		fuelTank.LockService = &mock.LockService{
-			LockFn:   func(ctx context.Context) {},
-			NameFn:   func() string { return "lock-mock" },
-			UnlockFn: func(ctx context.Context) {},
+			LockContextFn: func(ctx context.Context) error {
+				return nil
+			},
+			NameFn: func() string { return "lock-mock" },
+			UnlockContextFn: func(ctx context.Context) (bool, error) {
+				return true, nil
+			},
 		}
 
 		if cf, err := fuelTank.Fuel(ctx); err != nil {
@@ -256,9 +280,13 @@ func TestFuelTank_Refuel(t *testing.T) {
 		}
 
 		fuelTank.LockService = &mock.LockService{
-			LockFn:   func(ctx context.Context) {},
-			NameFn:   func() string { return "lock-mock" },
-			UnlockFn: func(ctx context.Context) {},
+			LockContextFn: func(ctx context.Context) error {
+				return nil
+			},
+			NameFn: func() string { return "lock-mock" },
+			UnlockContextFn: func(ctx context.Context) (bool, error) {
+				return true, nil
+			},
 		}
 
 		if err := fuelTank.Burn(ctx, entity.Fuel(50)); err != nil {
@@ -347,9 +375,13 @@ func TestFuelTank_Refuel(t *testing.T) {
 		}
 
 		fuelTank.LockService = &mock.LockService{
-			LockFn:   func(ctx context.Context) {},
-			NameFn:   func() string { return "lock-mock" },
-			UnlockFn: func(ctx context.Context) {},
+			LockContextFn: func(ctx context.Context) error {
+				return nil
+			},
+			NameFn: func() string { return "lock-mock" },
+			UnlockContextFn: func(ctx context.Context) (bool, error) {
+				return true, nil
+			},
 		}
 
 		if err := fuelTank.Burn(ctx, entity.Fuel(50)); err != nil {
@@ -394,9 +426,13 @@ func TestFuelTank_Refuel(t *testing.T) {
 		}
 
 		fuelTank.LockService = &mock.LockService{
-			LockFn:   func(ctx context.Context) {},
-			NameFn:   func() string { return "lock-mock" },
-			UnlockFn: func(ctx context.Context) {},
+			LockContextFn: func(ctx context.Context) error {
+				return nil
+			},
+			NameFn: func() string { return "lock-mock" },
+			UnlockContextFn: func(ctx context.Context) (bool, error) {
+				return true, nil
+			},
 		}
 
 		if err := fuelTank.Burn(ctx, entity.Fuel(50)); err != nil {
@@ -470,9 +506,13 @@ func TestFuelTank_Stats(t *testing.T) {
 		}
 
 		fuelTank.LockService = &mock.LockService{
-			LockFn:   func(ctx context.Context) {},
-			NameFn:   func() string { return "lock-mock" },
-			UnlockFn: func(ctx context.Context) {},
+			LockContextFn:   func(ctx context.Context) error {
+				return nil
+			},
+			NameFn:          func() string { return "lock-mock" },
+			UnlockContextFn: func(ctx context.Context) (bool, error) {
+				return true, nil
+			},
 		}
 
 		if err := fuelTank.Burn(ctx, entity.Fuel(15)); err != nil {
@@ -535,14 +575,16 @@ func TestFuelTank_Concurrency(t *testing.T) {
 		}
 
 		lockService := &mock.LockService{
-			LockFn: func(ctx context.Context) {
+			LockContextFn: func(ctx context.Context) error {
 				mux.Lock()
+				return nil
 			},
 			NameFn: func() string {
 				return "fuel-tank-mock"
 			},
-			UnlockFn: func(ctx context.Context) {
+			UnlockContextFn: func(ctx context.Context) (bool, error) {
 				mux.Unlock()
+				return true, nil
 			},
 		}
 
