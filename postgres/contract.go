@@ -38,9 +38,9 @@ func (cs *ContractService) CreateContract(ctx context.Context, contract *entity.
 
 	if err := createContract(ctx, tx, contract); err != nil {
 		return err
-	}
-
-	if err := tx.Commit(); err != nil {
+	} else if err := attachContractAssociations(ctx, tx, contract); err != nil {
+		return err
+	} else if err := tx.Commit(); err != nil {
 		return apperr.Errorf(apperr.EINTERNAL, "failed to commit transaction: %v", err)
 	}
 
@@ -140,9 +140,7 @@ func (cs *ContractService) UpdateContract(ctx context.Context, id int64, upd ser
 
 // attachContractAssociations attaches all associations of the contract to the database.
 func attachContractAssociations(ctx context.Context, tx *Tx, contract *entity.Contract) (err error) {
-	if !contract.UserID.Valid {
-		return nil
-	} else if contract.User, err = findUserByID(ctx, tx, contract.UserID.Int64); err != nil {
+	if contract.User, err = findUserByID(ctx, tx, contract.UserID); err != nil {
 		return err
 	}
 	return nil
@@ -158,7 +156,7 @@ func createContract(ctx context.Context, tx *Tx, contract *entity.Contract) erro
 		return err
 	} else if user := app.UserFromContext(ctx); user == nil {
 		return apperr.Errorf(apperr.EUNAUTHORIZED, "user is not authenticated")
-	} else if contract.UserID.Valid && contract.UserID.Int64 != app.UserIDFromContext(ctx) {
+	} else if contract.UserID != app.UserIDFromContext(ctx) {
 		return apperr.Errorf(apperr.EUNAUTHORIZED, "contract is not owned by the authenticated user")
 	} else if !user.CanCreateContract() {
 		return apperr.Errorf(apperr.EFORBIDDEN, "user is not allowed to create a contract")
@@ -188,9 +186,7 @@ func deleteContract(ctx context.Context, tx *Tx, id int64) error {
 
 	if contract, err := findContractByID(ctx, tx, id); err != nil {
 		return err
-	} else if !contract.UserID.Valid {
-		return apperr.Errorf(apperr.EFORBIDDEN, "standard contract cannot be deleted")
-	} else if contract.UserID.Int64 != app.UserIDFromContext(ctx) {
+	} else if contract.UserID != app.UserIDFromContext(ctx) {
 		return apperr.Errorf(apperr.EUNAUTHORIZED, "contract is not owned by the authenticated user")
 	}
 
@@ -291,9 +287,7 @@ func updateContract(ctx context.Context, tx *Tx, id int64, upd service.ContractU
 	contract, err := findContractByID(ctx, tx, id)
 	if err != nil {
 		return nil, err
-	} else if !contract.UserID.Valid {
-		return nil, apperr.Errorf(apperr.EFORBIDDEN, "standard contract cannot be updated")
-	} else if contract.UserID.Int64 != app.UserIDFromContext(ctx) {
+	} else if contract.UserID != app.UserIDFromContext(ctx) {
 		return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "contract is not owned by the authenticated user")
 	}
 

@@ -12,6 +12,7 @@ func GetConn(db *DB) *sqlx.DB {
 }
 
 var AttachUserAssociations = attachUserAssociations
+var AttachContractAssociations = attachContractAssociations
 
 var FindUserByEmail = func(ctx context.Context, db *DB, email string) (*entity.User, error) {
 	tx, err := db.BeginTx(ctx, nil)

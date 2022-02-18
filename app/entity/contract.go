@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/music-gang/music-gang-api/app/apperr"
-	"gopkg.in/guregu/null.v4"
 )
 
 // Visibility consts for the visibility of the contract.
@@ -38,7 +37,7 @@ type Contract struct {
 	ID          int64      `json:"id"`
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
-	UserID      null.Int   `json:"user_id"`
+	UserID      int64      `json:"user_id"`
 	Visibility  Visibility `json:"visibility"`
 	MaxFuel     Fuel       `json:"max_fuel"` // The maximum amount of fuel that can be burned from the contract.
 	CreatedAt   time.Time  `json:"created_at"`
@@ -46,24 +45,6 @@ type Contract struct {
 
 	LastRevision *Revision `json:"last_revision"`
 	User         *User     `json:"user"`
-}
-
-// Validate validates the contract.
-func (c *Contract) Validate() error {
-
-	if c.Name == "" {
-		return apperr.Errorf(apperr.EINVALID, "contract name is required")
-	}
-
-	if c.UserID.Valid && c.UserID.Int64 == 0 {
-		return apperr.Errorf(apperr.EINVALID, "User ID cannot be empty if provided")
-	}
-
-	if err := c.Visibility.Validate(); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // MaxExecutionTime returns the maximum execution time of the contract.
@@ -76,4 +57,22 @@ func (c *Contract) MaxExecutionTime() time.Duration {
 	}
 
 	return MaxExecutionTime
+}
+
+// Validate validates the contract.
+func (c *Contract) Validate() error {
+
+	if c.Name == "" {
+		return apperr.Errorf(apperr.EINVALID, "contract name is required")
+	}
+
+	if c.UserID == 0 {
+		return apperr.Errorf(apperr.EINVALID, "User ID cannot be empty if provided")
+	}
+
+	if err := c.Visibility.Validate(); err != nil {
+		return err
+	}
+
+	return nil
 }
