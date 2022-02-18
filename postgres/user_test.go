@@ -253,6 +253,29 @@ func TestUserService_UpdateUser(t *testing.T) {
 			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.EINTERNAL)
 		}
 	})
+
+	t.Run("NameAlReadyTaken", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		// truncate users test table
+		MustTruncateTable(t, db, "users")
+
+		s := postgres.NewUserService(db)
+
+		MustCreateUser(t, context.Background(), db, &entity.User{Name: "Jane"})
+
+		user1, ctx1 := MustCreateUser(t, context.Background(), db, &entity.User{Name: "Bob"})
+
+		newName := "Jane"
+
+		if _, err := s.UpdateUser(ctx1, user1.ID, service.UserUpdate{Name: &newName}); err == nil {
+			t.Fatal("expected error")
+		} else if apperr.ErrorCode(err) != apperr.EINVALID {
+			t.Fatalf("got %v, want %v", apperr.ErrorCode(err), apperr.EINVALID)
+		}
+	})
 }
 
 func TestUserService_DeleteUser(t *testing.T) {
