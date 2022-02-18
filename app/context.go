@@ -22,15 +22,15 @@ const (
 	ContextTagCLI     = "CLI"
 )
 
-// NewContextWithUser returns a new context with the provided user attached.
-func NewContextWithUser(ctx context.Context, user *entity.User) context.Context {
-	return context.WithValue(ctx, userContextKey, user)
-}
-
 // NewContextWithTag returns a new context with the provided tag attached.
 // This can be useful during logging to define in which context a log entry was created, for example, HTTP, cron, CLI, etc.
 func NewContextWithTags(ctx context.Context, tags []string) context.Context {
 	return context.WithValue(ctx, tagContextKey, tags)
+}
+
+// NewContextWithUser returns a new context with the provided user attached.
+func NewContextWithUser(ctx context.Context, user *entity.User) context.Context {
+	return context.WithValue(ctx, userContextKey, user)
 }
 
 // TagsFromContext returns the tags stored in the provided context.
