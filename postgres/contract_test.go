@@ -183,6 +183,89 @@ func TestContract_CreateContract(t *testing.T) {
 			}
 		})
 	})
+
+	t.Run("UserNotAuthenticated", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForContractTests(t, db)
+
+		cs := postgres.NewContractService(db)
+
+		user, _ := MustCreateUser(t, context.Background(), db, &entity.User{Name: "test-contract"})
+
+		testContractName := "test-contract"
+		testContractDescription := "test-contract-description"
+
+		contract := &entity.Contract{
+			Name:        testContractName,
+			Description: testContractDescription,
+			UserID:      user.ID,
+			Visibility:  entity.VisibilityPublic,
+			MaxFuel:     entity.FuelExtremeActionAmount,
+		}
+
+		if err := cs.CreateContract(context.Background(), contract); err == nil {
+			t.Fatal("expected error")
+		} else if code := apperr.ErrorCode(err); code != apperr.EUNAUTHORIZED {
+			t.Fatalf("expected %s, got %s", apperr.EUNAUTHORIZED, code)
+		}
+	})
+
+	t.Run("UserNotContractOwner", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForContractTests(t, db)
+
+		cs := postgres.NewContractService(db)
+
+		user0, _ := MustCreateUser(t, context.Background(), db, &entity.User{Name: "test-contract"})
+
+		_, ctx1 := MustCreateUser(t, context.Background(), db, &entity.User{Name: "test-contract-2"})
+
+		testContractName := "test-contract"
+		testContractDescription := "test-contract-description"
+
+		contract := &entity.Contract{
+			Name:        testContractName,
+			Description: testContractDescription,
+			UserID:      user0.ID,
+			Visibility:  entity.VisibilityPublic,
+			MaxFuel:     entity.FuelExtremeActionAmount,
+		}
+
+		if err := cs.CreateContract(ctx1, contract); err == nil {
+			t.Fatal("expected error")
+		} else if code := apperr.ErrorCode(err); code != apperr.EUNAUTHORIZED {
+			t.Fatalf("expected %s, got %s", apperr.EUNAUTHORIZED, code)
+		}
+	})
+
+	t.Run("UserCannotCreateContract", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForContractTests(t, db)
+
+		cs := postgres.NewContractService(db)
+
+		user, ctx := MustCreateUser(t, context.Background(), db, &entity.User{Name: "test-contract"})
+
+		testContractName := "test-contract"
+		testContractDescription := "test-contract-description"
+
+		contract := &entity.Contract{
+			Name:        testContractName,
+			Description: testContractDescription,
+			UserID:      user.ID,
+			Visibility:  entity.VisibilityPublic,
+			MaxFuel:     entity.FuelExtremeActionAmount,
+		}
+	})
 }
 
 func MustCreateContract(tb testing.TB, ctx context.Context, db *postgres.DB, contract *entity.Contract) (*entity.Contract, context.Context) {
