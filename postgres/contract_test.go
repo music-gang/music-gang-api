@@ -874,7 +874,7 @@ func TestContract_MakeRevision(t *testing.T) {
 		}
 
 		if err := cs.MakeRevision(ctx, newRevision); err == nil {
-			t.Fatal("expected error, get last revision is not implemented yet")
+			t.Fatal("expected error, 'get last revision' is not implemented yet")
 		}
 	})
 
