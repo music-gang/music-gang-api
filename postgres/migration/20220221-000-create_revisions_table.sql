@@ -7,6 +7,7 @@ CREATE TABLE revisions
     notes TEXT NOT NULL DEFAULT '',
     code TEXT NOT NULL DEFAULT '',
     compiled_code BYTEA NOT NULL,
+    max_fuel INT NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 
 );

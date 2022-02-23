@@ -1,6 +1,7 @@
 package postgres_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strconv"
@@ -164,6 +165,47 @@ func TestContract_CreateContract(t *testing.T) {
 				UserID:      user.ID,
 				Visibility:  "wrong",
 				MaxFuel:     entity.FuelExtremeActionAmount,
+			}
+
+			if err := cs.CreateContract(ctx, contract); err == nil {
+				t.Fatal("expected error")
+			} else if code := apperr.ErrorCode(err); code != apperr.EINVALID {
+				t.Fatalf("expected EINVALID, got %s", code)
+			}
+
+			contract = &entity.Contract{
+				Name:        testContractName,
+				Description: testContractDescription,
+				UserID:      user.ID,
+				MaxFuel:     entity.FuelExtremeActionAmount,
+			}
+
+			if err := cs.CreateContract(ctx, contract); err == nil {
+				t.Fatal("expected error")
+			} else if code := apperr.ErrorCode(err); code != apperr.EINVALID {
+				t.Fatalf("expected EINVALID, got %s", code)
+			}
+		})
+
+		t.Run("InvalidFuel", func(t *testing.T) {
+
+			db := MustOpenDB(t)
+			defer MustCloseDB(t, db)
+
+			TruncateTablesForContractTests(t, db)
+
+			cs := postgres.NewContractService(db)
+
+			user, ctx := MustCreateUser(t, context.Background(), db, &entity.User{Name: "test-contract"})
+
+			testContractName := "test-contract"
+			testContractDescription := "test-contract-description"
+
+			contract := &entity.Contract{
+				Name:        testContractName,
+				Description: testContractDescription,
+				UserID:      user.ID,
+				Visibility:  entity.VisibilityPublic,
 			}
 
 			if err := cs.CreateContract(ctx, contract); err == nil {
@@ -700,6 +742,191 @@ func TestContract_FindContracts(t *testing.T) {
 		} else if len(contracts) != 0 {
 			t.Fatal("Expected no contracts")
 		}
+	})
+}
+
+func TestContract_MakeRevision(t *testing.T) {
+
+	t.Run("OK", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForContractTests(t, db)
+
+		cs := postgres.NewContractService(db)
+
+		contract := &entity.Contract{
+			Name:       "make-revision",
+			MaxFuel:    entity.FuelExtremeActionAmount,
+			Visibility: entity.VisibilityPublic,
+		}
+
+		contract, ctx := MustCreateContract(t, context.Background(), db, contract, &entity.User{Name: "test-make-revision"})
+
+		code := "test-code"
+		notes := "test-notes"
+
+		revision := &entity.Revision{
+			Version:      entity.AnchorageVersion,
+			ContractID:   contract.ID,
+			Code:         code,
+			Notes:        notes,
+			CompiledCode: []byte(code),
+			MaxFuel:      entity.FuelInstantActionAmount,
+		}
+
+		if err := cs.MakeRevision(ctx, revision); err != nil {
+			t.Fatal(err)
+		} else if revision.ID == 0 {
+			t.Fatal("expected non-zero revision id")
+		} else if revision.ContractID != contract.ID {
+			t.Fatalf("expected revision contract id to be %d, got %d", contract.ID, revision.ContractID)
+		} else if revision.Version != entity.AnchorageVersion {
+			t.Fatalf("expected revision version to be %s, got %s", entity.AnchorageVersion, revision.Version)
+		} else if revision.Notes != notes {
+			t.Fatalf("expected revision notes to be %s, got %s", notes, revision.Notes)
+		} else if revision.MaxFuel == contract.MaxFuel {
+			t.Fatal("expected revision max fuel to be different than contract max fuel")
+		} else if revision.Code != code {
+			t.Fatalf("expected revision code to be %s, got %s", code, revision.Code)
+		} else if !bytes.Equal(revision.CompiledCode, []byte(code)) {
+			t.Fatalf("expected revision compiled code to be %s, got %s", code, revision.CompiledCode)
+		}
+	})
+
+	t.Run("ContextCancelled", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForContractTests(t, db)
+
+		cs := postgres.NewContractService(db)
+
+		contract := &entity.Contract{
+			Name:       "make-revision",
+			MaxFuel:    entity.FuelExtremeActionAmount,
+			Visibility: entity.VisibilityPublic,
+		}
+
+		contract, ctx := MustCreateContract(t, context.Background(), db, contract, &entity.User{Name: "test-make-revision"})
+
+		code := "test-code"
+		notes := "test-notes"
+
+		revision := &entity.Revision{
+			Version:      entity.AnchorageVersion,
+			ContractID:   contract.ID,
+			Code:         code,
+			Notes:        notes,
+			CompiledCode: []byte(code),
+			MaxFuel:      entity.FuelInstantActionAmount,
+		}
+
+		ctx, cancel := context.WithCancel(ctx)
+
+		cancel()
+
+		if err := cs.MakeRevision(ctx, revision); err == nil {
+			t.Fatal("expected error")
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINTERNAL {
+			t.Fatalf("expected %s, got %s", apperr.EINTERNAL, errCode)
+		}
+	})
+
+	t.Run("ErrValidate", func(t *testing.T) {
+
+		contract := &entity.Contract{
+			Name:       "make-revision",
+			MaxFuel:    entity.FuelExtremeActionAmount,
+			Visibility: entity.VisibilityPublic,
+		}
+
+		t.Run("MissingVersion", func(t *testing.T) {
+
+			db := MustOpenDB(t)
+			defer db.Close()
+
+			TruncateTablesForContractTests(t, db)
+
+			cs := postgres.NewContractService(db)
+
+			contract, ctx := MustCreateContract(t, context.Background(), db, contract, &entity.User{Name: "test-make-revision"})
+
+			code := "test-code"
+			notes := "test-notes"
+
+			revision := &entity.Revision{
+				ContractID:   contract.ID,
+				Code:         code,
+				Notes:        notes,
+				CompiledCode: []byte(code),
+				MaxFuel:      entity.FuelInstantActionAmount,
+			}
+
+			if err := cs.MakeRevision(ctx, revision); err == nil {
+				t.Fatal("expected error")
+			} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINVALID {
+				t.Fatalf("expected %s, got %s", apperr.EINVALID, errCode)
+			}
+		})
+
+		t.Run("MissingCode", func(t *testing.T) {
+
+			db := MustOpenDB(t)
+			defer db.Close()
+
+			TruncateTablesForContractTests(t, db)
+
+			cs := postgres.NewContractService(db)
+
+			contract, ctx := MustCreateContract(t, context.Background(), db, contract, &entity.User{Name: "test-make-revision"})
+
+			code := "test-code"
+			notes := "test-notes"
+
+			revision := &entity.Revision{
+				Version:      entity.AnchorageVersion,
+				ContractID:   contract.ID,
+				Notes:        notes,
+				CompiledCode: []byte(code),
+				MaxFuel:      entity.FuelInstantActionAmount,
+			}
+
+			if err := cs.MakeRevision(ctx, revision); err == nil {
+				t.Fatal("expected error")
+			} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINVALID {
+				t.Fatalf("expected %s, got %s", apperr.EINVALID, errCode)
+			}
+		})
+
+		t.Run("MissingContractID", func(t *testing.T) {
+
+			db := MustOpenDB(t)
+			defer db.Close()
+
+			TruncateTablesForContractTests(t, db)
+
+			cs := postgres.NewContractService(db)
+
+			code := "test-code"
+			notes := "test-notes"
+
+			revision := &entity.Revision{
+				Version:      entity.AnchorageVersion,
+				Code:         code,
+				Notes:        notes,
+				CompiledCode: []byte(code),
+				MaxFuel:      entity.FuelInstantActionAmount,
+			}
+
+			if err := cs.MakeRevision(context.Background(), revision); err == nil {
+				t.Fatal("expected error")
+			} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINVALID {
+				t.Fatalf("expected %s, got %s", apperr.EINVALID, errCode)
+			}
+		})
 	})
 }
 

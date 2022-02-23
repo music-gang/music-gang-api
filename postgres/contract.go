@@ -119,6 +119,27 @@ func (cs *ContractService) MakeRevision(ctx context.Context, revision *entity.Re
 	}
 	defer tx.Rollback()
 
+	if revision.ContractID == 0 {
+		return apperr.Errorf(apperr.EINVALID, "contract id is required")
+	}
+
+	contract, err := cs.FindContractByID(ctx, revision.ContractID)
+	if err != nil {
+		return err
+	} else if contract.UserID != app.UserIDFromContext(ctx) {
+		return apperr.Errorf(apperr.EUNAUTHORIZED, "contract is not owned by the authenticated user")
+	}
+
+	var newRevNumber uint = 1
+	if contract.LastRevision != nil {
+		newRevNumber = uint(contract.LastRevision.Rev) + 1
+	}
+
+	if revision.MaxFuel == 0 {
+		revision.MaxFuel = contract.MaxFuel
+	}
+	revision.Rev = entity.RevisionNumber(newRevNumber)
+
 	if err := makeRevision(ctx, tx, revision); err != nil {
 		return err
 	}
@@ -297,40 +318,24 @@ func findContracts(ctx context.Context, tx *Tx, filter service.ContractFilter) (
 // makeRevision creates a new revision for the contract passed in.
 func makeRevision(ctx context.Context, tx *Tx, revision *entity.Revision) error {
 
-	if revision.ContractID == 0 {
-		return apperr.Errorf(apperr.EINVALID, "contract id is required")
-	}
-
-	contract, err := findContractByID(ctx, tx, revision.ContractID)
-	if err != nil {
-		return err
-	} else if contract.UserID != app.UserIDFromContext(ctx) {
-		return apperr.Errorf(apperr.EUNAUTHORIZED, "contract is not owned by the authenticated user")
-	}
-
-	var newRevNumber uint = 1
-	if contract.LastRevision != nil {
-		newRevNumber = uint(contract.LastRevision.Rev) + 1
-	}
-
 	revision.CreatedAt = tx.now
-	revision.Rev = entity.RevisionNumber(newRevNumber)
 
 	if err := revision.Validate(); err != nil {
 		return err
 	}
 
-	if _, err := tx.ExecContext(ctx, `
+	if err := tx.QueryRowContext(ctx, `
 		INSERT INTO revisions (
-			revision,
+			rev,
 			version,
 			contract_id,
 			notes,
 			code,
 			compiled_code,
+			max_fuel,
 			created_at
-		) VALUES ($1, $2, $3, $4, $5, $6)
-	`, revision.Rev, revision.Version, revision.ContractID, revision.Notes, revision.Code, revision.CompiledCode); err != nil {
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id
+	`, revision.Rev, revision.Version, revision.ContractID, revision.Notes, revision.Code, revision.CompiledCode, revision.MaxFuel, revision.CreatedAt).Scan(&revision.ID); err != nil {
 		return apperr.Errorf(apperr.EINTERNAL, "failed to insert revision: %v", err)
 	}
 
