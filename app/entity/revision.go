@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/music-gang/music-gang-api/app/apperr"
-	"gopkg.in/guregu/null.v4"
 )
 
 // RevisionVersion indicates the version of revision management system.
@@ -12,9 +11,9 @@ type RevisionVersion string
 
 // This is a list of all revisions versions.
 const (
-	Anchorage RevisionVersion = "Anchorage"
+	AnchorageVersion RevisionVersion = "Anchorage"
 
-	CurrentRevisionVersion RevisionVersion = Anchorage
+	CurrentRevisionVersion RevisionVersion = AnchorageVersion
 )
 
 // RevisionNumber is the revision number of the entity.
@@ -31,9 +30,10 @@ type Revision struct {
 	Rev          RevisionNumber  `json:"revision"`
 	Version      RevisionVersion `json:"version"`
 	ContractID   int64           `json:"contract_id"`
-	Notes        null.String     `json:"note"`
+	Notes        string          `json:"note"`
 	Code         string          `json:"code"`
 	CompiledCode []byte          `json:"-"`
+	MaxFuel      Fuel            `json:"max_fuel"`
 
 	Contract *Contract `json:"contract"`
 }
@@ -42,19 +42,32 @@ type Revision struct {
 func (r *Revision) Validate() error {
 
 	if r.Rev == 0 {
+
 		return apperr.Errorf(apperr.EINVALID, "revision number cannot be zero")
-	}
-	if r.Code == "" {
+
+	} else if r.Code == "" {
+
 		return apperr.Errorf(apperr.EINVALID, "code is required")
-	}
-	if r.ContractID == 0 {
+
+	} else if r.ContractID == 0 {
+
 		return apperr.Errorf(apperr.EINVALID, "contract id is required")
-	}
-	if r.Version != CurrentRevisionVersion {
+
+	} else if r.Version != CurrentRevisionVersion {
+
 		return apperr.Errorf(apperr.EINVALID, "invalid revision version")
-	}
-	if r.CreatedAt.IsZero() {
+
+	} else if r.CreatedAt.IsZero() {
+
 		return apperr.Errorf(apperr.EINVALID, "created at is required")
+
+	} else if r.MaxFuel == 0 {
+
+		return apperr.Errorf(apperr.EINVALID, "max fuel is required")
+
+	} else if len(r.CompiledCode) == 0 {
+
+		return apperr.Errorf(apperr.EINVALID, "compiled code is required")
 	}
 
 	return nil

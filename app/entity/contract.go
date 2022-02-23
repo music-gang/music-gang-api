@@ -70,6 +70,10 @@ func (c *Contract) Validate() error {
 		return apperr.Errorf(apperr.EINVALID, "User ID cannot be empty if provided")
 	}
 
+	if c.MaxFuel == 0 {
+		return apperr.Errorf(apperr.EINVALID, "Max fuel is required")
+	}
+
 	if err := c.Visibility.Validate(); err != nil {
 		return err
 	}
