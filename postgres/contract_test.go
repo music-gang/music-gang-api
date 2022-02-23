@@ -3,7 +3,7 @@ package postgres_test
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"reflect"
 	"strconv"
 	"testing"
 	"time"
@@ -50,14 +50,12 @@ func TestContract_CreateContract(t *testing.T) {
 			t.Fatal("contract user is nil")
 		} else if contract.User.ID != user.ID {
 			t.Fatalf("contract user ID is %d, expected %d", contract.User.ID, user.ID)
-		} else if contract.Name != testContractName {
-			t.Fatalf("contract name is %s, expected %s", contract.Name, testContractName)
-		} else if contract.Description != testContractDescription {
-			t.Fatalf("contract description is %s, expected %s", contract.Description, testContractDescription)
-		} else if contract.Visibility != entity.VisibilityPublic {
-			t.Fatalf("contract visibility is %s, expected %s", contract.Visibility, entity.VisibilityPublic)
-		} else if contract.MaxFuel != entity.FuelExtremeActionAmount {
-			t.Fatalf("contract max fuel is %d, expected %d", contract.MaxFuel, entity.FuelExtremeActionAmount)
+		}
+
+		if other, err := cs.FindContractByID(ctx, contract.ID); err != nil {
+			t.Fatal(err)
+		} else if !reflect.DeepEqual(contract, other) {
+			t.Fatal("contracts are not equal")
 		}
 	})
 
@@ -459,23 +457,21 @@ func TestContract_UpdateContract(t *testing.T) {
 			Description: &newContractDescription,
 		}
 
-		contract.Name = newContractName
-		contract.Description = newContractDescription
-
 		// sleep to make sure updated_at is different
 		time.Sleep(time.Second)
 
 		if c, err := cs.UpdateContract(ctx, contract.ID, contractUpdate); err != nil {
 			t.Fatal(err)
-		} else if err := CompareContracts(t, contract, c); err != nil {
+		} else if cc, err := cs.FindContractByID(ctx, c.ID); err != nil {
 			t.Fatal(err)
+		} else if !reflect.DeepEqual(c, cc) {
+			t.Fatal("expected contract to be equal")
 		} else if c.UpdatedAt.Equal(oldUpdatedAt) {
 			t.Fatalf("expected updatedAt to be updated")
 		} else if reloadedContract, err := cs.FindContractByID(ctx, c.ID); err != nil {
 			t.Fatal(err)
-		} else if err := CompareContracts(t, reloadedContract, c); err != nil {
-			t.Fatal(err)
-
+		} else if !reflect.DeepEqual(reloadedContract, c) {
+			t.Fatal("expected contract to be equal")
 		} else if reloadedContract.UpdatedAt.Equal(oldUpdatedAt) {
 			t.Fatalf("expected updatedAt to be updated")
 		} else if !reloadedContract.UpdatedAt.Equal(c.UpdatedAt) {
@@ -654,8 +650,8 @@ func TestContract_FindContractByID(t *testing.T) {
 
 		if c, err := cs.FindContractByID(ctx, contract.ID); err != nil {
 			t.Fatal(err)
-		} else if err := CompareContracts(t, contract, c); err != nil {
-			t.Fatal(err)
+		} else if !reflect.DeepEqual(contract, c) {
+			t.Fatal("expected contract to be equal")
 		}
 	})
 
@@ -795,6 +791,161 @@ func TestContract_MakeRevision(t *testing.T) {
 		}
 	})
 
+	t.Run("MaxFuelDefaultFromContract", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForContractTests(t, db)
+
+		cs := postgres.NewContractService(db)
+
+		contract := &entity.Contract{
+			Name:       "make-revision",
+			MaxFuel:    entity.FuelExtremeActionAmount,
+			Visibility: entity.VisibilityPublic,
+		}
+
+		contract, ctx := MustCreateContract(t, context.Background(), db, contract, &entity.User{Name: "test-make-revision"})
+
+		code := "test-code"
+		notes := "test-notes"
+
+		revision := &entity.Revision{
+			Version:      entity.AnchorageVersion,
+			ContractID:   contract.ID,
+			Code:         code,
+			Notes:        notes,
+			CompiledCode: []byte(code),
+		}
+
+		if err := cs.MakeRevision(ctx, revision); err != nil {
+			t.Fatal(err)
+		} else if revision.MaxFuel != contract.MaxFuel {
+			t.Fatalf("expected revision max fuel to be %d, got %d", contract.MaxFuel, revision.MaxFuel)
+		}
+	})
+
+	t.Run("NewRevision", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForContractTests(t, db)
+
+		cs := postgres.NewContractService(db)
+
+		contract := &entity.Contract{
+			Name:       "make-revision",
+			MaxFuel:    entity.FuelExtremeActionAmount,
+			Visibility: entity.VisibilityPublic,
+		}
+
+		contract, ctx := MustCreateContract(t, context.Background(), db, contract, &entity.User{Name: "test-make-revision"})
+
+		code := "test-code"
+		notes := "test-notes"
+
+		revision := &entity.Revision{
+			Version:      entity.AnchorageVersion,
+			ContractID:   contract.ID,
+			Code:         code,
+			Notes:        notes,
+			CompiledCode: []byte(code),
+			MaxFuel:      entity.FuelInstantActionAmount,
+		}
+
+		if err := cs.MakeRevision(ctx, revision); err != nil {
+			t.Fatal(err)
+		} else if revision.Rev != 1 {
+			t.Fatalf("expected revision rev to be 1, got %d", revision.Rev)
+		}
+
+		newCode := "test-code"
+		newNotes := "test-notes"
+
+		newRevision := &entity.Revision{
+			Version:      entity.AnchorageVersion,
+			ContractID:   contract.ID,
+			Code:         newCode,
+			Notes:        newNotes,
+			CompiledCode: []byte(newCode),
+			MaxFuel:      entity.FuelInstantActionAmount,
+		}
+
+		if err := cs.MakeRevision(ctx, newRevision); err == nil {
+			t.Fatal("expected error, get last revision is not implemented yet")
+		}
+	})
+
+	t.Run("ContractNotFound", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForContractTests(t, db)
+
+		cs := postgres.NewContractService(db)
+
+		code := "test-code"
+		notes := "test-notes"
+
+		revision := &entity.Revision{
+			Version:      entity.AnchorageVersion,
+			ContractID:   1,
+			Code:         code,
+			Notes:        notes,
+			CompiledCode: []byte(code),
+			MaxFuel:      entity.FuelInstantActionAmount,
+		}
+
+		if err := cs.MakeRevision(context.Background(), revision); err == nil {
+			t.Fatal(err)
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.ENOTFOUND {
+			t.Fatalf("expected error code to be %s, got %s", apperr.ENOTFOUND, errCode)
+		}
+	})
+
+	t.Run("ContractNotOwned", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForContractTests(t, db)
+
+		cs := postgres.NewContractService(db)
+
+		contract, _ := MustCreateContract(t, context.Background(), db, &entity.Contract{
+			Name:       "make-revision",
+			MaxFuel:    entity.FuelExtremeActionAmount,
+			Visibility: entity.VisibilityPublic,
+		}, &entity.User{Name: "test-make-revision"})
+
+		_, ctx1 := MustCreateContract(t, context.Background(), db, &entity.Contract{
+			Name:       "make-revision",
+			MaxFuel:    entity.FuelExtremeActionAmount,
+			Visibility: entity.VisibilityPublic,
+		}, &entity.User{Name: "test-make-revision-1"})
+
+		code := "test-code"
+		notes := "test-notes"
+
+		revision := &entity.Revision{
+			Version:      entity.AnchorageVersion,
+			ContractID:   contract.ID,
+			Code:         code,
+			Notes:        notes,
+			CompiledCode: []byte(code),
+			MaxFuel:      entity.FuelInstantActionAmount,
+		}
+
+		if err := cs.MakeRevision(ctx1, revision); err == nil {
+			t.Fatal(err)
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EUNAUTHORIZED {
+			t.Fatalf("expected error code to be %s, got %s", apperr.EUNAUTHORIZED, errCode)
+		}
+	})
+
 	t.Run("ContextCancelled", func(t *testing.T) {
 
 		db := MustOpenDB(t)
@@ -872,6 +1023,33 @@ func TestContract_MakeRevision(t *testing.T) {
 			}
 		})
 
+		t.Run("MissingContractID", func(t *testing.T) {
+
+			db := MustOpenDB(t)
+			defer db.Close()
+
+			TruncateTablesForContractTests(t, db)
+
+			cs := postgres.NewContractService(db)
+
+			code := "test-code"
+			notes := "test-notes"
+
+			revision := &entity.Revision{
+				Version:      entity.AnchorageVersion,
+				Code:         code,
+				Notes:        notes,
+				CompiledCode: []byte(code),
+				MaxFuel:      entity.FuelInstantActionAmount,
+			}
+
+			if err := cs.MakeRevision(context.Background(), revision); err == nil {
+				t.Fatal("expected error")
+			} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINVALID {
+				t.Fatalf("expected %s, got %s", apperr.EINVALID, errCode)
+			}
+		})
+
 		t.Run("MissingCode", func(t *testing.T) {
 
 			db := MustOpenDB(t)
@@ -901,7 +1079,7 @@ func TestContract_MakeRevision(t *testing.T) {
 			}
 		})
 
-		t.Run("MissingContractID", func(t *testing.T) {
+		t.Run("MissingCompiledCode", func(t *testing.T) {
 
 			db := MustOpenDB(t)
 			defer db.Close()
@@ -910,18 +1088,20 @@ func TestContract_MakeRevision(t *testing.T) {
 
 			cs := postgres.NewContractService(db)
 
+			contract, ctx := MustCreateContract(t, context.Background(), db, contract, &entity.User{Name: "test-make-revision"})
+
 			code := "test-code"
 			notes := "test-notes"
 
 			revision := &entity.Revision{
-				Version:      entity.AnchorageVersion,
-				Code:         code,
-				Notes:        notes,
-				CompiledCode: []byte(code),
-				MaxFuel:      entity.FuelInstantActionAmount,
+				Version:    entity.AnchorageVersion,
+				ContractID: contract.ID,
+				Notes:      notes,
+				Code:       code,
+				MaxFuel:    entity.FuelInstantActionAmount,
 			}
 
-			if err := cs.MakeRevision(context.Background(), revision); err == nil {
+			if err := cs.MakeRevision(ctx, revision); err == nil {
 				t.Fatal("expected error")
 			} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINVALID {
 				t.Fatalf("expected %s, got %s", apperr.EINVALID, errCode)
@@ -944,35 +1124,6 @@ func TruncateTablesForContractTests(tb testing.TB, db *postgres.DB) {
 	tb.Helper()
 
 	MustTruncateTable(tb, db, "users")
+	MustTruncateTable(tb, db, "auths")
 	MustTruncateTable(tb, db, "contracts")
-}
-
-func CompareContracts(t testing.TB, expected *entity.Contract, actual *entity.Contract) error {
-	t.Helper()
-
-	if expected.ID != actual.ID {
-		return fmt.Errorf("expected contract id %d, got %d", expected.ID, actual.ID)
-	}
-
-	if expected.Name != actual.Name {
-		return fmt.Errorf("expected contract name %s, got %s", expected.Name, actual.Name)
-	}
-
-	if expected.Description != actual.Description {
-		return fmt.Errorf("expected contract description %s, got %s", expected.Description, actual.Description)
-	}
-
-	if expected.Visibility != actual.Visibility {
-		return fmt.Errorf("expected contract visibility %s, got %s", expected.Visibility, actual.Visibility)
-	}
-
-	if expected.MaxFuel != actual.MaxFuel {
-		return fmt.Errorf("expected contract max fuel %d, got %d", expected.MaxFuel, actual.MaxFuel)
-	}
-
-	if expected.UserID != actual.UserID {
-		return fmt.Errorf("expected contract user id %d, got %d", expected.UserID, actual.UserID)
-	}
-
-	return nil
 }
