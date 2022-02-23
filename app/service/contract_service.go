@@ -31,6 +31,14 @@ type ContractService interface {
 	// Also returns the total count of contracts.
 	FindContracts(ctx context.Context, filter ContractFilter) (entity.Contracts, int, error)
 
+	// // FindRevisionByContractAndRev returns the revision searched by the given contract and revision number.
+	// // Return ENOTFOUND if the revision does not exist.
+	// FindRevisionByContractAndRev(ctx context.Context, contractID int64, rev entity.RevisionNumber) (*entity.Revision, error)
+
+	// // FindRevisions returns a list of revisions of the contract with the given id.
+	// // Also returns the total count of revisions.
+	// FindRevisions(ctx context.Context, filter RevisionFilter) (entity.Revisions, int, error)
+
 	// MakeRevision creates a new revision of the contract.
 	// Return ENOTFOUND if the contract does not exist.
 	// Return EINVALID if the revision is invalid.
@@ -53,6 +61,17 @@ type ContractFilter struct {
 	Limit  int `json:"limit"`
 	Offset int `json:"offset"`
 }
+
+// // RevisionFilter represents the options used to filter the revisions of a contract.
+// type RevisionFilter struct {
+// 	// ContractID is not a pointer because should be a mandatory field and honestly i prefer to have to check for zero value istead of nil.
+// 	// It is not possible to filter by contract id if it is not present.
+// 	ContractID int64  `json:"contract_id"`
+// 	Rev        *int64 `json:"number"`
+
+// 	Limit  int `json:"limit"`
+// 	Offset int `json:"offset"`
+// }
 
 // ContractUpdate represents the options used to update the contracts.
 type ContractUpdate struct {
