@@ -4,10 +4,9 @@ CREATE TABLE revisions
     rev INT NOT NULL,
     version VARCHAR(255) NOT NULL,
     contract_id BIGINT NOT NULL REFERENCES contracts(id) ON DELETE CASCADE,
-    note TEXT NOT NULL DEFAULT '',
+    notes TEXT NOT NULL DEFAULT '',
     code TEXT NOT NULL DEFAULT '',
     compiled_code BYTEA NOT NULL,
-    hash TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 
 );

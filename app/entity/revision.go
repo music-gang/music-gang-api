@@ -1,16 +1,11 @@
 package entity
 
 import (
-	"crypto/sha256"
-	"fmt"
 	"time"
 
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"gopkg.in/guregu/null.v4"
 )
-
-// Hash represents the hash an hash.
-type Hash [32]byte
 
 // RevisionVersion indicates the version of revision management system.
 type RevisionVersion string
@@ -36,31 +31,11 @@ type Revision struct {
 	Rev          RevisionNumber  `json:"revision"`
 	Version      RevisionVersion `json:"version"`
 	ContractID   int64           `json:"contract_id"`
-	Note         null.String     `json:"note"`
+	Notes        null.String     `json:"note"`
 	Code         string          `json:"code"`
 	CompiledCode []byte          `json:"-"`
-	Hash         string          `json:"hash"`
 
 	Contract *Contract `json:"contract"`
-}
-
-// CalculateHash calculates the hash of the revision.
-func (r Revision) CalculateHash() (Hash, error) {
-
-	if err := r.Validate(); err != nil {
-		return Hash{}, err
-	}
-
-	var dataToHash string
-
-	switch r.Version {
-	case Anchorage:
-		dataToHash = fmt.Sprintf("%d%s%d%s%d%s", r.ID, r.CreatedAt.Format(time.RFC3339), r.Rev, r.Version, r.ContractID, r.Code)
-	default:
-		return Hash{}, apperr.Errorf(apperr.EINVALID, "invalid revision version")
-	}
-
-	return sha256.Sum256([]byte(dataToHash)), nil
 }
 
 // Validate validates the revision.

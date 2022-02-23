@@ -119,12 +119,7 @@ func (cs *ContractService) MakeRevision(ctx context.Context, revision *entity.Re
 	}
 	defer tx.Rollback()
 
-	contract, err := cs.FindContractByID(ctx, revision.ContractID)
-	if err != nil {
-		return err
-	}
-
-	if err := makeRevision(ctx, tx, contract, revision); err != nil {
+	if err := makeRevision(ctx, tx, revision); err != nil {
 		return err
 	}
 
@@ -299,12 +294,18 @@ func findContracts(ctx context.Context, tx *Tx, filter service.ContractFilter) (
 	return contracts, n, nil
 }
 
-func makeRevision(ctx context.Context, tx *Tx, contract *entity.Contract, revision *entity.Revision) error {
+// makeRevision creates a new revision for the contract passed in.
+func makeRevision(ctx context.Context, tx *Tx, revision *entity.Revision) error {
 
-	if contract.UserID != app.UserIDFromContext(ctx) {
+	if revision.ContractID == 0 {
+		return apperr.Errorf(apperr.EINVALID, "contract id is required")
+	}
+
+	contract, err := findContractByID(ctx, tx, revision.ContractID)
+	if err != nil {
+		return err
+	} else if contract.UserID != app.UserIDFromContext(ctx) {
 		return apperr.Errorf(apperr.EUNAUTHORIZED, "contract is not owned by the authenticated user")
-	} else if revision.ContractID != contract.ID {
-		return apperr.Errorf(apperr.EFORBIDDEN, "cannot create revision for a different contract")
 	}
 
 	var newRevNumber uint = 1
@@ -317,6 +318,20 @@ func makeRevision(ctx context.Context, tx *Tx, contract *entity.Contract, revisi
 
 	if err := revision.Validate(); err != nil {
 		return err
+	}
+
+	if _, err := tx.ExecContext(ctx, `
+		INSERT INTO revisions (
+			revision,
+			version,
+			contract_id,
+			notes,
+			code,
+			compiled_code,
+			created_at
+		) VALUES ($1, $2, $3, $4, $5, $6)
+	`, revision.Rev, revision.Version, revision.ContractID, revision.Notes, revision.Code, revision.CompiledCode); err != nil {
+		return apperr.Errorf(apperr.EINTERNAL, "failed to insert revision: %v", err)
 	}
 
 	return nil
