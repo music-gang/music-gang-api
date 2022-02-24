@@ -27,10 +27,10 @@ type Revisions []*Revision
 type Revision struct {
 	ID           int64           `json:"id"`
 	CreatedAt    time.Time       `json:"created_at"`
-	Rev          RevisionNumber  `json:"revision"`
+	Rev          RevisionNumber  `json:"rev"`
 	Version      RevisionVersion `json:"version"`
 	ContractID   int64           `json:"contract_id"`
-	Notes        string          `json:"note"`
+	Notes        string          `json:"notes"`
 	Code         string          `json:"code"`
 	CompiledCode []byte          `json:"-"`
 	MaxFuel      Fuel            `json:"max_fuel"`
