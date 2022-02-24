@@ -109,11 +109,40 @@ func (cs *ContractService) FindContracts(ctx context.Context, filter service.Con
 
 // FindRevisionByContractAndRev returns the revision searched by the given contract and revision number.
 // Return ENOTFOUND if the revision does not exist.
-// func (cs *ContractService) FindRevisionByContractAndRev(ctx context.Context, contractID int64, rev entity.RevisionNumber) (*entity.Revision, error)
+func (cs *ContractService) FindRevisionByContractAndRev(ctx context.Context, contractID int64, rev entity.RevisionNumber) (*entity.Revision, error) {
+
+	tx, err := cs.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	revision, err := findRevisionByContractAndRev(ctx, tx, contractID, rev)
+	if err != nil {
+		return nil, err
+	} else if err := attachRevisionAssociations(ctx, tx, revision); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, apperr.Errorf(apperr.EINTERNAL, "failed to commit transaction: %v", err)
+	}
+
+	return revision, nil
+}
 
 // // FindRevisions returns a list of revisions of the contract with the given id.
 // // Also returns the total count of revisions.
-// func (cs *ContractService) FindRevisions(ctx context.Context, filter service.RevisionFilter) (entity.Revisions, int, error)
+func (cs *ContractService) FindRevisions(ctx context.Context, filter service.RevisionFilter) (entity.Revisions, int, error) {
+
+	tx, err := cs.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer tx.Rollback()
+
+	return findRevisions(ctx, tx, filter)
+}
 
 // MakeRevision creates a new revision of the contract.
 // Return ENOTFOUND if the contract does not exist.
@@ -185,6 +214,14 @@ func (cs *ContractService) UpdateContract(ctx context.Context, id int64, upd ser
 // attachContractAssociations attaches all associations of the contract to the database.
 func attachContractAssociations(ctx context.Context, tx *Tx, contract *entity.Contract) (err error) {
 	if contract.User, err = findUserByID(ctx, tx, contract.UserID); err != nil {
+		return err
+	}
+	return nil
+}
+
+// attachRevisionAssociations attaches all associations of the revision to the database.
+func attachRevisionAssociations(ctx context.Context, tx *Tx, revision *entity.Revision) (err error) {
+	if revision.Contract, err = findContractByID(ctx, tx, revision.ContractID); err != nil {
 		return err
 	}
 	return nil
@@ -321,6 +358,89 @@ func findContracts(ctx context.Context, tx *Tx, filter service.ContractFilter) (
 	}
 
 	return contracts, n, nil
+}
+
+// findRevisionByContractAndRev returns the revision filtered by the contract and revision number.
+func findRevisionByContractAndRev(ctx context.Context, tx *Tx, contractID int64, rev entity.RevisionNumber) (*entity.Revision, error) {
+	c, _, err := findRevisions(ctx, tx, service.RevisionFilter{ContractID: contractID, Rev: &rev})
+	if err != nil {
+		return nil, err
+	} else if len(c) == 0 {
+		return nil, apperr.Errorf(apperr.ENOTFOUND, "revision not found")
+	}
+
+	return c[0], nil
+}
+
+// findRevisions returns a list of revisions filtered by the given options.
+// Also returns the total count of revisions.
+func findRevisions(ctx context.Context, tx *Tx, filter service.RevisionFilter) (_ entity.Revisions, n int, err error) {
+
+	where, args := []string{"1 = 1"}, []interface{}{}
+
+	counterParameter := 1
+
+	if v := filter.ContractID; v != 0 {
+		where = append(where, fmt.Sprintf("contract_id = $%d", counterParameter))
+		args = append(args, v)
+		counterParameter++
+	}
+	if v := filter.Rev; v != nil {
+		where = append(where, fmt.Sprintf("rev = $%d", counterParameter))
+		args = append(args, *v)
+		counterParameter++
+	}
+
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			id,
+			rev,
+			version,
+			contract_id,
+			notes,
+			code,
+			compiled_code,
+			max_fuel,
+			created_at,
+			COUNT(*) OVER() as count
+		FROM revisions
+		WHERE `+strings.Join(where, " AND ")+`
+		ORDER BY id ASC
+		`+FormatLimitOffset(filter.Limit, filter.Offset), args...)
+
+	if err != nil {
+		return nil, 0, apperr.Errorf(apperr.EINTERNAL, "failed to query revisions: %v", err)
+	}
+	defer rows.Close()
+
+	revisions := make(entity.Revisions, 0)
+
+	for rows.Next() {
+
+		var revision entity.Revision
+
+		if err := rows.Scan(
+			&revision.ID,
+			&revision.Rev,
+			&revision.Version,
+			&revision.ContractID,
+			&revision.Notes,
+			&revision.Code,
+			&revision.CompiledCode,
+			&revision.MaxFuel,
+			&revision.CreatedAt,
+			&n,
+		); err != nil {
+			return nil, 0, apperr.Errorf(apperr.EINTERNAL, "failed to scan revision: %v", err)
+		}
+
+		revisions = append(revisions, &revision)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, apperr.Errorf(apperr.EINTERNAL, "failed to iterate over revisions: %v", err)
+	}
+
+	return revisions, n, nil
 }
 
 // makeRevision creates a new revision for the contract passed in.
