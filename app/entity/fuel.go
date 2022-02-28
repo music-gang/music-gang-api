@@ -9,6 +9,7 @@ import (
 // Like the real world, the fuel is limited, so the VM will stop if the fuel usage reaches the max capacity.
 type Fuel uint64
 
+// MarshalBinary implements the encoding.BinaryMarshaler interface.
 func (f Fuel) MarshalBinary() (data []byte, err error) {
 	return strconv.AppendUint(nil, uint64(f), 10), nil
 }
@@ -81,6 +82,18 @@ func FuelAmount(execution time.Duration) Fuel {
 		}
 	}
 	return FuelLongActionAmount
+}
+
+// MaxExecutionTime returns the maximum execution time of the contract.
+// MaxExecutionTime is based on max fuel compared with fuelAmountTable.
+func MaxExecutionTimeFromFuel(fuel Fuel) time.Duration {
+	for t, f := range fuelAmountTable {
+		if fuel <= f {
+			return t
+		}
+	}
+
+	return MaxExecutionTime
 }
 
 // FuelStats represents the statistics of the fuel tank.

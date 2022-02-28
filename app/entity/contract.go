@@ -51,13 +51,7 @@ type Contract struct {
 // MaxExecutionTime returns the maximum execution time of the contract.
 // MaxExecutionTime is based on max fuel compared with fuelAmountTable.
 func (c *Contract) MaxExecutionTime() time.Duration {
-	for t, fuel := range fuelAmountTable {
-		if c.MaxFuel <= fuel {
-			return t
-		}
-	}
-
-	return MaxExecutionTime
+	return MaxExecutionTimeFromFuel(c.MaxFuel)
 }
 
 // Validate validates the contract.

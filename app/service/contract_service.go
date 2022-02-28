@@ -6,10 +6,25 @@ import (
 	"github.com/music-gang/music-gang-api/app/entity"
 )
 
-// ContractService rapresents the contract managment service.
-// Except for search services, it is required that in passed context is injected the user who try to access this repository, otherwise it will return EUNAUTHORIZED.
-type ContractService interface {
+// ContractSearchService is the interface for searching contracts and revisions.
+type ContractSearchService interface {
+	// FindContractByID returns the contract with the given id.
+	// Return ENOTFOUND if the contract does not exist.
+	FindContractByID(ctx context.Context, id int64) (*entity.Contract, error)
 
+	// FindContracts returns a list of contracts filtered by the given options.
+	// Also returns the total count of contracts.
+	FindContracts(ctx context.Context, filter ContractFilter) (entity.Contracts, int, error)
+
+	// FindRevisionByContractAndRev returns the revision searched by the given contract and revision number.
+	// Return ENOTFOUND if the revision does not exist.
+	FindRevisionByContractAndRev(ctx context.Context, contractID int64, rev entity.RevisionNumber) (*entity.Revision, error)
+}
+
+// ContractManagmentService is the interface for managing contracts.
+// It is used to create, update and delete contracts.
+// Also is used to create new contract revisions.
+type ContractManagmentService interface {
 	// CreateContract creates a new contract.
 	// Return EINVALID if the contract is invalid.
 	// Return EEXISTS if the contract already exists.
@@ -23,18 +38,6 @@ type ContractService interface {
 	// This service also deletes the revisions of the contract.
 	DeleteContract(ctx context.Context, id int64) error
 
-	// FindContractByID returns the contract with the given id.
-	// Return ENOTFOUND if the contract does not exist.
-	FindContractByID(ctx context.Context, id int64) (*entity.Contract, error)
-
-	// FindContracts returns a list of contracts filtered by the given options.
-	// Also returns the total count of contracts.
-	FindContracts(ctx context.Context, filter ContractFilter) (entity.Contracts, int, error)
-
-	// FindRevisionByContractAndRev returns the revision searched by the given contract and revision number.
-	// Return ENOTFOUND if the revision does not exist.
-	FindRevisionByContractAndRev(ctx context.Context, contractID int64, rev entity.RevisionNumber) (*entity.Revision, error)
-
 	// MakeRevision creates a new revision of the contract.
 	// Return ENOTFOUND if the contract does not exist.
 	// Return EINVALID if the revision is invalid.
@@ -45,6 +48,19 @@ type ContractService interface {
 	// Return ENOTFOUND if the contract does not exist.
 	// Return EUNAUTHORIZED if the contract is not owned by the authenticated user.
 	UpdateContract(ctx context.Context, id int64, contract ContractUpdate) (*entity.Contract, error)
+}
+
+// ContractExecutorService rapresents the contract executor service.
+type ContractExecutorService interface {
+	// ExecContract executes a contract.
+	ExecContract(ctx context.Context, revision *entity.Revision) (res interface{}, err error)
+}
+
+// ContractService rapresents the contract managment service.
+// Except for search services, it is required that in passed context is injected the user who try to access this repository, otherwise it will return EUNAUTHORIZED.
+type ContractService interface {
+	ContractSearchService
+	ContractManagmentService
 }
 
 // ContractFilter represents the options used to filter the contracts.
@@ -73,31 +89,4 @@ type RevisionFilter struct {
 type ContractUpdate struct {
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
-}
-
-// ContractCall rappresents a request from an user to call a contract.
-type ContractCall struct {
-	ctx      context.Context
-	Contract *entity.Contract `json:"contract"`
-	Caller   *entity.User     `json:"caller"`
-}
-
-// MaxFuel returns the maximum fuel that can be used to call the contract.
-func (c *ContractCall) MaxFuel() entity.Fuel {
-	return c.Contract.MaxFuel
-}
-
-// NewContractCall creates a new ContractCall.
-func NewContractCall(ctx context.Context, contract *entity.Contract, caller *entity.User) *ContractCall {
-	return &ContractCall{
-		ctx:      ctx,
-		Contract: contract,
-		Caller:   caller,
-	}
-}
-
-// ContractExecutorService rapresents the contract executor service.
-type ContractExecutorService interface {
-	// ExecContract executes a contract.
-	ExecContract(ctx context.Context, contractRef *ContractCall) (res interface{}, err error)
 }

@@ -5,9 +5,12 @@ import (
 	"time"
 
 	"github.com/music-gang/music-gang-api/app/apperr"
+	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
 	"github.com/robertkrimen/otto"
 )
+
+var _ service.ContractExecutorService = (*AnchorageContractExecutor)(nil)
 
 // AnchorageContractExecutor is the contract executor for the anchorage contract version.
 type AnchorageContractExecutor struct{}
@@ -19,7 +22,7 @@ func NewAnchorageContractExecutor() *AnchorageContractExecutor {
 
 // ExecContract effectively executes the contract and returns the result.
 // If the engine goes into execution timeout, it panics with EngineExecutionTimeoutPanic.
-func (*AnchorageContractExecutor) ExecContract(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
+func (*AnchorageContractExecutor) ExecContract(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
 
 	select {
 	case <-ctx.Done():
@@ -30,7 +33,7 @@ func (*AnchorageContractExecutor) ExecContract(ctx context.Context, contractRef 
 	ottoVm := otto.New()
 	ottoVm.Interrupt = make(chan func(), 1)
 
-	timeoutTicker := time.NewTicker(contractRef.Contract.MaxExecutionTime())
+	timeoutTicker := time.NewTicker(entity.MaxExecutionTimeFromFuel(revision.MaxFuel))
 	defer timeoutTicker.Stop()
 
 	go func() {
@@ -40,7 +43,7 @@ func (*AnchorageContractExecutor) ExecContract(ctx context.Context, contractRef 
 		}
 	}()
 
-	_, err = ottoVm.Run(contractRef.Contract.LastRevision.Code)
+	_, err = ottoVm.Run(revision.CompiledCode)
 	close(ottoVm.Interrupt)
 
 	if err != nil {
