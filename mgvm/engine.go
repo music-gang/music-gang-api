@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 
 	"github.com/music-gang/music-gang-api/app/apperr"
+	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
 )
 
@@ -13,40 +14,40 @@ var _ service.EngineService = (*Engine)(nil)
 // Engine is the state machine for the MusicGangVM.
 // His job is to exec the called contracts.
 type Engine struct {
-	state    service.State
+	state    entity.State
 	Executor service.ContractExecutorService
 }
 
 // NewEngine creates a new engine.
 func NewEngine() *Engine {
 	return &Engine{
-		state: service.StateInitializing,
+		state: entity.StateInitializing,
 	}
 }
 
 // ExecContract effectively executes the contract and returns the result.
 // If the engine goes into execution timeout, it panics with EngineExecutionTimeoutPanic.
-func (e *Engine) ExecContract(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
+func (e *Engine) ExecContract(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
 
 	if !e.IsRunning() {
 		return nil, apperr.Errorf(apperr.EMGVM, "engine is not running")
 	}
 
-	return e.Executor.ExecContract(ctx, contractRef)
+	return e.Executor.ExecContract(ctx, revision)
 }
 
 // IsRunning returns true if the engine is running.
 func (e *Engine) IsRunning() bool {
-	return atomic.LoadInt32((*int32)(&e.state)) == int32(service.StateRunning)
+	return atomic.LoadInt32((*int32)(&e.state)) == int32(entity.StateRunning)
 }
 
 // Pause pauses the engine.
 func (e *Engine) Pause() error {
 	// It is not possible to pause the engine if is stopped or already paused.
-	if e.State() == service.StateStopped || e.State() == service.StatePaused {
+	if e.State() == entity.StateStopped || e.State() == entity.StatePaused {
 		return apperr.Errorf(apperr.EMGVM, "engine is not running")
 	}
-	atomic.StoreInt32((*int32)(&e.state), int32(service.StatePaused))
+	atomic.StoreInt32((*int32)(&e.state), int32(entity.StatePaused))
 	return nil
 }
 
@@ -56,21 +57,21 @@ func (e *Engine) Resume() error {
 	if e.IsRunning() {
 		return apperr.Errorf(apperr.EMGVM, "engine is already running")
 	}
-	atomic.StoreInt32((*int32)(&e.state), int32(service.StateRunning))
+	atomic.StoreInt32((*int32)(&e.state), int32(entity.StateRunning))
 	return nil
 }
 
 // State returns the state of the engine.
-func (e *Engine) State() service.State {
-	return service.State(atomic.LoadInt32((*int32)(&e.state)))
+func (e *Engine) State() entity.State {
+	return entity.State(atomic.LoadInt32((*int32)(&e.state)))
 }
 
 // Stop stops the engine.
 func (e *Engine) Stop() error {
 	// It is not possible to stop the engine if is already stopped.
-	if e.State() == service.StateStopped {
+	if e.State() == entity.StateStopped {
 		return apperr.Errorf(apperr.EMGVM, "engine is already stopped")
 	}
-	atomic.StoreInt32((*int32)(&e.state), int32(service.StateStopped))
+	atomic.StoreInt32((*int32)(&e.state), int32(entity.StateStopped))
 	return nil
 }

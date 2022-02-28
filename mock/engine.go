@@ -3,25 +3,26 @@ package mock
 import (
 	"context"
 
+	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
 )
 
 var _ service.EngineService = (*EngineService)(nil)
 
 type EngineService struct {
-	ExecContractFn func(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error)
+	ExecContractFn func(ctx context.Context, revision *entity.Revision) (res interface{}, err error)
 	IsRunningFn    func() bool
 	PauseFn        func() error
 	ResumeFn       func() error
-	StateFn        func() service.State
+	StateFn        func() entity.State
 	StopFn         func() error
 }
 
-func (e *EngineService) ExecContract(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
+func (e *EngineService) ExecContract(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
 	if e.ExecContractFn == nil {
 		panic("ExecContractFn is not defined")
 	}
-	return e.ExecContractFn(ctx, contractRef)
+	return e.ExecContractFn(ctx, revision)
 }
 
 func (e *EngineService) IsRunning() bool {
@@ -45,7 +46,7 @@ func (e *EngineService) Resume() error {
 	return e.ResumeFn()
 }
 
-func (e *EngineService) State() service.State {
+func (e *EngineService) State() entity.State {
 	if e.StateFn == nil {
 		panic("StateFn is not defined")
 	}
