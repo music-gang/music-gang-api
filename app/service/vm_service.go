@@ -1,5 +1,9 @@
 package service
 
+import (
+	"github.com/music-gang/music-gang-api/app/entity"
+)
+
 // State represents the state of the MusicGangVM.
 type State int32
 
@@ -51,4 +55,10 @@ type EngineService interface {
 type VmService interface {
 	FuelMeterService
 	EngineService
+}
+
+// VmCaller is the interface for the MusicGang VM callable operations.
+// Everyone who wants to call the MusicGang VM must implement this interface.
+type VmCaller interface {
+	MaxFuel() entity.Fuel
 }
