@@ -108,6 +108,7 @@ func (cs *ContractService) FindContracts(ctx context.Context, filter service.Con
 }
 
 // FindRevisionByContractAndRev returns the revision searched by the given contract and revision number.
+// if rev passed is eq 0, it returns the latest revision.
 // Return ENOTFOUND if the revision does not exist.
 func (cs *ContractService) FindRevisionByContractAndRev(ctx context.Context, contractID int64, rev entity.RevisionNumber) (*entity.Revision, error) {
 
@@ -129,19 +130,6 @@ func (cs *ContractService) FindRevisionByContractAndRev(ctx context.Context, con
 	}
 
 	return revision, nil
-}
-
-// // FindRevisions returns a list of revisions of the contract with the given id.
-// // Also returns the total count of revisions.
-func (cs *ContractService) FindRevisions(ctx context.Context, filter service.RevisionFilter) (entity.Revisions, int, error) {
-
-	tx, err := cs.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, 0, err
-	}
-	defer tx.Rollback()
-
-	return findRevisions(ctx, tx, filter)
 }
 
 // MakeRevision creates a new revision of the contract.
@@ -168,8 +156,9 @@ func (cs *ContractService) MakeRevision(ctx context.Context, revision *entity.Re
 	}
 
 	var newRevNumber uint = 1
-	if contract.LastRevision != nil {
-		newRevNumber = uint(contract.LastRevision.Rev) + 1
+
+	if lastRevision, err := contract.UnwrapRevision(); err == nil {
+		newRevNumber = uint(lastRevision.Rev) + 1
 	}
 
 	if revision.MaxFuel == 0 {
@@ -178,6 +167,10 @@ func (cs *ContractService) MakeRevision(ctx context.Context, revision *entity.Re
 	revision.Rev = entity.RevisionNumber(newRevNumber)
 
 	if err := makeRevision(ctx, tx, revision); err != nil {
+		return err
+	}
+
+	if err := attachRevisionAssociations(ctx, tx, revision); err != nil {
 		return err
 	}
 
@@ -216,6 +209,14 @@ func attachContractAssociations(ctx context.Context, tx *Tx, contract *entity.Co
 	if contract.User, err = findUserByID(ctx, tx, contract.UserID); err != nil {
 		return err
 	}
+
+	lastContractRevision, err := findRevisionByContractAndRev(ctx, tx, contract.ID, 0)
+	if errCode := apperr.ErrorCode(err); err != nil && errCode != apperr.ENOTFOUND {
+		return err
+	}
+
+	contract.LastRevision = lastContractRevision
+
 	return nil
 }
 
@@ -361,6 +362,8 @@ func findContracts(ctx context.Context, tx *Tx, filter service.ContractFilter) (
 }
 
 // findRevisionByContractAndRev returns the revision filtered by the contract and revision number.
+// If rev is eq to 0, the latest revision is returned.
+// Return ENOTFOUND if the revision is not found.
 func findRevisionByContractAndRev(ctx context.Context, tx *Tx, contractID int64, rev entity.RevisionNumber) (*entity.Revision, error) {
 	c, _, err := findRevisions(ctx, tx, service.RevisionFilter{ContractID: contractID, Rev: &rev})
 	if err != nil {
@@ -373,6 +376,7 @@ func findRevisionByContractAndRev(ctx context.Context, tx *Tx, contractID int64,
 }
 
 // findRevisions returns a list of revisions filtered by the given options.
+// If filter.Rev is not nil and equal to 0, the latest revision is returned, this filter overrides the other limit and offset filters.
 // Also returns the total count of revisions.
 func findRevisions(ctx context.Context, tx *Tx, filter service.RevisionFilter) (_ entity.Revisions, n int, err error) {
 
@@ -386,9 +390,14 @@ func findRevisions(ctx context.Context, tx *Tx, filter service.RevisionFilter) (
 		counterParameter++
 	}
 	if v := filter.Rev; v != nil {
-		where = append(where, fmt.Sprintf("rev = $%d", counterParameter))
-		args = append(args, *v)
-		counterParameter++
+		if *v == 0 {
+			filter.Limit = 1
+			filter.Offset = 0
+		} else {
+			where = append(where, fmt.Sprintf("rev = $%d", counterParameter))
+			args = append(args, *v)
+			counterParameter++
+		}
 	}
 
 	rows, err := tx.QueryContext(ctx, `
@@ -405,7 +414,7 @@ func findRevisions(ctx context.Context, tx *Tx, filter service.RevisionFilter) (
 			COUNT(*) OVER() as count
 		FROM revisions
 		WHERE `+strings.Join(where, " AND ")+`
-		ORDER BY id ASC
+		ORDER BY rev DESC
 		`+FormatLimitOffset(filter.Limit, filter.Offset), args...)
 
 	if err != nil {

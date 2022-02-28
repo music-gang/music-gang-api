@@ -35,10 +35,6 @@ type ContractService interface {
 	// Return ENOTFOUND if the revision does not exist.
 	FindRevisionByContractAndRev(ctx context.Context, contractID int64, rev entity.RevisionNumber) (*entity.Revision, error)
 
-	// FindRevisions returns a list of revisions of the contract with the given id.
-	// Also returns the total count of revisions.
-	FindRevisions(ctx context.Context, filter RevisionFilter) (entity.Revisions, int, error)
-
 	// MakeRevision creates a new revision of the contract.
 	// Return ENOTFOUND if the contract does not exist.
 	// Return EINVALID if the revision is invalid.

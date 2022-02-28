@@ -1,8 +1,9 @@
 package postgres_test
 
 import (
-	"bytes"
 	"context"
+	"fmt"
+	"math/rand"
 	"reflect"
 	"strconv"
 	"testing"
@@ -774,20 +775,10 @@ func TestContract_MakeRevision(t *testing.T) {
 
 		if err := cs.MakeRevision(ctx, revision); err != nil {
 			t.Fatal(err)
-		} else if revision.ID == 0 {
-			t.Fatal("expected non-zero revision id")
-		} else if revision.ContractID != contract.ID {
-			t.Fatalf("expected revision contract id to be %d, got %d", contract.ID, revision.ContractID)
-		} else if revision.Version != entity.AnchorageVersion {
-			t.Fatalf("expected revision version to be %s, got %s", entity.AnchorageVersion, revision.Version)
-		} else if revision.Notes != notes {
-			t.Fatalf("expected revision notes to be %s, got %s", notes, revision.Notes)
-		} else if revision.MaxFuel == contract.MaxFuel {
-			t.Fatal("expected revision max fuel to be different than contract max fuel")
-		} else if revision.Code != code {
-			t.Fatalf("expected revision code to be %s, got %s", code, revision.Code)
-		} else if !bytes.Equal(revision.CompiledCode, []byte(code)) {
-			t.Fatalf("expected revision compiled code to be %s, got %s", code, revision.CompiledCode)
+		} else if r, err := cs.FindRevisionByContractAndRev(ctx, contract.ID, revision.Rev); err != nil {
+			t.Fatal(err)
+		} else if !reflect.DeepEqual(revision, r) {
+			t.Fatal("expected revision to be equal")
 		}
 	})
 
@@ -873,8 +864,10 @@ func TestContract_MakeRevision(t *testing.T) {
 			MaxFuel:      entity.FuelInstantActionAmount,
 		}
 
-		if err := cs.MakeRevision(ctx, newRevision); err == nil {
-			t.Fatal("expected error, 'get last revision' is not implemented yet")
+		if err := cs.MakeRevision(ctx, newRevision); err != nil {
+			t.Fatal(err)
+		} else if newRevision.Rev != 2 {
+			t.Fatalf("expected revision rev to be 2, got %d", newRevision.Rev)
 		}
 	})
 
@@ -1110,6 +1103,189 @@ func TestContract_MakeRevision(t *testing.T) {
 	})
 }
 
+func TestContract_FindRevisionByContractAndRev(t *testing.T) {
+
+	t.Run("OK", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForContractTests(t, db)
+
+		cs := postgres.NewContractService(db)
+
+		contract := &entity.Contract{
+			Name:       "test-find-revision-by-contract-and-rev",
+			MaxFuel:    entity.FuelInstantActionAmount,
+			Visibility: entity.VisibilityPublic,
+		}
+
+		revision, ctx := MustCreateRevision(t, context.Background(), db, DataToMakeRevision{
+			Contract: contract,
+			User:     &entity.User{Name: "test-find-revision-by-contract-and-rev"},
+			Revision: &entity.Revision{
+				Code:         "test-code",
+				CompiledCode: []byte("test-code"),
+				Version:      entity.CurrentRevisionVersion,
+			},
+		})
+
+		if r, err := cs.FindRevisionByContractAndRev(ctx, revision.ContractID, revision.Rev); err != nil {
+			t.Fatal(err)
+		} else if r == nil {
+			t.Fatal("expected revision")
+		} else if !reflect.DeepEqual(r, revision) {
+			t.Fatalf("expected revision %v, got %v", revision, r)
+		}
+	})
+
+	t.Run("ContextCancelled", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForContractTests(t, db)
+
+		cs := postgres.NewContractService(db)
+
+		contract := &entity.Contract{
+			Name:       "test-find-revision-by-contract-and-rev",
+			MaxFuel:    entity.FuelInstantActionAmount,
+			Visibility: entity.VisibilityPublic,
+		}
+
+		_, ctx := MustCreateRevision(t, context.Background(), db, DataToMakeRevision{
+			Contract: contract,
+			User:     &entity.User{Name: "test-find-revision-by-contract-and-rev"},
+			Revision: &entity.Revision{
+				Code:         "test-code",
+				CompiledCode: []byte("test-code"),
+				Version:      entity.CurrentRevisionVersion,
+			},
+		})
+
+		ctx, cancel := context.WithCancel(ctx)
+
+		cancel()
+
+		if _, err := cs.FindRevisionByContractAndRev(ctx, contract.ID, 0); err == nil {
+			t.Fatal("expected error")
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINTERNAL {
+			t.Fatalf("expected %s, got %s", apperr.EINTERNAL, errCode)
+		}
+	})
+
+	t.Run("ContractNotExists", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForContractTests(t, db)
+
+		cs := postgres.NewContractService(db)
+
+		if _, err := cs.FindRevisionByContractAndRev(context.Background(), 1, 0); err == nil {
+			t.Fatal("expected error")
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.ENOTFOUND {
+			t.Fatalf("expected %s, got %s", apperr.ENOTFOUND, errCode)
+		}
+	})
+
+	t.Run("RevNumberNotExists", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForContractTests(t, db)
+
+		cs := postgres.NewContractService(db)
+
+		contract := &entity.Contract{
+			Name:       "test-find-revision-by-contract-and-rev",
+			MaxFuel:    entity.FuelInstantActionAmount,
+			Visibility: entity.VisibilityPublic,
+		}
+
+		MustCreateRevision(t, context.Background(), db, DataToMakeRevision{
+			Contract: contract,
+			User:     &entity.User{Name: "test-find-revision-by-contract-and-rev"},
+			Revision: &entity.Revision{
+				Code:         "test-code",
+				CompiledCode: []byte("test-code"),
+				Version:      entity.CurrentRevisionVersion,
+			},
+		})
+
+		// now exists rev n°1, try to find rev n°2
+
+		if _, err := cs.FindRevisionByContractAndRev(context.Background(), contract.ID, 2); err == nil {
+			t.Fatal("expected error")
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.ENOTFOUND {
+			t.Fatalf("expected %s, got %s", apperr.ENOTFOUND, errCode)
+		}
+	})
+
+	t.Run("FindLastRevision", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer db.Close()
+
+		TruncateTablesForContractTests(t, db)
+
+		cs := postgres.NewContractService(db)
+
+		contract := &entity.Contract{
+			Name:       "test-find-revision-by-contract-and-rev",
+			MaxFuel:    entity.FuelInstantActionAmount,
+			Visibility: entity.VisibilityPublic,
+		}
+
+		revision, ctx := MustCreateRevision(t, context.Background(), db, DataToMakeRevision{
+			Contract: contract,
+			User:     &entity.User{Name: "test-find-revision-by-contract-and-rev"},
+			Revision: &entity.Revision{
+				Code:         "test-code",
+				CompiledCode: []byte("test-code"),
+				Version:      entity.CurrentRevisionVersion,
+			},
+		})
+
+		// create random number between 2 and 100
+		rand.Seed(time.Now().UnixNano())
+		num := rand.Intn(98) + 2
+
+		for i := 0; i < num; i++ {
+			revisionCode := fmt.Sprintf("test-code-%d", i)
+			revision := &entity.Revision{
+				Version:      entity.AnchorageVersion,
+				ContractID:   contract.ID,
+				Code:         revisionCode,
+				CompiledCode: []byte(revisionCode),
+				MaxFuel:      entity.FuelInstantActionAmount,
+			}
+			if err := cs.MakeRevision(ctx, revision); err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		lastRevision, err := cs.FindRevisionByContractAndRev(ctx, revision.ContractID, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		lastCalculatedRevision, err := cs.FindRevisionByContractAndRev(ctx, revision.ContractID, entity.RevisionNumber(num+1))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if lastRevision.Rev != lastCalculatedRevision.Rev {
+			t.Fatalf("expected last revision %d, got %d", lastCalculatedRevision.Rev, lastRevision.Rev)
+		} else if !reflect.DeepEqual(lastRevision, lastCalculatedRevision) {
+			t.Fatalf("expected last revision %v, got %v", lastCalculatedRevision, lastRevision)
+		}
+	})
+}
+
 func MustCreateContract(tb testing.TB, ctx context.Context, db *postgres.DB, contract *entity.Contract, user *entity.User) (*entity.Contract, context.Context) {
 	tb.Helper()
 	user, ctx = MustCreateUser(tb, ctx, db, user)
@@ -1118,6 +1294,22 @@ func MustCreateContract(tb testing.TB, ctx context.Context, db *postgres.DB, con
 		tb.Fatal(err)
 	}
 	return contract, ctx
+}
+
+type DataToMakeRevision struct {
+	Contract *entity.Contract
+	Revision *entity.Revision
+	User     *entity.User
+}
+
+func MustCreateRevision(tb testing.TB, ctx context.Context, db *postgres.DB, data DataToMakeRevision) (*entity.Revision, context.Context) {
+	tb.Helper()
+	contract, ctx := MustCreateContract(tb, ctx, db, data.Contract, data.User)
+	data.Revision.ContractID = contract.ID
+	if err := postgres.NewContractService(db).MakeRevision(ctx, data.Revision); err != nil {
+		tb.Fatal(err)
+	}
+	return data.Revision, ctx
 }
 
 func TruncateTablesForContractTests(tb testing.TB, db *postgres.DB) {
