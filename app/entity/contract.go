@@ -43,6 +43,7 @@ type Contract struct {
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 
+	// avoid to access this field directly because it can be nil, use the Revision method UnwrapRevision instead.
 	LastRevision *Revision `json:"last_revision"`
 	User         *User     `json:"user"`
 }
@@ -79,4 +80,12 @@ func (c *Contract) Validate() error {
 	}
 
 	return nil
+}
+
+// UnwrapRevision returns the last revision of the contract if it exists, otherwise error is returned.
+func (c *Contract) UnwrapRevision() (*Revision, error) {
+	if c.LastRevision == nil {
+		return nil, apperr.Errorf(apperr.ENOTFOUND, "no revision found")
+	}
+	return c.LastRevision, nil
 }
