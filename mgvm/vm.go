@@ -88,7 +88,12 @@ func (vm *MusicGangVM) Close() error {
 // ExecContract executes the contract.
 // This func is a wrapper for the Engine.ExecContract.
 func (vm *MusicGangVM) ExecContract(ctx context.Context, contractRef *service.ContractCall) (res interface{}, err error) {
+	return vm.makeOperations(ctx, contractRef, func(ctx context.Context) (interface{}, error) {
+		return vm.EngineService.ExecContract(ctx, contractRef)
+	})
+}
 
+func (vm *MusicGangVM) makeOperations(ctx context.Context, caller service.VmCaller, op func(ctx context.Context) (interface{}, error)) (res interface{}, err error) {
 	select {
 	case <-ctx.Done():
 		return nil, apperr.Errorf(apperr.EMGVM, "Timeout while executing contract")
@@ -115,7 +120,7 @@ func (vm *MusicGangVM) ExecContract(ctx context.Context, contractRef *service.Co
 	}()
 
 	// burn the max fuel consumed by the contract.
-	if err := vm.FuelTank.Burn(vm.ctx, contractRef.Contract.MaxFuel); err != nil {
+	if err := vm.FuelTank.Burn(vm.ctx, caller.MaxFuel()); err != nil {
 		if err == service.ErrFuelTankNotEnough {
 			vm.LogService.ReportInfo(vm.ctx, "Not enough fuel to execute contract, pause engine")
 			vm.Pause()
@@ -123,23 +128,22 @@ func (vm *MusicGangVM) ExecContract(ctx context.Context, contractRef *service.Co
 		return nil, err
 	}
 
-	startContractTime := time.Now()
+	startOpTime := time.Now()
 
-	// pass the contract to the engine.
-	res, err = vm.EngineService.ExecContract(ctx, contractRef)
+	res, err = op(ctx)
 	if err != nil {
 		vm.LogService.ReportError(vm.ctx, err)
 		return nil, err
 	}
 
 	// log the contract execution time.
-	elapsed := time.Since(startContractTime)
+	elapsed := time.Since(startOpTime)
 
 	// calculate the fuel consumed effectively.
 	effectiveFuelAmount := entity.FuelAmount(elapsed)
 
 	// calculate the fuel saved.
-	fuelRecovered := contractRef.Contract.MaxFuel - effectiveFuelAmount
+	fuelRecovered := caller.MaxFuel() - effectiveFuelAmount
 
 	// if fuel saved is greater than 0, refuel the tank.
 	if fuelRecovered > 0 {

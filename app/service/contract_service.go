@@ -82,6 +82,11 @@ type ContractCall struct {
 	Caller   *entity.User     `json:"caller"`
 }
 
+// MaxFuel returns the maximum fuel that can be used to call the contract.
+func (c *ContractCall) MaxFuel() entity.Fuel {
+	return c.Contract.MaxFuel
+}
+
 // NewContractCall creates a new ContractCall.
 func NewContractCall(ctx context.Context, contract *entity.Contract, caller *entity.User) *ContractCall {
 	return &ContractCall{
