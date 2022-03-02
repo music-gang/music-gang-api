@@ -231,20 +231,6 @@ func findUserByID(ctx context.Context, tx *Tx, id int64) (*entity.User, error) {
 	return u[0], nil
 }
 
-// findUserByName returns the user with the given name.
-// Return ENOTFOUND if the user does not exist.
-func findUserByName(ctx context.Context, tx *Tx, name string) (*entity.User, error) {
-
-	u, _, err := findUsers(ctx, tx, service.UserFilter{Name: &name})
-	if err != nil {
-		return nil, err
-	} else if len(u) == 0 {
-		return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
-	}
-
-	return u[0], nil
-}
-
 // findUsers returns a list of users matching a filter. Also returns a count of
 // total matching users which may differ if filter.Limit is set.
 func findUsers(ctx context.Context, tx *Tx, filter service.UserFilter) (_ entity.Users, n int, err error) {
@@ -330,17 +316,6 @@ func updateUser(ctx context.Context, tx *Tx, id int64, upd service.UserUpdate) (
 	}
 
 	if v := upd.Name; v != nil {
-
-		// we need to check if the name is already taken
-		if userToCheck, err := findUserByName(ctx, tx, *v); err != nil {
-			if errCode := apperr.ErrorCode(err); errCode != apperr.ENOTFOUND {
-				return nil, err
-			}
-		} else if userToCheck.ID != user.ID {
-			// found a user with the same name but different id, update is not allowed
-			return nil, apperr.Errorf(apperr.EINVALID, "name is already taken")
-		}
-
 		user.Name = *v
 	}
 
