@@ -1,0 +1,151 @@
+package mgvm
+
+import (
+	"context"
+
+	"github.com/music-gang/music-gang-api/app"
+	"github.com/music-gang/music-gang-api/app/apperr"
+	"github.com/music-gang/music-gang-api/app/entity"
+	"github.com/music-gang/music-gang-api/app/service"
+)
+
+var _ service.ContractManagmentService = (*MusicGangVM)(nil)
+
+// var _ service.UserManagmentService = (*MusicGangVM)(nil)
+
+// CreateContract creates a new contract under a vm operation.
+// This call consumes fuel.
+// No check on authorization is performed.
+func (vm *MusicGangVM) CreateContract(ctx context.Context, contract *entity.Contract) (err error) {
+	user := app.UserFromContext(ctx)
+
+	opMaxFuel := entity.VmOperationCost(entity.VmOperationCreateContract)
+
+	call := service.NewVmCallWithConfig(service.VmCallOpt{
+		User:          user,
+		CustomMaxFuel: &opMaxFuel,
+		IgnoreRefuel:  true,
+		ContractRef:   contract,
+		VmOperation:   entity.VmOperationCreateContract,
+	})
+
+	_, err = vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+		return nil, vm.ContractManagmentService.CreateContract(ctx, ref.Contract())
+	})
+	return err
+}
+
+// CreateUser creates a new user.
+// This call consumes fuel.
+func (vm *MusicGangVM) CreateUser(ctx context.Context, user *entity.User) error {
+
+	opMaxFuel := entity.VmOperationCost(entity.VmOperationCreateUser)
+
+	call := service.NewVmCallWithConfig(service.VmCallOpt{
+		User:          user,
+		IgnoreRefuel:  true,
+		CustomMaxFuel: &opMaxFuel,
+		VmOperation:   entity.VmOperationCreateUser,
+	})
+
+	_, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+		return nil, vm.UserManagmentService.CreateUser(ctx, ref.Caller())
+	})
+
+	return err
+}
+
+// DeleteContract deletes the contract under a vm operation.
+// This call consumes fuel.
+// No check on authorization is performed.
+func (vm *MusicGangVM) DeleteContract(ctx context.Context, id int64) error {
+
+	user := app.UserFromContext(ctx)
+
+	opMaxFuel := entity.VmOperationCost(entity.VmOperationDeleteContract)
+
+	call := service.NewVmCallWithConfig(service.VmCallOpt{
+		User:          user,
+		CustomMaxFuel: &opMaxFuel,
+		IgnoreRefuel:  true,
+		VmOperation:   entity.VmOperationDeleteContract,
+	})
+
+	_, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+		return nil, vm.ContractManagmentService.DeleteContract(ctx, id)
+	})
+
+	return err
+}
+
+// ExecContract executes the contract.
+// This func is a wrapper for the Engine.ExecContract.
+func (vm *MusicGangVM) ExecContract(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+
+	user := app.UserFromContext(ctx)
+
+	call := service.NewVmCallWithConfig(service.VmCallOpt{
+		User:        user,
+		RevisionRef: revision,
+		VmOperation: entity.VmOperationExecuteContract,
+		ContractRef: revision.Contract,
+	})
+
+	return vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+		return vm.EngineService.ExecContract(ctx, ref.Revision())
+	})
+}
+
+// MakeRevision makes a revision under a vm operation.
+// This call consumes fuel.
+// No check on authorization is performed.
+func (vm *MusicGangVM) MakeRevision(ctx context.Context, revision *entity.Revision) (err error) {
+
+	user := app.UserFromContext(ctx)
+
+	opMaxFuel := entity.VmOperationCost(entity.VmOperationMakeContractRevision)
+
+	call := service.NewVmCallWithConfig(service.VmCallOpt{
+		User:          user,
+		CustomMaxFuel: &opMaxFuel,
+		IgnoreRefuel:  true,
+		VmOperation:   entity.VmOperationMakeContractRevision,
+		RevisionRef:   revision,
+	})
+
+	_, err = vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+		return nil, vm.ContractManagmentService.MakeRevision(ctx, ref.Revision())
+	})
+
+	return err
+}
+
+// UpdateContract updates the contract under a vm operation.
+// This call consumes fuel.
+// No check on authorization is performed.
+func (vm *MusicGangVM) UpdateContract(ctx context.Context, id int64, contract service.ContractUpdate) (*entity.Contract, error) {
+	user := app.UserFromContext(ctx)
+
+	opMaxFuel := entity.VmOperationCost(entity.VmOperationUpdateContract)
+
+	call := service.NewVmCallWithConfig(service.VmCallOpt{
+		User:          user,
+		CustomMaxFuel: &opMaxFuel,
+		IgnoreRefuel:  true,
+		VmOperation:   entity.VmOperationUpdateContract,
+	})
+
+	result, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+		return vm.ContractManagmentService.UpdateContract(ctx, id, contract)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if v, ok := result.(*entity.Contract); !ok || v == nil {
+		return nil, apperr.Errorf(apperr.EINTERNAL, "invalid contract update result")
+	}
+
+	return result.(*entity.Contract), nil
+}

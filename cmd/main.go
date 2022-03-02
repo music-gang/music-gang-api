@@ -133,6 +133,7 @@ func (m *Main) Run(ctx context.Context) error {
 
 	postgresAuthService := postgres.NewAuthService(m.Postgres)
 	postgresUserService := postgres.NewUserService(m.Postgres)
+	postgresContractService := postgres.NewContractService(m.Postgres)
 
 	authService := auth.NewAuth(postgresAuthService, postgresUserService, config.GetConfig().APP.Auths)
 
@@ -166,7 +167,7 @@ func (m *Main) Run(ctx context.Context) error {
 	fuelStationService.FuelTankService = fuelTankService
 	fuelStationService.LogService = logService
 	fuelStationService.FuelRefillAmount = entity.FuelRefillAmount
-	fuelStationService.FuelRefillRate = 400 * time.Millisecond
+	fuelStationService.FuelRefillRate = 400 * time.Millisecond // TODO: Make configurable
 
 	anchorageExecutor := executor.NewAnchorageContractExecutor()
 	engineService := mgvm.NewEngine()
@@ -176,6 +177,7 @@ func (m *Main) Run(ctx context.Context) error {
 	m.VM.FuelTank = fuelTankService
 	m.VM.FuelStation = fuelStationService
 	m.VM.EngineService = engineService
+	m.VM.ContractManagmentService = postgresContractService
 
 	if err := m.VM.Run(); err != nil {
 		return err

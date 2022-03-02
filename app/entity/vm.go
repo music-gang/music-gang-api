@@ -42,6 +42,10 @@ const (
 	VmOperationCreateUser VmOperation = "create-user"
 	VmOperationUpdateUser VmOperation = "update-user"
 	VmOperationDeleteUser VmOperation = "delete-user"
+
+	VmOperationAuthenticate VmOperation = "authenticate"
+	VmOperationCreateAuth   VmOperation = "create-auth"
+	VmOperationDeleteAuth   VmOperation = "delete-auth"
 )
 
 const (
