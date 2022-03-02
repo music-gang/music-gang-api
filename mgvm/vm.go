@@ -141,6 +141,9 @@ func (vm *MusicGangVM) CreateContract(ctx context.Context, contract *entity.Cont
 	call := service.NewVmCallWithConfig(service.VmCallOpt{
 		User:          user,
 		CustomMaxFuel: &opMaxFuel,
+		IgnoreRefuel:  true,
+		ContractRef:   contract,
+		VmOperation:   entity.VmOperationCreateContract,
 	})
 
 	_, err = vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
@@ -161,10 +164,12 @@ func (vm *MusicGangVM) DeleteContract(ctx context.Context, id int64) error {
 	call := service.NewVmCallWithConfig(service.VmCallOpt{
 		User:          user,
 		CustomMaxFuel: &opMaxFuel,
+		IgnoreRefuel:  true,
+		VmOperation:   entity.VmOperationDeleteContract,
 	})
 
 	_, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
-		return nil, vm.ContractManagmentService.DeleteContract(ctx, ref.Contract().ID)
+		return nil, vm.ContractManagmentService.DeleteContract(ctx, id)
 	})
 
 	return err
@@ -200,6 +205,9 @@ func (vm *MusicGangVM) MakeRevision(ctx context.Context, revision *entity.Revisi
 	call := service.NewVmCallWithConfig(service.VmCallOpt{
 		User:          user,
 		CustomMaxFuel: &opMaxFuel,
+		IgnoreRefuel:  true,
+		VmOperation:   entity.VmOperationMakeContractRevision,
+		RevisionRef:   revision,
 	})
 
 	_, err = vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
@@ -220,6 +228,8 @@ func (vm *MusicGangVM) UpdateContract(ctx context.Context, id int64, contract se
 	call := service.NewVmCallWithConfig(service.VmCallOpt{
 		User:          user,
 		CustomMaxFuel: &opMaxFuel,
+		IgnoreRefuel:  true,
+		VmOperation:   entity.VmOperationUpdateContract,
 	})
 
 	result, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
@@ -230,7 +240,7 @@ func (vm *MusicGangVM) UpdateContract(ctx context.Context, id int64, contract se
 		return nil, err
 	}
 
-	if _, ok := result.(*entity.Contract); !ok {
+	if v, ok := result.(*entity.Contract); !ok || v == nil {
 		return nil, apperr.Errorf(apperr.EINTERNAL, "invalid contract update result")
 	}
 
@@ -285,19 +295,22 @@ func (vm *MusicGangVM) makeOperations(ctx context.Context, ref service.VmCallabl
 		return nil, err
 	}
 
-	// log the contract execution time.
-	elapsed := time.Since(startOpTime)
+	if ref.WithRefuel() {
 
-	// calculate the fuel consumed effectively.
-	effectiveFuelAmount := entity.FuelAmount(elapsed)
+		// log the contract execution time.
+		elapsed := time.Since(startOpTime)
 
-	// calculate the fuel saved.
-	fuelRecovered := ref.MaxFuel() - effectiveFuelAmount
+		// calculate the fuel consumed effectively.
+		effectiveFuelAmount := entity.FuelAmount(elapsed)
 
-	// if fuel saved is greater than 0, refuel the tank.
-	if fuelRecovered > 0 {
-		if err := vm.FuelTank.Refuel(vm.ctx, fuelRecovered); err != nil {
-			return nil, err
+		// calculate the fuel saved.
+		fuelRecovered := ref.MaxFuel() - effectiveFuelAmount
+
+		// if fuel saved is greater than 0, refuel the tank.
+		if fuelRecovered > 0 {
+			if err := vm.FuelTank.Refuel(vm.ctx, fuelRecovered); err != nil {
+				return nil, err
+			}
 		}
 	}
 
