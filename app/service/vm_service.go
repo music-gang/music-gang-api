@@ -53,6 +53,8 @@ type VmCallable interface {
 	// Revision is the revision of the contract that is being called.
 	// Can be nil if the Revision is not defined.
 	Revision() *entity.Revision
+	// WithRefuel returns true if is necessary to refuel remaining fuel after Call ends.
+	WithRefuel() bool
 }
 
 var _ VmCallable = (*VmCall)(nil)
@@ -64,6 +66,7 @@ type VmCall struct {
 	RevisionRef   *entity.Revision   `json:"revision"`
 	CustomMaxFuel *entity.Fuel       `json:"custom_max_fuel"`
 	VmOperation   entity.VmOperation `json:"operation"`
+	IgnoreRefuel  bool               `json:"ignore_refuel"`
 }
 
 // VmCallOpt is the options for the contract call constructor
@@ -73,6 +76,7 @@ type VmCallOpt struct {
 	RevisionRef   *entity.Revision
 	CustomMaxFuel *entity.Fuel
 	VmOperation   entity.VmOperation
+	IgnoreRefuel  bool
 }
 
 // NewVmCall creates a new contract call.
@@ -88,11 +92,12 @@ func NewVmCallWithConfig(opt VmCallOpt) *VmCall {
 		RevisionRef:   opt.RevisionRef,
 		CustomMaxFuel: opt.CustomMaxFuel,
 		VmOperation:   opt.VmOperation,
+		IgnoreRefuel:  opt.IgnoreRefuel,
 	}
 }
 
 // Caller returns the caller of the contract.
-func (c VmCall) Caller() *entity.User {
+func (c *VmCall) Caller() *entity.User {
 	return c.User
 }
 
@@ -120,7 +125,7 @@ func (c *VmCall) Operation() entity.VmOperation {
 }
 
 // Revision is the revision of the contract that is being called.
-func (c VmCall) Revision() *entity.Revision {
+func (c *VmCall) Revision() *entity.Revision {
 	if c.RevisionRef != nil {
 		return c.RevisionRef
 	} else if c.ContractRef != nil && c.ContractRef.LastRevision != nil {
@@ -128,4 +133,9 @@ func (c VmCall) Revision() *entity.Revision {
 	} else {
 		return nil
 	}
+}
+
+// WithRefuel returns true if is necessary to refuel remaining fuel after Call ends.
+func (c *VmCall) WithRefuel() bool {
+	return !c.IgnoreRefuel
 }
