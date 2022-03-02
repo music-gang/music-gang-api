@@ -6,16 +6,8 @@ import (
 	"github.com/music-gang/music-gang-api/app/entity"
 )
 
-// UserService rapresents the user managment service.
-type UserService interface {
-	// CreateUser creates a new user.
-	CreateUser(ctx context.Context, user *entity.User) error
-
-	// DeleteUser deletes the user with the given id.
-	// Return EUNAUTHORIZED if the user is not the same as the authenticated user.
-	// Return ENOTFOUND if the user does not exist.
-	DeleteUser(ctx context.Context, id int64) error
-
+// UserSearchService is the interface for searching users.
+type UserSearchService interface {
 	// FindUserByEmail returns the user with the given email.
 	// Return ENOTFOUND if the user does not exist.
 	FindUserByEmail(ctx context.Context, email string) (*entity.User, error)
@@ -27,11 +19,28 @@ type UserService interface {
 	// FindUsers returns a list of users filtered by the given options.
 	// Also returns the total count of auths.
 	FindUsers(ctx context.Context, filter UserFilter) (entity.Users, int, error)
+}
+
+// UserManagmentService is the interface for managing users.
+type UserManagmentService interface {
+	// CreateUser creates a new user.
+	CreateUser(ctx context.Context, user *entity.User) error
+
+	// DeleteUser deletes the user with the given id.
+	// Return EUNAUTHORIZED if the user is not the same as the authenticated user.
+	// Return ENOTFOUND if the user does not exist.
+	DeleteUser(ctx context.Context, id int64) error
 
 	// UpdateUser updates the given user.
 	// Return EUNAUTHORIZED if the user is not the same as the authenticated user.
 	// Return ENOTFOUND if the user does not exist.
 	UpdateUser(ctx context.Context, id int64, user UserUpdate) (*entity.User, error)
+}
+
+// UserService rapresents the user service.
+type UserService interface {
+	UserSearchService
+	UserManagmentService
 }
 
 // UserFilter represents the options used to filter the users.
