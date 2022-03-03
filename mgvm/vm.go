@@ -13,6 +13,8 @@ import (
 
 var _ service.VmService = (*MusicGangVM)(nil)
 var _ service.FuelMeterService = (*MusicGangVM)(nil)
+var _ service.ContractManagmentService = (*MusicGangVM)(nil)
+var _ service.UserManagmentService = (*MusicGangVM)(nil)
 
 // vmFunc is a generic function callback executed by the vm.
 type vmFunc func(ctx context.Context, ref service.VmCallable) (interface{}, error)
