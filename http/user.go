@@ -46,7 +46,7 @@ func handleUserUpdate(c echo.Context, s *ServerAPI, userParams service.UserUpdat
 		return ErrorResponseJSON(c, err, nil)
 	}
 
-	if updatedUser, err := s.UserService.UpdateUser(c.Request().Context(), user.ID, userParams); err != nil {
+	if updatedUser, err := s.VmCallableService.UpdateUser(c.Request().Context(), user.ID, userParams); err != nil {
 		s.LogService.ReportError(c.Request().Context(), err)
 		return ErrorResponseJSON(c, err, nil)
 	} else {

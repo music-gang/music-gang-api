@@ -31,10 +31,10 @@ func (s *ServerAPI) JWTVerifyMiddleware(next echo.HandlerFunc) echo.HandlerFunc 
 		}
 
 		// load user by id and check if user is active with specific auth
-		if _, err := s.UserService.FindUserByID(c.Request().Context(), claims.Auth.ID); err != nil {
+		if _, err := s.UserSearchService.FindUserByID(c.Request().Context(), claims.Auth.ID); err != nil {
 			return ErrorResponseJSON(c, err, nil)
 		}
-		if _, err := s.AuthService.FindAuthByID(c.Request().Context(), claims.Auth.ID); err != nil {
+		if _, err := s.AuthSearchService.FindAuthByID(c.Request().Context(), claims.Auth.ID); err != nil {
 			return ErrorResponseJSON(c, err, nil)
 		}
 

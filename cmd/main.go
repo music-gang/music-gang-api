@@ -143,8 +143,8 @@ func (m *Main) Run(ctx context.Context) error {
 
 	m.HTTPServerAPI.Addr = config.GetConfig().APP.HTTP.Addr
 	m.HTTPServerAPI.Domain = config.GetConfig().APP.HTTP.Domain
-	m.HTTPServerAPI.UserService = postgresUserService
-	m.HTTPServerAPI.AuthService = authService
+	m.HTTPServerAPI.UserSearchService = postgresUserService
+	m.HTTPServerAPI.AuthSearchService = authService
 	m.HTTPServerAPI.JWTService = jwtService
 
 	logService := &applog.Logger{}
@@ -178,13 +178,15 @@ func (m *Main) Run(ctx context.Context) error {
 	m.VM.FuelStation = fuelStationService
 	m.VM.EngineService = engineService
 	m.VM.ContractManagmentService = postgresContractService
+	m.VM.UserManagmentService = postgresUserService
+	m.VM.AuthManagmentService = authService
 
 	if err := m.VM.Run(); err != nil {
 		return err
 	}
 
 	m.HTTPServerAPI.LogService = logService
-	m.HTTPServerAPI.FuelMeterService = m.VM
+	m.HTTPServerAPI.VmCallableService = m.VM
 
 	if err := m.HTTPServerAPI.Open(); err != nil {
 		return err

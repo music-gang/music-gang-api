@@ -21,6 +21,11 @@ var codes = map[string]int{
 	apperr.EUNAUTHORIZED:   http.StatusUnauthorized,
 	apperr.EINTERNAL:       http.StatusInternalServerError,
 	apperr.EUNKNOWN:        http.StatusInternalServerError,
+
+	apperr.EMGVM:         http.StatusInternalServerError,
+	apperr.EMGVM_LOWFUEL: http.StatusInsufficientStorage,
+
+	apperr.EANCHORAGE: http.StatusServiceUnavailable,
 }
 
 // MessageFromErr returns the message for the given app error.

@@ -127,7 +127,7 @@ func (s *ServerAPI) AuthRegisterHandler(c echo.Context) error {
 // handleAuthLogin handles the login Business Logic.
 func handleAuthLogin(c echo.Context, server *ServerAPI, params LoginParams) error {
 
-	auth, err := server.AuthService.Auhenticate(c.Request().Context(), &entity.AuthUserOptions{
+	auth, err := server.VmCallableService.Auhenticate(c.Request().Context(), &entity.AuthUserOptions{
 		Source: &localSource,
 		UserParams: &entity.UserParams{
 			Email:    &params.Email,
@@ -201,7 +201,7 @@ func handleAuthRegister(c echo.Context, server *ServerAPI, params RegisterParams
 		return ErrorResponseJSON(c, err, nil)
 	}
 
-	if err := server.AuthService.CreateAuth(c.Request().Context(), &entity.Auth{
+	if err := server.VmCallableService.CreateAuth(c.Request().Context(), &entity.Auth{
 		Source: localSource,
 		User: &entity.User{
 			Email:    null.StringFrom(params.Email),

@@ -33,13 +33,13 @@ func TestMiddleware_JWT(t *testing.T) {
 			},
 		}
 
-		s.UserService = &mock.UserService{
+		s.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				return &entity.User{ID: 1}, nil
 			},
 		}
 
-		s.AuthService = &mock.AuthService{
+		s.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				return &entity.Auth{ID: 1}, nil
 			},
@@ -104,7 +104,7 @@ func TestMiddleware_JWT(t *testing.T) {
 			},
 		}
 
-		s.UserService = &mock.UserService{
+		s.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
 			},
@@ -141,13 +141,13 @@ func TestMiddleware_JWT(t *testing.T) {
 			},
 		}
 
-		s.UserService = &mock.UserService{
+		s.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				return &entity.User{ID: 1}, nil
 			},
 		}
 
-		s.AuthService = &mock.AuthService{
+		s.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				return nil, apperr.Errorf(apperr.ENOTFOUND, "auth not found")
 			},
@@ -200,7 +200,7 @@ func TestMiddleware_ReportPanic(t *testing.T) {
 
 		// call /user endpoint, but omit AuthService and JWTService to simulate panic, it should recover panicking and return 500
 
-		s.AuthService = nil
+		s.AuthSearchService = nil
 		s.JWTService = nil
 
 		req, err := http.NewRequest(http.MethodGet, s.URL()+"/v1/user", nil)
