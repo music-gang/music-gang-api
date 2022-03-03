@@ -24,17 +24,19 @@ type EngineService interface {
 	Stop() error
 }
 
-// VmService is a service for the engine of the MusicGang VM.
+// VmService is a general service for of the MusicGang VM.
 type VmService interface {
-	FuelMeterService
 	EngineService
+	VmCallableService
 }
 
 // VmCallableService defines all callable services of the MusicGang VM.
 type VmCallableService interface {
-	FuelMeterService
-	ContractManagmentService
+	AuthManagmentService
 	ContractExecutorService
+	ContractManagmentService
+	FuelMeterService
+	UserManagmentService
 }
 
 // VmCallable is the interface for the MusicGang VM callable operations.
