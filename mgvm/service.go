@@ -9,9 +9,54 @@ import (
 	"github.com/music-gang/music-gang-api/app/service"
 )
 
-var _ service.ContractManagmentService = (*MusicGangVM)(nil)
+// Auhenticate authenticates a user.
+// This func is a wrapper for the AuthManagmentService.Auhenticate.
+// No checks is performed.
+func (vm *MusicGangVM) Auhenticate(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
 
-// var _ service.UserManagmentService = (*MusicGangVM)(nil)
+	opMaxFuel := entity.VmOperationCost(entity.VmOperationAuthenticate)
+
+	call := service.NewVmCallWithConfig(service.VmCallOpt{
+		User:          app.UserFromContext(ctx),
+		CustomMaxFuel: &opMaxFuel,
+		IgnoreRefuel:  true,
+		VmOperation:   entity.VmOperationAuthenticate,
+	})
+
+	res, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+		return vm.AuthManagmentService.Auhenticate(ctx, opts)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if res, ok := res.(*entity.Auth); !ok || res == nil {
+		return nil, apperr.Errorf(apperr.EINTERNAL, "invalid auth result")
+	}
+
+	return res.(*entity.Auth), nil
+}
+
+// CreateAuth creates a new auth.
+// This call consumes fuel.
+// No check on authorization is performed.
+func (vm *MusicGangVM) CreateAuth(ctx context.Context, auth *entity.Auth) error {
+
+	user := app.UserFromContext(ctx)
+
+	call := service.NewVmCallWithConfig(service.VmCallOpt{
+		User:          user,
+		CustomMaxFuel: nil,
+		IgnoreRefuel:  true,
+		VmOperation:   entity.VmOperationCreateAuth,
+	})
+
+	_, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+		return nil, vm.AuthManagmentService.CreateAuth(ctx, auth)
+	})
+
+	return err
+}
 
 // CreateContract creates a new contract under a vm operation.
 // This call consumes fuel.
@@ -50,6 +95,29 @@ func (vm *MusicGangVM) CreateUser(ctx context.Context, user *entity.User) error 
 
 	_, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
 		return nil, vm.UserManagmentService.CreateUser(ctx, ref.Caller())
+	})
+
+	return err
+}
+
+// DeleteAuth deletes the auth.
+// This call consumes fuel.
+// No check on authorization is performed.
+func (vm *MusicGangVM) DeleteAuth(ctx context.Context, id int64) error {
+
+	user := app.UserFromContext(ctx)
+
+	opMaxFuel := entity.VmOperationCost(entity.VmOperationDeleteAuth)
+
+	call := service.NewVmCallWithConfig(service.VmCallOpt{
+		User:          user,
+		CustomMaxFuel: &opMaxFuel,
+		IgnoreRefuel:  true,
+		VmOperation:   entity.VmOperationDeleteAuth,
+	})
+
+	_, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+		return nil, vm.AuthManagmentService.DeleteAuth(ctx, id)
 	})
 
 	return err
