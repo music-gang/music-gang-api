@@ -55,6 +55,29 @@ func (vm *MusicGangVM) CreateUser(ctx context.Context, user *entity.User) error 
 	return err
 }
 
+// DeleteUser deletes the user.
+// This call consumes fuel.
+// No check on authorization is performed.
+func (vm *MusicGangVM) DeleteUser(ctx context.Context, id int64) error {
+
+	user := app.UserFromContext(ctx)
+
+	opMaxFuel := entity.VmOperationCost(entity.VmOperationDeleteUser)
+
+	call := service.NewVmCallWithConfig(service.VmCallOpt{
+		User:          user,
+		CustomMaxFuel: &opMaxFuel,
+		IgnoreRefuel:  true,
+		VmOperation:   entity.VmOperationDeleteUser,
+	})
+
+	_, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+		return nil, vm.UserManagmentService.DeleteUser(ctx, id)
+	})
+
+	return err
+}
+
 // DeleteContract deletes the contract under a vm operation.
 // This call consumes fuel.
 // No check on authorization is performed.
@@ -148,4 +171,34 @@ func (vm *MusicGangVM) UpdateContract(ctx context.Context, id int64, contract se
 	}
 
 	return result.(*entity.Contract), nil
+}
+
+// UpdateUser updates the user.
+// This call consumes fuel.
+// No check on authorization is performed.
+func (vm *MusicGangVM) UpdateUser(ctx context.Context, id int64, upd service.UserUpdate) (*entity.User, error) {
+
+	user := app.UserFromContext(ctx)
+
+	opMaxFuel := entity.VmOperationCost(entity.VmOperationUpdateUser)
+
+	call := service.NewVmCallWithConfig(service.VmCallOpt{
+		User:          user,
+		CustomMaxFuel: &opMaxFuel,
+		IgnoreRefuel:  true,
+		VmOperation:   entity.VmOperationUpdateUser,
+	})
+
+	result, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+		return vm.UserManagmentService.UpdateUser(ctx, id, upd)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if v, ok := result.(*entity.User); !ok || v == nil {
+		return nil, apperr.Errorf(apperr.EINTERNAL, "invalid user update result")
+	}
+
+	return result.(*entity.User), nil
 }
