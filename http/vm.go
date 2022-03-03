@@ -12,7 +12,7 @@ func (s *ServerAPI) VmStatsHandler(c echo.Context) error {
 
 func handleVmStats(c echo.Context, s *ServerAPI) error {
 
-	stats, err := s.FuelMeterService.Stats(c.Request().Context())
+	stats, err := s.VmCallableService.Stats(c.Request().Context())
 	if err != nil {
 		s.LogService.ReportError(c.Request().Context(), err)
 		return ErrorResponseJSON(c, err, nil)

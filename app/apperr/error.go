@@ -21,7 +21,9 @@ const (
 	EFORBIDDEN      = "forbidden"       // access forbidden
 	EEXISTS         = "exists"          // resource already exists
 
-	EMGVM      = "mgvm"      // error code prefix for music gang virtual machine, it is assimilated to EINTERNAL
+	EMGVM         = "mgvm"     // error code prefix for music gang virtual machine, it is assimilated to EINTERNAL
+	EMGVM_LOWFUEL = "low_fuel" // subcode for EMGVM, low fuel
+
 	EANCHORAGE = "anchorage" // error code prefix for anchorage contract executor, it is assimilated to EINTERNAL
 )
 

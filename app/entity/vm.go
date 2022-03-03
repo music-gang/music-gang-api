@@ -63,6 +63,9 @@ var vmOperationCostTable = map[VmOperation]Fuel{
 	VmOperationCreateUser:           Fuel(15),
 	VmOperationUpdateUser:           Fuel(5),
 	VmOperationDeleteUser:           Fuel(10),
+	VmOperationAuthenticate:         Fuel(20),
+	VmOperationCreateAuth:           Fuel(5),
+	VmOperationDeleteAuth:           Fuel(5),
 }
 
 // VmOperationCost returns the cost of the operation.
@@ -75,12 +78,6 @@ func VmOperationCost(op VmOperation) Fuel {
 
 // IsValidOperation returns true if the operation is valid.
 func IsValidOperation(op VmOperation) bool {
-	switch op {
-	case VmOperationCreateContract, VmOperationExecuteContract, VmOperationUpdateContract, VmOperationDeleteContract,
-		VmOperationMakeContractRevision,
-		VmOperationCreateUser, VmOperationUpdateUser, VmOperationDeleteUser:
-		return true
-	default:
-		return false
-	}
+	_, ok := vmOperationCostTable[op]
+	return ok
 }

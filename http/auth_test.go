@@ -36,20 +36,22 @@ func TestAuth_Login(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.AuthService = &mock.AuthService{
-			AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
-				return &entity.Auth{
-					ID:     1,
-					UserID: 1,
-					Source: entity.AuthSourceLocal,
-					User: &entity.User{
-						ID:       1,
-						Name:     "JaneDoe",
-						Email:    null.StringFrom("jane.doe@test.com"),
-						Password: null.StringFrom("123456"),
-						Auths:    []*entity.Auth{},
-					},
-				}, nil
+		s.VmCallableService = &mock.VmCallableService{
+			AuthService: &mock.AuthService{
+				AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
+					return &entity.Auth{
+						ID:     1,
+						UserID: 1,
+						Source: entity.AuthSourceLocal,
+						User: &entity.User{
+							ID:       1,
+							Name:     "JaneDoe",
+							Email:    null.StringFrom("jane.doe@test.com"),
+							Password: null.StringFrom("123456"),
+							Auths:    []*entity.Auth{},
+						},
+					}, nil
+				},
 			},
 		}
 
@@ -188,9 +190,11 @@ func TestAuth_Login(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.AuthService = &mock.AuthService{
-			AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
-				return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "invalid credentials")
+		s.VmCallableService = &mock.VmCallableService{
+			AuthService: &mock.AuthService{
+				AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
+					return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "invalid credentials")
+				},
 			},
 		}
 
@@ -223,19 +227,21 @@ func TestAuth_Login(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.AuthService = &mock.AuthService{
-			AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
-				return &entity.Auth{
-					ID:     1,
-					UserID: 1,
-					Source: entity.AuthSourceLocal,
-					User: &entity.User{
-						ID:       1,
-						Name:     "JaneDoe",
-						Email:    null.StringFrom("jane.doe@test.com"),
-						Password: null.StringFrom("123456"),
-					},
-				}, nil
+		s.VmCallableService = &mock.VmCallableService{
+			AuthService: &mock.AuthService{
+				AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
+					return &entity.Auth{
+						ID:     1,
+						UserID: 1,
+						Source: entity.AuthSourceLocal,
+						User: &entity.User{
+							ID:       1,
+							Name:     "JaneDoe",
+							Email:    null.StringFrom("jane.doe@test.com"),
+							Password: null.StringFrom("123456"),
+						},
+					}, nil
+				},
 			},
 		}
 
@@ -274,9 +280,11 @@ func TestAuth_Login(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.AuthService = &mock.AuthService{
-			AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
-				return nil, apperr.Errorf(apperr.ENOTFOUND, "User not found")
+		s.VmCallableService = &mock.VmCallableService{
+			AuthService: &mock.AuthService{
+				AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
+					return nil, apperr.Errorf(apperr.ENOTFOUND, "User not found")
+				},
 			},
 		}
 
@@ -538,18 +546,21 @@ func TestAuth_Register(t *testing.T) {
 
 		var authenticatedAuth *entity.Auth
 
-		s.AuthService = &mock.AuthService{
-			AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
-				return authenticatedAuth, nil
-			},
-			CreateAuthFn: func(ctx context.Context, auth *entity.Auth) error {
-				auth.ID = 1
-				auth.User.ID = 1
-				auth.UserID = 1
-				authenticatedAuth = auth
-				return nil
+		s.VmCallableService = &mock.VmCallableService{
+			AuthService: &mock.AuthService{
+				AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
+					return authenticatedAuth, nil
+				},
+				CreateAuthFn: func(ctx context.Context, auth *entity.Auth) error {
+					auth.ID = 1
+					auth.User.ID = 1
+					auth.UserID = 1
+					authenticatedAuth = auth
+					return nil
+				},
 			},
 		}
+
 		s.JWTService = &mock.JWTService{
 			ExchangeFn: func(ctx context.Context, auth *entity.Auth) (*entity.TokenPair, error) {
 				return &entity.TokenPair{
@@ -795,9 +806,11 @@ func TestAuth_Register(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.AuthService = &mock.AuthService{
-			CreateAuthFn: func(ctx context.Context, auth *entity.Auth) error {
-				return apperr.Errorf(apperr.EUNAUTHORIZED, "authentication failed")
+		s.VmCallableService = &mock.VmCallableService{
+			AuthService: &mock.AuthService{
+				CreateAuthFn: func(ctx context.Context, auth *entity.Auth) error {
+					return apperr.Errorf(apperr.EUNAUTHORIZED, "authentication failed")
+				},
 			},
 		}
 

@@ -36,7 +36,7 @@ func TestUserHandler(t *testing.T) {
 			},
 		}
 
-		s.UserService = &mock.UserService{
+		s.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -46,7 +46,7 @@ func TestUserHandler(t *testing.T) {
 			},
 		}
 
-		s.AuthService = &mock.AuthService{
+		s.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -116,26 +116,15 @@ func TestUser_Update(t *testing.T) {
 			},
 		}
 
-		s.UserService = &mock.UserService{
+		s.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
 				}
 				return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
 			},
-			UpdateUserFn: func(ctx context.Context, id int64, user service.UserUpdate) (*entity.User, error) {
-				if id == 1 {
-					updatedUser := &entity.User{ID: 1}
-					if user.Name != nil {
-						updatedUser.Name = *user.Name
-					}
-					return updatedUser, nil
-				}
-				return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
-			},
 		}
-
-		s.AuthService = &mock.AuthService{
+		s.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -145,6 +134,20 @@ func TestUser_Update(t *testing.T) {
 					}, nil
 				}
 				return nil, apperr.Errorf(apperr.ENOTFOUND, "auth not found")
+			},
+		}
+		s.VmCallableService = &mock.VmCallableService{
+			UserService: &mock.UserService{
+				UpdateUserFn: func(ctx context.Context, id int64, user service.UserUpdate) (*entity.User, error) {
+					if id == 1 {
+						updatedUser := &entity.User{ID: 1}
+						if user.Name != nil {
+							updatedUser.Name = *user.Name
+						}
+						return updatedUser, nil
+					}
+					return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
+				},
 			},
 		}
 
@@ -206,7 +209,7 @@ func TestUser_Update(t *testing.T) {
 			},
 		}
 
-		s.UserService = &mock.UserService{
+		s.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -214,12 +217,9 @@ func TestUser_Update(t *testing.T) {
 
 				return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
 			},
-			UpdateUserFn: func(ctx context.Context, id int64, user service.UserUpdate) (*entity.User, error) {
-				return nil, apperr.Errorf(apperr.EINTERNAL, "internal error")
-			},
 		}
 
-		s.AuthService = &mock.AuthService{
+		s.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -229,6 +229,13 @@ func TestUser_Update(t *testing.T) {
 					}, nil
 				}
 				return nil, apperr.Errorf(apperr.ENOTFOUND, "auth not found")
+			},
+		}
+		s.VmCallableService = &mock.VmCallableService{
+			UserService: &mock.UserService{
+				UpdateUserFn: func(ctx context.Context, id int64, user service.UserUpdate) (*entity.User, error) {
+					return nil, apperr.Errorf(apperr.EINTERNAL, "internal error")
+				},
 			},
 		}
 

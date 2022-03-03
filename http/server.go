@@ -37,12 +37,10 @@ type ServerAPI struct {
 	JWTSecret string
 
 	// Services used by HTTP handler.
-	AuthService service.AuthService
-	UserService service.UserService
-	JWTService  service.JWTService
-
-	// MusicGang VM service api
-	FuelMeterService service.FuelMeterService
+	AuthSearchService service.AuthSearchService
+	UserSearchService service.UserSearchService
+	VmCallableService service.VmCallableService
+	JWTService        service.JWTService
 
 	// loggin service used by HTTP Server.
 	LogService service.LogService
