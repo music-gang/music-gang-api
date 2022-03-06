@@ -25,7 +25,7 @@ var codes = map[string]int{
 	apperr.EMGVM:         http.StatusInternalServerError,
 	apperr.EMGVM_LOWFUEL: http.StatusInsufficientStorage,
 
-	apperr.EANCHORAGE: http.StatusServiceUnavailable,
+	apperr.EANCHORAGE: http.StatusInternalServerError,
 }
 
 // MessageFromErr returns the message for the given app error.
