@@ -9,6 +9,7 @@ import (
 
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
+	"github.com/music-gang/music-gang-api/app/service"
 	"github.com/music-gang/music-gang-api/mgvm"
 	"github.com/music-gang/music-gang-api/mock"
 )
@@ -709,5 +710,66 @@ func TestVm_Meter(t *testing.T) {
 		go vm.Meter(infoChan, errChan)
 
 		time.Sleep(time.Second)
+	})
+}
+
+func TestVm_MakeOperation(t *testing.T) {
+
+	t.Run("InvalidOperation", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		currentState := entity.StateInitializing
+		currentFuel := entity.Fuel(0)
+
+		vm.LogService = &mock.LogServiceNoOp{}
+		vm.FuelTank = &mock.FuelTankService{
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				atomic.StoreUint64((*uint64)(&currentFuel), uint64(fuel))
+				return nil
+			},
+			FuelFn: func(ctx context.Context) (entity.Fuel, error) {
+				return entity.Fuel(atomic.LoadUint64((*uint64)(&currentFuel))), nil
+			},
+			RefuelFn: func(ctx context.Context, fuelToRefill entity.Fuel) error {
+				panic("should not be called")
+			},
+		}
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+			},
+			PauseFn: func() error {
+				return nil
+			},
+			ResumeFn: func() error {
+				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
+				return nil
+			},
+			StateFn: func() entity.State {
+				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			},
+			StopFn: func() error {
+				return nil
+			},
+		}
+
+		if err := vm.Resume(); err != nil {
+			t.Fatal(err)
+		}
+
+		var invalidOp entity.VmOperation = "invalid"
+
+		refCall := service.NewVmCallWithConfig(service.VmCallOpt{
+			VmOperation: invalidOp,
+		})
+
+		if _, err := vm.MakeOperation(context.Background(), refCall, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+			panic("should not be called")
+		}); err == nil {
+			t.Fatal("Expected error")
+		} else if code := apperr.ErrorCode(err); code != apperr.EFORBIDDEN {
+			t.Errorf("Unexpected error code, got: %s, want: %s", code, apperr.EFORBIDDEN)
+		}
 	})
 }

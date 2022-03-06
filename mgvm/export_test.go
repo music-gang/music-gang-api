@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/music-gang/music-gang-api/app/entity"
+	"github.com/music-gang/music-gang-api/app/service"
 )
 
 func SwitchToLocalFuel() {
@@ -24,4 +25,8 @@ func (vm *MusicGangVM) Meter(infoChan chan<- string, errChan chan<- error) {
 
 func (vm *MusicGangVM) Cancel() {
 	vm.cancel()
+}
+
+func (vm *MusicGangVM) MakeOperation(ctx context.Context, ref service.VmCallable, fn VmFunc) (res interface{}, err error) {
+	return vm.makeOperation(ctx, ref, fn)
 }

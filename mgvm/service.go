@@ -23,7 +23,7 @@ func (vm *MusicGangVM) Auhenticate(ctx context.Context, opts *entity.AuthUserOpt
 		VmOperation:   entity.VmOperationAuthenticate,
 	})
 
-	res, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+	res, err := vm.makeOperation(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
 		return vm.AuthManagmentService.Auhenticate(ctx, opts)
 	})
 	if err != nil {
@@ -51,7 +51,7 @@ func (vm *MusicGangVM) CreateAuth(ctx context.Context, auth *entity.Auth) error 
 		VmOperation:   entity.VmOperationCreateAuth,
 	})
 
-	_, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+	_, err := vm.makeOperation(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
 		return nil, vm.AuthManagmentService.CreateAuth(ctx, auth)
 	})
 
@@ -74,7 +74,7 @@ func (vm *MusicGangVM) CreateContract(ctx context.Context, contract *entity.Cont
 		VmOperation:   entity.VmOperationCreateContract,
 	})
 
-	_, err = vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+	_, err = vm.makeOperation(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
 		return nil, vm.ContractManagmentService.CreateContract(ctx, ref.Contract())
 	})
 	return err
@@ -93,7 +93,7 @@ func (vm *MusicGangVM) CreateUser(ctx context.Context, user *entity.User) error 
 		VmOperation:   entity.VmOperationCreateUser,
 	})
 
-	_, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+	_, err := vm.makeOperation(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
 		return nil, vm.UserManagmentService.CreateUser(ctx, ref.Caller())
 	})
 
@@ -116,31 +116,8 @@ func (vm *MusicGangVM) DeleteAuth(ctx context.Context, id int64) error {
 		VmOperation:   entity.VmOperationDeleteAuth,
 	})
 
-	_, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+	_, err := vm.makeOperation(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
 		return nil, vm.AuthManagmentService.DeleteAuth(ctx, id)
-	})
-
-	return err
-}
-
-// DeleteUser deletes the user.
-// This call consumes fuel.
-// No check on authorization is performed.
-func (vm *MusicGangVM) DeleteUser(ctx context.Context, id int64) error {
-
-	user := app.UserFromContext(ctx)
-
-	opMaxFuel := entity.VmOperationCost(entity.VmOperationDeleteUser)
-
-	call := service.NewVmCallWithConfig(service.VmCallOpt{
-		User:          user,
-		CustomMaxFuel: &opMaxFuel,
-		IgnoreRefuel:  true,
-		VmOperation:   entity.VmOperationDeleteUser,
-	})
-
-	_, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
-		return nil, vm.UserManagmentService.DeleteUser(ctx, id)
 	})
 
 	return err
@@ -162,8 +139,31 @@ func (vm *MusicGangVM) DeleteContract(ctx context.Context, id int64) error {
 		VmOperation:   entity.VmOperationDeleteContract,
 	})
 
-	_, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+	_, err := vm.makeOperation(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
 		return nil, vm.ContractManagmentService.DeleteContract(ctx, id)
+	})
+
+	return err
+}
+
+// DeleteUser deletes the user.
+// This call consumes fuel.
+// No check on authorization is performed.
+func (vm *MusicGangVM) DeleteUser(ctx context.Context, id int64) error {
+
+	user := app.UserFromContext(ctx)
+
+	opMaxFuel := entity.VmOperationCost(entity.VmOperationDeleteUser)
+
+	call := service.NewVmCallWithConfig(service.VmCallOpt{
+		User:          user,
+		CustomMaxFuel: &opMaxFuel,
+		IgnoreRefuel:  true,
+		VmOperation:   entity.VmOperationDeleteUser,
+	})
+
+	_, err := vm.makeOperation(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+		return nil, vm.UserManagmentService.DeleteUser(ctx, id)
 	})
 
 	return err
@@ -182,7 +182,7 @@ func (vm *MusicGangVM) ExecContract(ctx context.Context, revision *entity.Revisi
 		ContractRef: revision.Contract,
 	})
 
-	return vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+	return vm.makeOperation(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
 		return vm.EngineService.ExecContract(ctx, ref.Revision())
 	})
 }
@@ -204,7 +204,7 @@ func (vm *MusicGangVM) MakeRevision(ctx context.Context, revision *entity.Revisi
 		RevisionRef:   revision,
 	})
 
-	_, err = vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+	_, err = vm.makeOperation(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
 		return nil, vm.ContractManagmentService.MakeRevision(ctx, ref.Revision())
 	})
 
@@ -226,7 +226,7 @@ func (vm *MusicGangVM) UpdateContract(ctx context.Context, id int64, contract se
 		VmOperation:   entity.VmOperationUpdateContract,
 	})
 
-	result, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+	result, err := vm.makeOperation(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
 		return vm.ContractManagmentService.UpdateContract(ctx, id, contract)
 	})
 
@@ -257,7 +257,7 @@ func (vm *MusicGangVM) UpdateUser(ctx context.Context, id int64, upd service.Use
 		VmOperation:   entity.VmOperationUpdateUser,
 	})
 
-	result, err := vm.makeOperations(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+	result, err := vm.makeOperation(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
 		return vm.UserManagmentService.UpdateUser(ctx, id, upd)
 	})
 	if err != nil {

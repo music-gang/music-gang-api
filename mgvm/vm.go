@@ -14,8 +14,8 @@ import (
 var _ service.VmService = (*MusicGangVM)(nil)
 var _ service.VmCallableService = (*MusicGangVM)(nil)
 
-// vmFunc is a generic function callback executed by the vm.
-type vmFunc func(ctx context.Context, ref service.VmCallable) (interface{}, error)
+// VmFunc is a generic function callback executed by the vm.
+type VmFunc func(ctx context.Context, ref service.VmCallable) (interface{}, error)
 
 // MusicGangVM is a virtual machine for the Mg language(nodeJS for now).
 type MusicGangVM struct {
@@ -131,8 +131,8 @@ func (vm *MusicGangVM) Stop() error {
 	return vm.EngineService.Stop()
 }
 
-// makeOperations executes the given operations.
-func (vm *MusicGangVM) makeOperations(ctx context.Context, ref service.VmCallable, fn vmFunc) (res interface{}, err error) {
+// makeOperation executes the given operations.
+func (vm *MusicGangVM) makeOperation(ctx context.Context, ref service.VmCallable, fn VmFunc) (res interface{}, err error) {
 	select {
 	case <-ctx.Done():
 		return nil, apperr.Errorf(apperr.EMGVM, "Timeout while executing contract")
