@@ -120,11 +120,6 @@ func (vm *MusicGangVM) State() entity.State {
 	return vm.EngineService.State()
 }
 
-// Stats returns the stats of fuel tank usage.
-func (vm *MusicGangVM) Stats(ctx context.Context) (*entity.FuelStat, error) {
-	return vm.FuelTank.Stats(ctx)
-}
-
 // Stop stops the engine.
 // Delegates to the engine service.
 func (vm *MusicGangVM) Stop() error {
@@ -137,14 +132,16 @@ func (vm *MusicGangVM) makeOperation(ctx context.Context, ref service.VmCallable
 	case <-ctx.Done():
 		return nil, apperr.Errorf(apperr.EMGVM, "Timeout while executing contract")
 	default:
-		func() {
-			vm.L.Lock()
-			for !vm.IsRunning() {
-				vm.LogService.ReportInfo(vm.ctx, "Wait for engine to resume")
-				vm.Wait()
-			}
-			vm.L.Unlock()
-		}()
+		if ref.WithEngineState() {
+			func() {
+				vm.L.Lock()
+				for !vm.IsRunning() {
+					vm.LogService.ReportInfo(vm.ctx, "Wait for engine to resume")
+					vm.Wait()
+				}
+				vm.L.Unlock()
+			}()
+		}
 	}
 
 	defer func() {
@@ -154,7 +151,7 @@ func (vm *MusicGangVM) makeOperation(ctx context.Context, ref service.VmCallable
 				err = apperr.Errorf(apperr.EMGVM, "Timeout while executing contract")
 				return
 			}
-			err = apperr.Errorf(apperr.EMGVM, "Panic while executing contract")
+			err = apperr.Errorf(apperr.EMGVM, "Panic while executing contract, %v", r)
 		}
 	}()
 

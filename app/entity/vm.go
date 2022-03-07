@@ -46,6 +46,8 @@ const (
 	VmOperationAuthenticate VmOperation = "authenticate"
 	VmOperationCreateAuth   VmOperation = "create-auth"
 	VmOperationDeleteAuth   VmOperation = "delete-auth"
+
+	VmOperationVmStats VmOperation = "vm-stats"
 )
 
 const (
@@ -66,6 +68,7 @@ var vmOperationCostTable = map[VmOperation]Fuel{
 	VmOperationAuthenticate:         Fuel(20),
 	VmOperationCreateAuth:           Fuel(5),
 	VmOperationDeleteAuth:           Fuel(5),
+	VmOperationVmStats:              Fuel(0),
 }
 
 // VmOperationCost returns the cost of the operation.

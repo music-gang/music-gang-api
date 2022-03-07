@@ -211,6 +211,35 @@ func (vm *MusicGangVM) MakeRevision(ctx context.Context, revision *entity.Revisi
 	return err
 }
 
+// Stats returns the stats of fuel tank usage.
+func (vm *MusicGangVM) Stats(ctx context.Context) (*entity.FuelStat, error) {
+
+	user := app.UserFromContext(ctx)
+
+	opMaxFuel := entity.VmOperationCost(entity.VmOperationVmStats)
+
+	call := service.NewVmCallWithConfig(service.VmCallOpt{
+		User:              user,
+		CustomMaxFuel:     &opMaxFuel,
+		IgnoreRefuel:      true,
+		VmOperation:       entity.VmOperationVmStats,
+		IgnoreEngineState: true,
+	})
+
+	res, err := vm.makeOperation(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+		return vm.FuelTank.Stats(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if v, ok := res.(*entity.FuelStat); !ok || v == nil {
+		return nil, apperr.Errorf(apperr.EINTERNAL, "invalid vm stats result")
+	}
+
+	return res.(*entity.FuelStat), nil
+}
+
 // UpdateContract updates the contract under a vm operation.
 // This call consumes fuel.
 // No check on authorization is performed.

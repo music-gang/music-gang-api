@@ -594,6 +594,157 @@ func TestVm_MakeRevision(t *testing.T) {
 	})
 }
 
+func TestVm_Stats(t *testing.T) {
+
+	t.Run("OK", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		now := time.Now()
+
+		currentState := entity.StateInitializing
+
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				panic("should not be called")
+			},
+			PauseFn: func() error {
+				return nil
+			},
+			ResumeFn: func() error {
+				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
+				return nil
+			},
+			StateFn: func() entity.State {
+				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			},
+			StopFn: func() error {
+				return nil
+			},
+		}
+
+		vm.FuelTank = &mock.FuelTankService{
+			StatsFn: func(ctx context.Context) (*entity.FuelStat, error) {
+				return &entity.FuelStat{
+					FuelCapacity:    100,
+					FuelUsed:        50,
+					LastRefuelAmout: 5,
+					LastRefuelAt:    now,
+				}, nil
+			},
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				return nil
+			},
+		}
+
+		if err := vm.Resume(); err != nil {
+			t.Errorf("Unexpected error: %s", err.Error())
+		}
+
+		if stats, err := vm.Stats(context.Background()); err != nil {
+			t.Errorf("Unexpected error: %s", err.Error())
+		} else if stats.FuelCapacity != 100 {
+			t.Errorf("Unexpected stats, got: %d, want: %d", stats.FuelCapacity, 100)
+		} else if stats.FuelUsed != 50 {
+			t.Errorf("Unexpected stats, got: %d, want: %d", stats.FuelUsed, 50)
+		} else if stats.LastRefuelAmout != 5 {
+			t.Errorf("Unexpected stats, got: %d, want: %d", stats.LastRefuelAmout, 5)
+		} else if stats.LastRefuelAt.Unix() != now.Unix() {
+			t.Errorf("Unexpected stats, got: %s, want: %s", stats.LastRefuelAt, now)
+		}
+	})
+
+	t.Run("ErrStats", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		currentState := entity.StateInitializing
+
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				panic("should not be called")
+			},
+			PauseFn: func() error {
+				return nil
+			},
+			ResumeFn: func() error {
+				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
+				return nil
+			},
+			StateFn: func() entity.State {
+				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			},
+			StopFn: func() error {
+				return nil
+			},
+		}
+
+		vm.FuelTank = &mock.FuelTankService{
+			StatsFn: func(ctx context.Context) (*entity.FuelStat, error) {
+				return nil, apperr.Errorf(apperr.EMGVM, "test error")
+			},
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				return nil
+			},
+		}
+
+		if err := vm.Resume(); err != nil {
+			t.Errorf("Unexpected error: %s", err.Error())
+		}
+
+		if _, err := vm.Stats(context.Background()); err == nil {
+			t.Errorf("Expected error")
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EMGVM {
+			t.Errorf("Unexpected error got %s, want %s", errCode, apperr.EMGVM)
+		}
+	})
+
+	t.Run("InvalidResult", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		currentState := entity.StateInitializing
+
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				panic("should not be called")
+			},
+			PauseFn: func() error {
+				return nil
+			},
+			ResumeFn: func() error {
+				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
+				return nil
+			},
+			StateFn: func() entity.State {
+				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			},
+			StopFn: func() error {
+				return nil
+			},
+		}
+
+		vm.FuelTank = &mock.FuelTankService{
+			StatsFn: func(ctx context.Context) (*entity.FuelStat, error) {
+				return nil, nil
+			},
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				return nil
+			},
+		}
+
+		if err := vm.Resume(); err != nil {
+			t.Errorf("Unexpected error: %s", err.Error())
+		}
+
+		if _, err := vm.Stats(context.Background()); err == nil {
+			t.Errorf("Expected error")
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINTERNAL {
+			t.Errorf("Unexpected error got %s, want %s", errCode, apperr.EINTERNAL)
+		}
+	})
+}
+
 func TestVm_UpdateContract(t *testing.T) {
 
 	t.Run("OK", func(t *testing.T) {

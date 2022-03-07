@@ -459,39 +459,6 @@ func TestVm_Close(t *testing.T) {
 	})
 }
 
-func TestVm_Stats(t *testing.T) {
-
-	t.Run("OK", func(t *testing.T) {
-
-		vm := mgvm.NewMusicGangVM()
-
-		now := time.Now()
-
-		vm.FuelTank = &mock.FuelTankService{
-			StatsFn: func(ctx context.Context) (*entity.FuelStat, error) {
-				return &entity.FuelStat{
-					FuelCapacity:    100,
-					FuelUsed:        50,
-					LastRefuelAmout: 5,
-					LastRefuelAt:    now,
-				}, nil
-			},
-		}
-
-		if stats, err := vm.Stats(context.Background()); err != nil {
-			t.Errorf("Unexpected error: %s", err.Error())
-		} else if stats.FuelCapacity != 100 {
-			t.Errorf("Unexpected stats, got: %d, want: %d", stats.FuelCapacity, 100)
-		} else if stats.FuelUsed != 50 {
-			t.Errorf("Unexpected stats, got: %d, want: %d", stats.FuelUsed, 50)
-		} else if stats.LastRefuelAmout != 5 {
-			t.Errorf("Unexpected stats, got: %d, want: %d", stats.LastRefuelAmout, 5)
-		} else if stats.LastRefuelAt.Unix() != now.Unix() {
-			t.Errorf("Unexpected stats, got: %s, want: %s", stats.LastRefuelAt, now)
-		}
-	})
-}
-
 func TestVm_Meter(t *testing.T) {
 
 	t.Run("OK", func(t *testing.T) {
