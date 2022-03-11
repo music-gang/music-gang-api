@@ -21,7 +21,6 @@ func TestAnchorageContractExecutor_ExecContract(t *testing.T) {
 	contract := &entity.Contract{
 		MaxFuel: entity.FuelLongActionAmount,
 		LastRevision: &entity.Revision{
-			Code:         code,
 			CompiledCode: []byte(code),
 		},
 	}
@@ -64,7 +63,6 @@ func TestAnchorageContractExecutor_ExecContract(t *testing.T) {
 		contract := &entity.Contract{
 			MaxFuel: entity.FuelLongActionAmount,
 			LastRevision: &entity.Revision{
-				Code:         code,
 				CompiledCode: []byte(code),
 			},
 		}
@@ -90,7 +88,6 @@ func TestAnchorageContractExecutor_ExecContract(t *testing.T) {
 		contract := &entity.Contract{
 			MaxFuel: entity.FuelLongActionAmount,
 			LastRevision: &entity.Revision{
-				Code:         code,
 				CompiledCode: []byte(code),
 			},
 		}

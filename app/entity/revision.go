@@ -31,7 +31,6 @@ type Revision struct {
 	Version      RevisionVersion `json:"version"`
 	ContractID   int64           `json:"contract_id"`
 	Notes        string          `json:"notes"`
-	Code         string          `json:"code"`
 	CompiledCode []byte          `json:"-"`
 	MaxFuel      Fuel            `json:"max_fuel"`
 
@@ -44,10 +43,6 @@ func (r *Revision) Validate() error {
 	if r.Rev == 0 {
 
 		return apperr.Errorf(apperr.EINVALID, "revision number cannot be zero")
-
-	} else if r.Code == "" {
-
-		return apperr.Errorf(apperr.EINVALID, "code is required")
 
 	} else if r.ContractID == 0 {
 

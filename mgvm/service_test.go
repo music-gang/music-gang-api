@@ -15,15 +15,17 @@ import (
 
 func TestVm_ExecContract(t *testing.T) {
 
+	code := `
+		function sum(a, b) {
+			return a+b;
+		}
+		var result = sum(1, 2);
+	`
+
 	contract := &entity.Contract{
 		MaxFuel: entity.FuelLongActionAmount,
 		LastRevision: &entity.Revision{
-			Code: `
-					function sum(a, b) {
-						return a+b;
-					}
-					var result = sum(1, 2);
-				`,
+			CompiledCode: []byte(code),
 		},
 	}
 
@@ -572,15 +574,17 @@ func TestVm_MakeRevision(t *testing.T) {
 			}
 		}()
 
+		code := `
+			function sum(a, b) {
+				return a+b;
+			}
+			var result = sum(1, 2);
+		`
+
 		contract := &entity.Contract{
 			MaxFuel: entity.FuelLongActionAmount,
 			LastRevision: &entity.Revision{
-				Code: `
-					function sum(a, b) {
-						return a+b;
-					}
-					var result = sum(1, 2);
-				`,
+				CompiledCode: []byte(code),
 			},
 		}
 
@@ -786,18 +790,20 @@ func TestVm_UpdateContract(t *testing.T) {
 			},
 		}
 
+		code := `
+			function sum(a, b) {
+				return a+b;
+			}
+			var result = sum(1, 2);
+		`
+
 		contract := &entity.Contract{
 			ID:          1,
 			Name:        "test",
 			Description: "test",
 			MaxFuel:     entity.FuelLongActionAmount,
 			LastRevision: &entity.Revision{
-				Code: `
-					function sum(a, b) {
-						return a+b;
-					}
-					var result = sum(1, 2);
-				`,
+				CompiledCode: []byte(code),
 			},
 		}
 

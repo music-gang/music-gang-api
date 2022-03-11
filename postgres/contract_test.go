@@ -767,7 +767,6 @@ func TestContract_MakeRevision(t *testing.T) {
 		revision := &entity.Revision{
 			Version:      entity.AnchorageVersion,
 			ContractID:   contract.ID,
-			Code:         code,
 			Notes:        notes,
 			CompiledCode: []byte(code),
 			MaxFuel:      entity.FuelInstantActionAmount,
@@ -805,7 +804,6 @@ func TestContract_MakeRevision(t *testing.T) {
 		revision := &entity.Revision{
 			Version:      entity.AnchorageVersion,
 			ContractID:   contract.ID,
-			Code:         code,
 			Notes:        notes,
 			CompiledCode: []byte(code),
 		}
@@ -840,7 +838,6 @@ func TestContract_MakeRevision(t *testing.T) {
 		revision := &entity.Revision{
 			Version:      entity.AnchorageVersion,
 			ContractID:   contract.ID,
-			Code:         code,
 			Notes:        notes,
 			CompiledCode: []byte(code),
 			MaxFuel:      entity.FuelInstantActionAmount,
@@ -858,7 +855,6 @@ func TestContract_MakeRevision(t *testing.T) {
 		newRevision := &entity.Revision{
 			Version:      entity.AnchorageVersion,
 			ContractID:   contract.ID,
-			Code:         newCode,
 			Notes:        newNotes,
 			CompiledCode: []byte(newCode),
 			MaxFuel:      entity.FuelInstantActionAmount,
@@ -886,7 +882,6 @@ func TestContract_MakeRevision(t *testing.T) {
 		revision := &entity.Revision{
 			Version:      entity.AnchorageVersion,
 			ContractID:   1,
-			Code:         code,
 			Notes:        notes,
 			CompiledCode: []byte(code),
 			MaxFuel:      entity.FuelInstantActionAmount,
@@ -926,7 +921,6 @@ func TestContract_MakeRevision(t *testing.T) {
 		revision := &entity.Revision{
 			Version:      entity.AnchorageVersion,
 			ContractID:   contract.ID,
-			Code:         code,
 			Notes:        notes,
 			CompiledCode: []byte(code),
 			MaxFuel:      entity.FuelInstantActionAmount,
@@ -962,7 +956,6 @@ func TestContract_MakeRevision(t *testing.T) {
 		revision := &entity.Revision{
 			Version:      entity.AnchorageVersion,
 			ContractID:   contract.ID,
-			Code:         code,
 			Notes:        notes,
 			CompiledCode: []byte(code),
 			MaxFuel:      entity.FuelInstantActionAmount,
@@ -1003,7 +996,6 @@ func TestContract_MakeRevision(t *testing.T) {
 
 			revision := &entity.Revision{
 				ContractID:   contract.ID,
-				Code:         code,
 				Notes:        notes,
 				CompiledCode: []byte(code),
 				MaxFuel:      entity.FuelInstantActionAmount,
@@ -1030,42 +1022,12 @@ func TestContract_MakeRevision(t *testing.T) {
 
 			revision := &entity.Revision{
 				Version:      entity.AnchorageVersion,
-				Code:         code,
 				Notes:        notes,
 				CompiledCode: []byte(code),
 				MaxFuel:      entity.FuelInstantActionAmount,
 			}
 
 			if err := cs.MakeRevision(context.Background(), revision); err == nil {
-				t.Fatal("expected error")
-			} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINVALID {
-				t.Fatalf("expected %s, got %s", apperr.EINVALID, errCode)
-			}
-		})
-
-		t.Run("MissingCode", func(t *testing.T) {
-
-			db := MustOpenDB(t)
-			defer db.Close()
-
-			TruncateTablesForContractTests(t, db)
-
-			cs := postgres.NewContractService(db)
-
-			contract, ctx := MustCreateContract(t, context.Background(), db, contract, &entity.User{Name: "test-make-revision"})
-
-			code := "test-code"
-			notes := "test-notes"
-
-			revision := &entity.Revision{
-				Version:      entity.AnchorageVersion,
-				ContractID:   contract.ID,
-				Notes:        notes,
-				CompiledCode: []byte(code),
-				MaxFuel:      entity.FuelInstantActionAmount,
-			}
-
-			if err := cs.MakeRevision(ctx, revision); err == nil {
 				t.Fatal("expected error")
 			} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINVALID {
 				t.Fatalf("expected %s, got %s", apperr.EINVALID, errCode)
@@ -1083,14 +1045,12 @@ func TestContract_MakeRevision(t *testing.T) {
 
 			contract, ctx := MustCreateContract(t, context.Background(), db, contract, &entity.User{Name: "test-make-revision"})
 
-			code := "test-code"
 			notes := "test-notes"
 
 			revision := &entity.Revision{
 				Version:    entity.AnchorageVersion,
 				ContractID: contract.ID,
 				Notes:      notes,
-				Code:       code,
 				MaxFuel:    entity.FuelInstantActionAmount,
 			}
 
@@ -1124,7 +1084,6 @@ func TestContract_FindRevisionByContractAndRev(t *testing.T) {
 			Contract: contract,
 			User:     &entity.User{Name: "test-find-revision-by-contract-and-rev"},
 			Revision: &entity.Revision{
-				Code:         "test-code",
 				CompiledCode: []byte("test-code"),
 				Version:      entity.CurrentRevisionVersion,
 			},
@@ -1158,7 +1117,6 @@ func TestContract_FindRevisionByContractAndRev(t *testing.T) {
 			Contract: contract,
 			User:     &entity.User{Name: "test-find-revision-by-contract-and-rev"},
 			Revision: &entity.Revision{
-				Code:         "test-code",
 				CompiledCode: []byte("test-code"),
 				Version:      entity.CurrentRevisionVersion,
 			},
@@ -1210,7 +1168,6 @@ func TestContract_FindRevisionByContractAndRev(t *testing.T) {
 			Contract: contract,
 			User:     &entity.User{Name: "test-find-revision-by-contract-and-rev"},
 			Revision: &entity.Revision{
-				Code:         "test-code",
 				CompiledCode: []byte("test-code"),
 				Version:      entity.CurrentRevisionVersion,
 			},
@@ -1244,7 +1201,6 @@ func TestContract_FindRevisionByContractAndRev(t *testing.T) {
 			Contract: contract,
 			User:     &entity.User{Name: "test-find-revision-by-contract-and-rev"},
 			Revision: &entity.Revision{
-				Code:         "test-code",
 				CompiledCode: []byte("test-code"),
 				Version:      entity.CurrentRevisionVersion,
 			},
@@ -1259,7 +1215,6 @@ func TestContract_FindRevisionByContractAndRev(t *testing.T) {
 			revision := &entity.Revision{
 				Version:      entity.AnchorageVersion,
 				ContractID:   contract.ID,
-				Code:         revisionCode,
 				CompiledCode: []byte(revisionCode),
 				MaxFuel:      entity.FuelInstantActionAmount,
 			}

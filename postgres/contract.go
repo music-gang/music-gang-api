@@ -407,7 +407,6 @@ func findRevisions(ctx context.Context, tx *Tx, filter service.RevisionFilter) (
 			version,
 			contract_id,
 			notes,
-			code,
 			compiled_code,
 			max_fuel,
 			created_at,
@@ -434,7 +433,6 @@ func findRevisions(ctx context.Context, tx *Tx, filter service.RevisionFilter) (
 			&revision.Version,
 			&revision.ContractID,
 			&revision.Notes,
-			&revision.Code,
 			&revision.CompiledCode,
 			&revision.MaxFuel,
 			&revision.CreatedAt,
@@ -467,12 +465,11 @@ func makeRevision(ctx context.Context, tx *Tx, revision *entity.Revision) error 
 			version,
 			contract_id,
 			notes,
-			code,
 			compiled_code,
 			max_fuel,
 			created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id
-	`, revision.Rev, revision.Version, revision.ContractID, revision.Notes, revision.Code, revision.CompiledCode, revision.MaxFuel, revision.CreatedAt).Scan(&revision.ID); err != nil {
+		) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id
+	`, revision.Rev, revision.Version, revision.ContractID, revision.Notes, revision.CompiledCode, revision.MaxFuel, revision.CreatedAt).Scan(&revision.ID); err != nil {
 		return apperr.Errorf(apperr.EINTERNAL, "failed to insert revision: %v", err)
 	}
 
