@@ -20,6 +20,12 @@ app:
   slack:
     webhook: your-slack-webhook-url
 
+  vm:
+    maxFuelTank: 100 vKFuel
+    maxExecutionTime: 10s
+    refuelAmount: 5 vKFuel
+    refuelRate: 400ms
+
   databases:
     postgres:
       database: database_name

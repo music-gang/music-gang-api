@@ -31,6 +31,28 @@ func init() {
 			log.Fatalf("Failed to load config: %v", err)
 		}
 	}
+
+	// During the init func are loaded the vm configs from the config file.
+
+	fuelRefillAmountFromConfig := config.GetConfig().APP.Vm.RefuelAmount
+	if f, err := entity.ParseFuel(fuelRefillAmountFromConfig); err == nil {
+		entity.FuelRefillAmount = f
+	}
+
+	fuelRefillRateFromConfig := config.GetConfig().APP.Vm.RefuelRate
+	if r, err := time.ParseDuration(fuelRefillRateFromConfig); err == nil {
+		entity.FuelRefillRate = r
+	}
+
+	FuelTankCapacityFromConfig := config.GetConfig().APP.Vm.MaxFuelTank
+	if f, err := entity.ParseFuel(FuelTankCapacityFromConfig); err == nil {
+		entity.FuelTankCapacity = f
+	}
+
+	maxExecutionTimeFromConfig := config.GetConfig().APP.Vm.MaxExecutionTime
+	if t, err := time.ParseDuration(maxExecutionTimeFromConfig); err == nil {
+		entity.MaxExecutionTime = t
+	}
 }
 
 func main() {
@@ -167,7 +189,7 @@ func (m *Main) Run(ctx context.Context) error {
 	fuelStationService.FuelTankService = fuelTankService
 	fuelStationService.LogService = logService
 	fuelStationService.FuelRefillAmount = entity.FuelRefillAmount
-	fuelStationService.FuelRefillRate = 400 * time.Millisecond // TODO: Make configurable
+	fuelStationService.FuelRefillRate = entity.FuelRefillRate
 
 	anchorageExecutor := executor.NewAnchorageContractExecutor()
 	engineService := mgvm.NewEngine()

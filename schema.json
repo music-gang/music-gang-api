@@ -43,13 +43,17 @@
                 },
                 "databases": {
                     "$ref": "#/definitions/Databases"
+                },
+                "vm": {
+                    "$ref": "#/definitions/Vm"
                 }
             },
             "required": [
                 "jwt",
                 "auths",
                 "redis",
-                "databases"
+                "databases",
+                "vm"
             ],
             "title": "App"
         },
@@ -210,6 +214,24 @@
             "required": [
                 "webhook"
             ]
+        },
+        "Vm": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "maxFuelTank": {
+                    "type": "string"
+                },
+                "maxExecutionTime": {
+                    "type": "string"
+                },
+                "refuelAmount": {
+                    "type": "string"
+                },
+                "refuelRate": {
+                    "type": "string"
+                }
+            }
         }
     }
 }

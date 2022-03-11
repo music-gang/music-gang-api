@@ -10,6 +10,8 @@ import (
 
 const (
 	configFile = "config.yaml"
+
+	
 )
 
 // cfg is the config loaded from LoadConfigWithOptions
@@ -101,6 +103,14 @@ type DatabaseListConfig struct {
 	Postgres DatabaseConfig `yaml:"postgres"`
 }
 
+// VmConfig contains the vm config
+type VmConfig struct {
+	MaxFuelTank      string `yaml:"maxFuelTank"`
+	MaxExecutionTime string `yaml:"maxExecutionTime"`
+	RefuelAmount     string `yaml:"refuelAmount"`
+	RefuelRate       string `yaml:"refuelRate"`
+}
+
 type AppConfig struct {
 	// HTTP is the http config
 	HTTP HTTPConfig `yaml:"http"`
@@ -119,6 +129,9 @@ type AppConfig struct {
 
 	// Redis contains the redis configuration
 	Redis RedisConfig `yaml:"redis"`
+
+	// Vm contains the vm configuration
+	Vm VmConfig `yaml:"vm"`
 }
 
 // Config - Configuration

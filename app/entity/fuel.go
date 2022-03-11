@@ -2,7 +2,10 @@ package entity
 
 import (
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/music-gang/music-gang-api/app/apperr"
 )
 
 // Fuel is a virtual unit of measure for the power consuption of the MusicGang VM.
@@ -38,19 +41,20 @@ const (
 
 // FuelRefillAmount retruns how much fuel is refilled at a time.
 // It is equivalent to 5% of the capacity of the fuel tank.
-const FuelRefillAmount = Fuel(FuelTankCapacity * 5 / 100)
+// This is the default value that may be overwritten by the init function.
+var FuelRefillAmount = Fuel(FuelTankCapacity * 5 / 100)
+
+// FuelRefillRate returns the rate of fuel refill.
+// This is the default value that may be overwritten by the init function.
+var FuelRefillRate = 400 * time.Millisecond
 
 // FuelTankCapacity is the maximum capacity of the fuel tank.
-// TODO: this should be a configurable value.
-const FuelTankCapacity = 100 * vKFuel
+// This is the default value that may be overwritten by the init function.
+var FuelTankCapacity = 100 * vKFuel
 
 // MaxExecutionTime returns the maximum execution time of an action.
-// TODO: this should be a configurable value.
-const MaxExecutionTime = 10 * time.Second
-
-// MinExecutionTime returns the minimum execution time of an action.
-// In fact, action can be executed in less than the minimum execution time.
-const MinExecutionTime = time.Millisecond * 100
+// This is the default value that may be overwritten by the init function.
+var MaxExecutionTime = 10 * time.Second
 
 var (
 	// fuelAmountTable is a grid of fuel costs based on the execution time.
@@ -94,6 +98,42 @@ func MaxExecutionTimeFromFuel(fuel Fuel) time.Duration {
 	}
 
 	return MaxExecutionTime
+}
+
+// ParseFuel accepts a string and returns a Fuel unit measurement, like the vFuel, vKFuel, vMFuel, vGFuel, vTFuel.
+// for an example, 10 vKFuel is equal to 10 * 1024 = 10240.
+func ParseFuel(s string) (Fuel, error) {
+	var fuel Fuel
+
+	arrF := strings.Split(s, " ")
+
+	if len(arrF) != 2 {
+		return 0, apperr.Errorf(apperr.EINVALID, "invalid config fuel format: %s", s)
+	}
+
+	f, err := strconv.ParseUint(arrF[0], 10, 64)
+	if err != nil {
+		return 0, apperr.Errorf(apperr.EINVALID, "Cannot parse fuel amount: %s", s)
+	}
+
+	fuel = Fuel(f)
+
+	switch arrF[1] {
+	case "vFuel":
+		break
+	case "vKFuel":
+		fuel *= vKFuel
+	case "vMFuel":
+		fuel *= vMFuel
+	case "vGFuel":
+		fuel *= vGFuel
+	case "vTFuel":
+		fuel *= vTFuel
+	default:
+		return 0, apperr.Errorf(apperr.EINVALID, "invalid config fuel format: %s", s)
+	}
+
+	return Fuel(fuel), nil
 }
 
 // FuelStats represents the statistics of the fuel tank.
