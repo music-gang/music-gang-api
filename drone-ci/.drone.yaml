@@ -60,120 +60,120 @@ steps:
       - while ! curl -m 60 --retry 10 build-and-run:8888; do sleep 1; done
       - bundle exec rspec --format doc
 
-  # TAGGED DOCKER IMAGE BUILD
-  - name: publish-docker-image
-    image: plugins/docker
-    when:
-      event:
-        - tag
-    settings:
-      repo:
-        from_secret: docker_repo
-      tags:
-        - latest
-        - ${DRONE_TAG}
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
+  # # TAGGED DOCKER IMAGE BUILD
+  # - name: publish-docker-image
+  #   image: plugins/docker
+  #   when:
+  #     event:
+  #       - tag
+  #   settings:
+  #     repo:
+  #       from_secret: docker_repo
+  #     tags:
+  #       - latest
+  #       - ${DRONE_TAG}
+  #     username:
+  #       from_secret: docker_username
+  #     password:
+  #       from_secret: docker_password
 
-  # DEVELOPMENT DOCKER IMAGE BUILD
-  - name: publish-docker-image-development
-    image: plugins/docker
-    when:
-      event:
-        - promote
-        - rollback
-      target:
-        exclude:
-          - production
-          - staging
-    settings:
-      repo:
-        from_secret: docker_repo
-      tags:
-        - latest
-        - ${DRONE_DEPLOY_TO}-${DRONE_BUILD_NUMBER}
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
+  # # DEVELOPMENT DOCKER IMAGE BUILD
+  # - name: publish-docker-image-development
+  #   image: plugins/docker
+  #   when:
+  #     event:
+  #       - promote
+  #       - rollback
+  #     target:
+  #       exclude:
+  #         - production
+  #         - staging
+  #   settings:
+  #     repo:
+  #       from_secret: docker_repo
+  #     tags:
+  #       - latest
+  #       - ${DRONE_DEPLOY_TO}-${DRONE_BUILD_NUMBER}
+  #     username:
+  #       from_secret: docker_username
+  #     password:
+  #       from_secret: docker_password
 
-  # NIGHTLY BUILD
-  - name: nightly-docker-image
-    image: plugins/docker
-    when:
-      event:
-        - cron
-    settings:
-      repo:
-        from_secret: docker_repo
-      tags:
-        - latest
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
+  # # NIGHTLY BUILD
+  # - name: nightly-docker-image
+  #   image: plugins/docker
+  #   when:
+  #     event:
+  #       - cron
+  #   settings:
+  #     repo:
+  #       from_secret: docker_repo
+  #     tags:
+  #       - latest
+  #     username:
+  #       from_secret: docker_username
+  #     password:
+  #       from_secret: docker_password
 
-  # UPDATE PROD MANIFEST
-  - name: update-manifest-prod
-    image: minghsu0107/update-kustomization:v1.0.3
-    environment:
-      SSH_KEY:
-        from_secret: ssh_key
-      IMAGES: iacopomelani/music-gang-api
-      IMAGE_TAG: ${DRONE_TAG}
-      MANIFEST_HOST: github.com
-      MANIFEST_USER: music-gang
-      MANIFEST_REPO: music-gang-api-manifest
-      MANIFEST_BRANCH: master
-      KUSTOMIZATION: overlays/prod
-    when:
-      event:
-        - promote
-        - rollback
-      target:
-        - production
+  # # UPDATE PROD MANIFEST
+  # - name: update-manifest-prod
+  #   image: minghsu0107/update-kustomization:v1.0.3
+  #   environment:
+  #     SSH_KEY:
+  #       from_secret: ssh_key
+  #     IMAGES: iacopomelani/music-gang-api
+  #     IMAGE_TAG: ${DRONE_TAG}
+  #     MANIFEST_HOST: github.com
+  #     MANIFEST_USER: music-gang
+  #     MANIFEST_REPO: music-gang-api-manifest
+  #     MANIFEST_BRANCH: master
+  #     KUSTOMIZATION: overlays/prod
+  #   when:
+  #     event:
+  #       - promote
+  #       - rollback
+  #     target:
+  #       - production
 
-  # UPDATE STAGING MANIFEST
-  - name: update-manifest-staging
-    image: minghsu0107/update-kustomization:v1.0.3
-    environment:
-      SSH_KEY:
-        from_secret: ssh_key
-      IMAGES: iacopomelani/music-gang-api
-      IMAGE_TAG: ${DRONE_TAG}
-      MANIFEST_HOST: github.com
-      MANIFEST_USER: music-gang
-      MANIFEST_REPO: music-gang-api-manifest
-      MANIFEST_BRANCH: master
-      KUSTOMIZATION: overlays/stage
-    when:
-      event:
-        - promote
-        - rollback
-      target:
-        - staging
+  # # UPDATE STAGING MANIFEST
+  # - name: update-manifest-staging
+  #   image: minghsu0107/update-kustomization:v1.0.3
+  #   environment:
+  #     SSH_KEY:
+  #       from_secret: ssh_key
+  #     IMAGES: iacopomelani/music-gang-api
+  #     IMAGE_TAG: ${DRONE_TAG}
+  #     MANIFEST_HOST: github.com
+  #     MANIFEST_USER: music-gang
+  #     MANIFEST_REPO: music-gang-api-manifest
+  #     MANIFEST_BRANCH: master
+  #     KUSTOMIZATION: overlays/stage
+  #   when:
+  #     event:
+  #       - promote
+  #       - rollback
+  #     target:
+  #       - staging
 
-  # UPDATE DEV MANIFEST
-  - name: update-manifest-dev-${DRONE_DEPLOY_TO}
-    image: minghsu0107/update-kustomization:v1.0.3
-    environment:
-      SSH_KEY:
-        from_secret: ssh_key
-      IMAGES: iacopomelani/music-gang-api
-      IMAGE_TAG: ${DRONE_DEPLOY_TO}-${DRONE_BUILD_NUMBER}
-      MANIFEST_HOST: github.com
-      MANIFEST_USER: music-gang
-      MANIFEST_REPO: music-gang-api-manifest
-      MANIFEST_BRANCH: master
-      KUSTOMIZATION: overlays/dev/${DRONE_DEPLOY_TO}
-    when:
-      event:
-        - promote
-        - rollback
-      target:
-        - mercury
+  # # UPDATE DEV MANIFEST
+  # - name: update-manifest-dev-${DRONE_DEPLOY_TO}
+  #   image: minghsu0107/update-kustomization:v1.0.3
+  #   environment:
+  #     SSH_KEY:
+  #       from_secret: ssh_key
+  #     IMAGES: iacopomelani/music-gang-api
+  #     IMAGE_TAG: ${DRONE_DEPLOY_TO}-${DRONE_BUILD_NUMBER}
+  #     MANIFEST_HOST: github.com
+  #     MANIFEST_USER: music-gang
+  #     MANIFEST_REPO: music-gang-api-manifest
+  #     MANIFEST_BRANCH: master
+  #     KUSTOMIZATION: overlays/dev/${DRONE_DEPLOY_TO}
+  #   when:
+  #     event:
+  #       - promote
+  #       - rollback
+  #     target:
+  #       - mercury
 
   # SLACK NOTIFICATIONS
   - name: slack
@@ -199,6 +199,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: 02bcb0c55cf2ec115b2622c0988c68a70324708d20c25fda2c5454e494cb6deb
-
-...
+hmac: f415b3098400a69fe459532c83d88d5543be62c7fdd8e734ffaf4adcebca29d0
