@@ -174,7 +174,8 @@ func (s *ServerAPI) registerContractRoutes(g *echo.Group) {
 	g.PUT("/:id", s.ContractUpdateHandler)
 	g.GET("/:id", s.ContractHandler)
 	g.POST("/:id/revision", s.ContractMakeRevisionHandler)
-	g.POST("/:id/call", nil)
+	g.POST("/:id/call", s.ContractCallHandler)         // latest revision
+	g.POST("/:id/call/:rev", s.ContractCallRevHandler) // specific revision
 }
 
 // registerUserRoutes register all routes for the API group user.

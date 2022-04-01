@@ -93,6 +93,9 @@ func TestContract_ContractCreateHandler(t *testing.T) {
 			ContractService: &mock.ContractService{
 				CreateContractFn: func(ctx context.Context, contract *entity.Contract) error {
 					contract.ID = 1
+					if err := contract.Validate(); err != nil {
+						return err
+					}
 					return nil
 				},
 			},
@@ -871,6 +874,375 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			t.Fatalf("expected revision id 1, got %d", revisionData.Revision.ID)
 		} else if revisionData.Revision.ContractID != 1 {
 			t.Fatalf("expected revision contract id 1, got %d", revisionData.Revision.ContractID)
+		}
+	})
+
+	t.Run("InvalidContractID", func(t *testing.T) {
+
+		s := MustOpenServerAPI(t)
+		defer MustCloseServerAPI(t, s)
+
+		s.JWTService = &mock.JWTService{
+			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
+				if token == "OK" {
+					return &entity.AppClaims{
+						Auth: &entity.Auth{
+							UserID: 1,
+							ID:     1,
+							User:   &entity.User{ID: 1},
+						},
+					}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "unauthorized")
+			},
+		}
+
+		s.UserSearchService = &mock.UserService{
+			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
+				if id == 1 {
+					return &entity.User{ID: 1}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
+			},
+		}
+
+		s.AuthSearchService = &mock.AuthService{
+			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
+				if id == 1 {
+					return &entity.Auth{
+						UserID: 1,
+						ID:     1,
+						User:   &entity.User{ID: 1},
+					}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.ENOTFOUND, "auth not found")
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodPost, s.URL()+"/v1/contract/invalid/revision", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Header.Set("Authorization", "Bearer OK")
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Fatalf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
+		}
+	})
+
+	t.Run("MissingJsonBody", func(t *testing.T) {
+
+		s := MustOpenServerAPI(t)
+		defer MustCloseServerAPI(t, s)
+
+		s.JWTService = &mock.JWTService{
+			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
+				if token == "OK" {
+					return &entity.AppClaims{
+						Auth: &entity.Auth{
+							UserID: 1,
+							ID:     1,
+							User:   &entity.User{ID: 1},
+						},
+					}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "unauthorized")
+			},
+		}
+
+		s.UserSearchService = &mock.UserService{
+			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
+				if id == 1 {
+					return &entity.User{ID: 1}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
+			},
+		}
+
+		s.AuthSearchService = &mock.AuthService{
+			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
+				if id == 1 {
+					return &entity.Auth{
+						UserID: 1,
+						ID:     1,
+						User:   &entity.User{ID: 1},
+					}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.ENOTFOUND, "auth not found")
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodPost, s.URL()+"/v1/contract/1/revision", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Header.Set("Authorization", "Bearer OK")
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Fatalf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
+		}
+	})
+
+	t.Run("MissingJsonBody", func(t *testing.T) {
+
+		s := MustOpenServerAPI(t)
+		defer MustCloseServerAPI(t, s)
+
+		s.JWTService = &mock.JWTService{
+			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
+				if token == "OK" {
+					return &entity.AppClaims{
+						Auth: &entity.Auth{
+							UserID: 1,
+							ID:     1,
+							User:   &entity.User{ID: 1},
+						},
+					}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "unauthorized")
+			},
+		}
+
+		s.UserSearchService = &mock.UserService{
+			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
+				if id == 1 {
+					return &entity.User{ID: 1}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
+			},
+		}
+
+		s.AuthSearchService = &mock.AuthService{
+			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
+				if id == 1 {
+					return &entity.Auth{
+						UserID: 1,
+						ID:     1,
+						User:   &entity.User{ID: 1},
+					}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.ENOTFOUND, "auth not found")
+			},
+		}
+
+		var b bytes.Buffer
+		writer := multipart.NewWriter(&b)
+		part, err := writer.CreateFormField("revision")
+		if err != nil {
+			t.Fatal(err)
+		} else if _, err := io.WriteString(part, "invalid json"); err != nil {
+			t.Fatal(err)
+		}
+		if err := writer.Close(); err != nil {
+			t.Fatal(err)
+		}
+
+		req, err := http.NewRequest(http.MethodPost, s.URL()+"/v1/contract/1/revision", &b)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Header.Set("Authorization", "Bearer OK")
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Fatalf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
+		}
+	})
+
+	t.Run("MissingFile", func(t *testing.T) {
+
+		s := MustOpenServerAPI(t)
+		defer MustCloseServerAPI(t, s)
+
+		s.JWTService = &mock.JWTService{
+			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
+				if token == "OK" {
+					return &entity.AppClaims{
+						Auth: &entity.Auth{
+							UserID: 1,
+							ID:     1,
+							User:   &entity.User{ID: 1},
+						},
+					}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "unauthorized")
+			},
+		}
+
+		s.UserSearchService = &mock.UserService{
+			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
+				if id == 1 {
+					return &entity.User{ID: 1}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
+			},
+		}
+
+		s.AuthSearchService = &mock.AuthService{
+			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
+				if id == 1 {
+					return &entity.Auth{
+						UserID: 1,
+						ID:     1,
+						User:   &entity.User{ID: 1},
+					}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.ENOTFOUND, "auth not found")
+			},
+		}
+
+		var b bytes.Buffer
+		writer := multipart.NewWriter(&b)
+		part, err := writer.CreateFormField("revision")
+		if err != nil {
+			t.Fatal(err)
+		} else if _, err := io.WriteString(part, revisionRequestBody); err != nil {
+			t.Fatal(err)
+		}
+		if err := writer.Close(); err != nil {
+			t.Fatal(err)
+		}
+
+		req, err := http.NewRequest(http.MethodPost, s.URL()+"/v1/contract/1/revision", &b)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Header.Set("Authorization", "Bearer OK")
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Fatalf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
+		}
+	})
+
+	t.Run("ErrMakeRevision", func(t *testing.T) {
+
+		s := MustOpenServerAPI(t)
+		defer MustCloseServerAPI(t, s)
+
+		s.JWTService = &mock.JWTService{
+			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
+				if token == "OK" {
+					return &entity.AppClaims{
+						Auth: &entity.Auth{
+							UserID: 1,
+							ID:     1,
+							User:   &entity.User{ID: 1},
+						},
+					}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "unauthorized")
+			},
+		}
+
+		s.UserSearchService = &mock.UserService{
+			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
+				if id == 1 {
+					return &entity.User{ID: 1}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
+			},
+		}
+
+		s.AuthSearchService = &mock.AuthService{
+			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
+				if id == 1 {
+					return &entity.Auth{
+						UserID: 1,
+						ID:     1,
+						User:   &entity.User{ID: 1},
+					}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.ENOTFOUND, "auth not found")
+			},
+		}
+
+		s.VmCallableService = &mock.VmCallableService{
+			ContractService: &mock.ContractService{
+				MakeRevisionFn: func(ctx context.Context, revision *entity.Revision) error {
+					return apperr.Errorf(apperr.EINTERNAL, "internal error")
+				},
+			},
+		}
+
+		var b bytes.Buffer
+		writer := multipart.NewWriter(&b)
+
+		file := mustOpen("revision_example/revision_test.js")
+		defer file.Close()
+
+		part, err := writer.CreateFormFile("compiled_revision", file.Name())
+		if err != nil {
+			t.Fatal(err)
+		}
+		io.Copy(part, file)
+
+		part, err = writer.CreateFormField("revision")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := part.Write([]byte(revisionRequestBody)); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := writer.Close(); err != nil {
+			t.Fatal(err)
+		}
+
+		req, err := http.NewRequest(http.MethodPost, s.URL()+"/v1/contract/1/revision", &b)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Header.Set("Authorization", "Bearer OK")
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if resp.StatusCode != http.StatusInternalServerError {
+			t.Fatalf("expected status code %d, got %d", http.StatusInternalServerError, resp.StatusCode)
 		}
 	})
 }

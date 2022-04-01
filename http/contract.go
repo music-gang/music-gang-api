@@ -13,6 +13,66 @@ import (
 	"github.com/music-gang/music-gang-api/app/service"
 )
 
+// ContractCallHandler is the handler for the /contract/:id/call API.
+func (s *ServerAPI) ContractCallHandler(c echo.Context) error {
+
+	contractID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid contract id"), nil)
+	}
+
+	return handleContractCall(c, s, contractID, 0)
+}
+
+// ContractCallRevHandler is the handler for the /contract/:id/call/:rev API.
+func (s *ServerAPI) ContractCallRevHandler(c echo.Context) error {
+
+	contractID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid contract id"), nil)
+	}
+
+	revisionNumber, err := strconv.ParseInt(c.Param("rev"), 10, 64)
+	if err != nil {
+		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid revision number"), nil)
+	}
+
+	return handleContractCall(c, s, contractID, entity.RevisionNumber(revisionNumber))
+}
+
+// handleContractCall handles the /contract/:id/call and /contract/:id/call/:rev business logic.
+func handleContractCall(c echo.Context, s *ServerAPI, contractID int64, revisionNumber entity.RevisionNumber) (err error) {
+
+	var revision *entity.Revision
+
+	if revisionNumber != 0 {
+		revision, err = s.ContractSearchService.FindRevisionByContractAndRev(c.Request().Context(), contractID, revisionNumber)
+		if err != nil {
+			s.LogService.ReportError(c.Request().Context(), err)
+			return ErrorResponseJSON(c, err, nil)
+		}
+	} else {
+
+		contract, err := s.ContractSearchService.FindContractByID(c.Request().Context(), contractID)
+		if err != nil {
+			s.LogService.ReportError(c.Request().Context(), err)
+			return ErrorResponseJSON(c, err, nil)
+		}
+
+		revision = contract.LastRevision
+	}
+
+	result, err := s.VmCallableService.ExecContract(c.Request().Context(), revision)
+	if err != nil {
+		s.LogService.ReportError(c.Request().Context(), err)
+		return ErrorResponseJSON(c, err, nil)
+	}
+
+	return SuccessResponseJSON(c, http.StatusOK, echo.Map{
+		"result": result,
+	})
+}
+
 // ContractHandler is the handler for the /contract/:id search API.
 func (s *ServerAPI) ContractHandler(c echo.Context) error {
 
