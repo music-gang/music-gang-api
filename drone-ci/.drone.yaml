@@ -32,7 +32,7 @@ services:
 steps:
   # TESTING
   - name: test
-    image: golang:1.17
+    image: golang:1.18
     commands:
       - sleep 15
       - cp drone-ci/config.drone.yaml config.yaml
@@ -40,7 +40,7 @@ steps:
 
   # BUILD AND RUN
   - name: build-and-run
-    image: golang:1.17
+    image: golang:1.18
     detach: true
     commands:
       - go build -o mg-api cmd/main.go

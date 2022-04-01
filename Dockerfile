@@ -1,4 +1,4 @@
-FROM golang:1.17 AS builder
+FROM golang:1.18 AS builder
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ COPY . .
 RUN GIT_COMMIT=$(git rev-list -1 HEAD) && \ 
     go build -ldflags "-X main.Commit=$GIT_COMMIT" -o mg-api cmd/main.go
 
-FROM debian
+FROM gcr.io/distroless/base-debian11
 
 WORKDIR /app
 
