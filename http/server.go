@@ -37,10 +37,11 @@ type ServerAPI struct {
 	JWTSecret string
 
 	// Services used by HTTP handler.
-	AuthSearchService service.AuthSearchService
-	UserSearchService service.UserSearchService
-	VmCallableService service.VmCallableService
-	JWTService        service.JWTService
+	AuthSearchService     service.AuthSearchService
+	ContractSearchService service.ContractSearchService
+	UserSearchService     service.UserSearchService
+	VmCallableService     service.VmCallableService
+	JWTService            service.JWTService
 
 	// loggin service used by HTTP Server.
 	LogService service.LogService
@@ -151,6 +152,9 @@ func (s *ServerAPI) registerRoutes(g *echo.Group) {
 
 	vmGroup := g.Group("/vm")
 	s.registerVmRoutes(vmGroup)
+
+	contractGroup := g.Group("/contract", s.JWTVerifyMiddleware)
+	s.registerContractRoutes(contractGroup)
 }
 
 // registerAuthRoutes registers all routes for the API group auth.
@@ -162,6 +166,15 @@ func (s *ServerAPI) registerAuthRoutes(g *echo.Group) {
 
 	// oauth2 routes
 	g.GET("/oauth2/:source/callback", nil)
+}
+
+// registerContractRoutes registers all routes for the API group contract.
+func (s *ServerAPI) registerContractRoutes(g *echo.Group) {
+	g.POST("", s.ContractCreateHandler)
+	g.PUT("/:id", s.ContractUpdateHandler)
+	g.GET("/:id", s.ContractHandler)
+	g.POST("/:id/revision", s.ContractMakeRevisionHandler)
+	g.POST("/:id/call", nil)
 }
 
 // registerUserRoutes register all routes for the API group user.

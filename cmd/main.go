@@ -165,8 +165,9 @@ func (m *Main) Run(ctx context.Context) error {
 
 	m.HTTPServerAPI.Addr = config.GetConfig().APP.HTTP.Addr
 	m.HTTPServerAPI.Domain = config.GetConfig().APP.HTTP.Domain
-	m.HTTPServerAPI.UserSearchService = postgresUserService
 	m.HTTPServerAPI.AuthSearchService = authService
+	m.HTTPServerAPI.ContractSearchService = postgresContractService
+	m.HTTPServerAPI.UserSearchService = postgresUserService
 	m.HTTPServerAPI.JWTService = jwtService
 
 	logService := &applog.Logger{}
