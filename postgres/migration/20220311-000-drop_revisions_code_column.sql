@@ -1,1 +1,0 @@
-ALTER TABLE revisions DROP COLUMN code;
