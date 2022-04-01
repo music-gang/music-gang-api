@@ -1,4 +1,4 @@
-# Music Gang, the distributed and modest FaaS 
+# Music Gang, the modest FaaS 
 
 ![facebook_profile_image-blue](https://user-images.githubusercontent.com/24415510/156928418-3d84f432-7ba8-44bc-9c67-fab68f0fc701.png)
 
