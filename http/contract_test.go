@@ -1001,7 +1001,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 		}
 	})
 
-	t.Run("MissingJsonBody", func(t *testing.T) {
+	t.Run("InvalidJsonBody", func(t *testing.T) {
 
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
@@ -1848,6 +1848,75 @@ func TestContract_ContractCallRev(t *testing.T) {
 
 		if resp.StatusCode != http.StatusBadRequest {
 			t.Fatalf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
+		}
+	})
+
+	t.Run("ContractRevNotFound", func(t *testing.T) {
+
+		s := MustOpenServerAPI(t)
+		defer MustCloseServerAPI(t, s)
+
+		s.JWTService = &mock.JWTService{
+			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
+				if token == "OK" {
+					return &entity.AppClaims{
+						Auth: &entity.Auth{
+							UserID: 1,
+							ID:     1,
+							User:   &entity.User{ID: 1},
+						},
+					}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "unauthorized")
+			},
+		}
+
+		s.UserSearchService = &mock.UserService{
+			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
+				if id == 1 {
+					return &entity.User{ID: 1}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
+			},
+		}
+
+		s.AuthSearchService = &mock.AuthService{
+			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
+				if id == 1 {
+					return &entity.Auth{
+						UserID: 1,
+						ID:     1,
+						User:   &entity.User{ID: 1},
+					}, nil
+				}
+
+				return nil, apperr.Errorf(apperr.ENOTFOUND, "auth not found")
+			},
+		}
+
+		s.ContractSearchService = &mock.ContractService{
+			FindRevisionByContractAndRevFn: func(ctx context.Context, contractID int64, rev entity.RevisionNumber) (*entity.Revision, error) {
+				return nil, apperr.Errorf(apperr.ENOTFOUND, "contract not found")
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodPost, s.URL()+"/v1/contract/1/call/1", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Header.Set("Authorization", "Bearer OK")
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+
+		if resp.StatusCode != http.StatusNotFound {
+			t.Fatalf("expected status code %d, got %d", http.StatusNotFound, resp.StatusCode)
 		}
 	})
 }
