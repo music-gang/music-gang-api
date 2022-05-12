@@ -25,7 +25,7 @@ type AppClaims struct {
 func NewAppClaims(auth *Auth, expiresAfterMinutes time.Duration) *AppClaims {
 	return &AppClaims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: util.AppNowUTC().Add(time.Duration(expiresAfterMinutes * time.Minute)).Unix(),
+			ExpiresAt: util.AppNowUTC().Add(expiresAfterMinutes).Unix(),
 			NotBefore: util.AppNowUTC().Unix(),
 			Subject:   fmt.Sprint(auth.UserID),
 			Id:        uuid.NewString(),

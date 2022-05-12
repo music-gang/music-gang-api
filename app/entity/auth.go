@@ -24,7 +24,7 @@ type Auth struct {
 	ID       int64       `json:"id"`
 	UserID   int64       `json:"user_id"`
 	Source   string      `json:"source"`
-	SourceID null.String `json:"source_id"`
+	SourceID null.String `json:"-"`
 
 	AccessToken  null.String `json:"-"`
 	RefreshToken null.String `json:"-"`
