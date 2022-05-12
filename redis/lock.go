@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-redsync/redsync/v4"
 	"github.com/go-redsync/redsync/v4/redis/goredis/v8"
+	"github.com/music-gang/music-gang-api/app/apperr"
 )
 
 // LockService implements a distributed lock.
@@ -28,7 +29,10 @@ func NewLockService(db *DB, name string) *LockService {
 
 // LockContext locks the lock.
 func (l *LockService) LockContext(ctx context.Context) error {
-	return l.mux.LockContext(ctx)
+	if err := l.mux.LockContext(ctx); err != nil {
+		return apperr.Errorf(apperr.EINTERNAL, "failed to acquire lock: %s", err)
+	}
+	return nil
 }
 
 // Name returns the name of the lock.
@@ -38,5 +42,9 @@ func (l *LockService) Name() string {
 
 // UnlockContext unlocks the lock.
 func (l *LockService) UnlockContext(ctx context.Context) (bool, error) {
-	return l.mux.UnlockContext(ctx)
+	ok, err := l.mux.UnlockContext(ctx)
+	if err != nil {
+		return false, apperr.Errorf(apperr.EINTERNAL, "failed to release lock: %s", err)
+	}
+	return ok, nil
 }

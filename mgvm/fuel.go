@@ -88,7 +88,9 @@ func burn(ctx context.Context, ft *FuelTank, fuel entity.Fuel) error {
 
 	// first, we need to aquire the lock
 
-	ft.LockService.LockContext(ctx)
+	if err := ft.LockService.LockContext(ctx); err != nil {
+		return err
+	}
 	defer ft.LockService.UnlockContext(ctx)
 
 	// second, we need to retrive the current fuel tank capacity and the current fuel used
@@ -130,7 +132,9 @@ func refuel(ctx context.Context, ft *FuelTank, refillFuel entity.Fuel) error {
 
 	// first, we need to aquire the lock
 
-	ft.LockService.LockContext(ctx)
+	if err := ft.LockService.LockContext(ctx); err != nil {
+		return err
+	}
 	defer ft.LockService.UnlockContext(ctx)
 
 	// second, we need to retrive the current fuel tank capacity and the current fuel used
@@ -165,7 +169,9 @@ func refuel(ctx context.Context, ft *FuelTank, refillFuel entity.Fuel) error {
 func stats(ctx context.Context, ft *FuelTank, useRemoteFuel bool) (*entity.FuelStat, error) {
 
 	if useRemoteFuel {
-		ft.LockService.LockContext(ctx)
+		if err := ft.LockService.LockContext(ctx); err != nil {
+			return nil, err
+		}
 		defer ft.LockService.UnlockContext(ctx)
 		return ft.FuelTankService.Stats(ctx)
 	}
