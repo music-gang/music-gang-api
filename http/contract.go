@@ -32,7 +32,7 @@ func (s *ServerAPI) ContractCallRevHandler(c echo.Context) error {
 		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid contract id"), nil)
 	}
 
-	revisionNumber, err := strconv.ParseInt(c.Param("rev"), 10, 64)
+	revisionNumber, err := strconv.ParseUint(c.Param("rev"), 10, 64)
 	if err != nil {
 		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid revision number"), nil)
 	}
