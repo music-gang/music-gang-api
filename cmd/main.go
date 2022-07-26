@@ -194,7 +194,7 @@ func (m *Main) Run(ctx context.Context) error {
 
 	anchorageExecutor := executor.NewAnchorageContractExecutor()
 	engineService := mgvm.NewEngine()
-	engineService.Executor = anchorageExecutor
+	engineService.Executors[entity.AnchorageVersion] = anchorageExecutor
 
 	m.VM.LogService = logService
 	m.VM.FuelTank = fuelTankService

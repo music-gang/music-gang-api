@@ -122,7 +122,7 @@ func TestEngine_ExecContract(t *testing.T) {
 
 		solution := "5"
 
-		engine.Executor = &mock.ExecutorService{
+		engine.Executors[entity.AnchorageVersion] = &mock.ExecutorService{
 			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
 				return solution, nil
 			},
@@ -132,7 +132,9 @@ func TestEngine_ExecContract(t *testing.T) {
 			t.Errorf("Unexpected error: %s", err.Error())
 		}
 
-		res, err := engine.ExecContract(context.Background(), &entity.Revision{})
+		res, err := engine.ExecContract(context.Background(), &entity.Revision{
+			Version: entity.AnchorageVersion,
+		})
 		if err != nil {
 			t.Errorf("Unexpected error: %s", err.Error())
 		}
