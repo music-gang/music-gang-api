@@ -15,6 +15,13 @@ class ServiceContainer
     @services[:auth]
   end
 
+  # @return [ContractService]
+  def contract_service
+    raise ServiceNotFound, 'contract' unless @services.key? :contract
+
+    @services[:contract]
+  end
+
   # @return [FuelService]
   def fuel_service
     raise ServiceNotFound, 'fuel' unless @services.key? :fuel

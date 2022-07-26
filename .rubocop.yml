@@ -28,6 +28,15 @@ Metrics/MethodLength:
 Metrics/AbcSize:
   Enabled: false
 
+Layout/LineLength:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
 Metrics/BlockLength:
   Enabled: false
   IgnoredMethods:

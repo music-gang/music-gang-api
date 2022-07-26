@@ -18,6 +18,7 @@ def service_container
   @container = ServiceContainer.new
   @container.services[:auth] = AuthService.new SCHEMA, URL
   @container.services[:fuel] = FuelService.new SCHEMA, URL
+  @container.services[:contract] = ContractService.new SCHEMA, URL
   @container
 end
 
