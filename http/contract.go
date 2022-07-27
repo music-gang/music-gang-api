@@ -32,12 +32,12 @@ func (s *ServerAPI) ContractCallRevHandler(c echo.Context) error {
 		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid contract id"), nil)
 	}
 
-	revisionNumber, err := strconv.ParseUint(c.Param("rev"), 10, 64)
+	revisionNumber, err := strconv.ParseUint(c.Param("rev"), 10, 32)
 	if err != nil {
 		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid revision number"), nil)
 	}
 
-	return handleContractCall(c, s, contractID, entity.RevisionNumber(revisionNumber))
+	return handleContractCall(c, s, contractID, entity.RevisionNumber(uint(revisionNumber)))
 }
 
 // handleContractCall handles the /contract/:id/call and /contract/:id/call/:rev business logic.
