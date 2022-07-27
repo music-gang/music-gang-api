@@ -6,7 +6,6 @@ require (
 	github.com/go-redsync/redsync/v4 v4.5.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	gopkg.in/guregu/null.v4 v4.0.0
-	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
@@ -25,6 +24,7 @@ require (
 )
 
 require (
+	github.com/caarlos0/env/v6 v6.9.3
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.3.0

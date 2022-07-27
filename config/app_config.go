@@ -2,147 +2,142 @@ package config
 
 import (
 	"fmt"
-	"os"
 
-	"github.com/music-gang/music-gang-api/app/util"
-	"gopkg.in/yaml.v2"
+	"github.com/caarlos0/env/v6"
 )
 
-const (
-	configFile = "config.yaml"
-
-	
-)
-
-// cfg is the config loaded from LoadConfigWithOptions
+// cfg is the config loaded from init func
 var cfg Config
+
+func init() {
+	if err := env.Parse(&cfg, env.Options{
+		Prefix: "MG_",
+	}); err != nil {
+		panic(err)
+	}
+}
 
 type AuthConfig struct {
 	// ClientID is the application's ID.
-	ClientID string `yaml:"client_id"`
+	ClientID string `env:"CLIENT_ID"`
 
 	// ClientSecret is the application's secret.
-	ClientSecret string `yaml:"client_secret"`
+	ClientSecret string `env:"CLIENT_SECRET"`
 
 	// Endpoint contains the resource server's token endpoint
 	// URLs. These are constants specific to each server and are
 	// often available via site-specific packages, such as
 	// google.Endpoint or github.Endpoint.
 	Endpoint struct {
-		AuthURL  string `yaml:"auth_url"`
-		TokenURL string `yaml:"token_url"`
+		AuthURL  string `env:"AUTH_URL"`
+		TokenURL string `env:"TOKEN_URL"`
 
 		// AuthStyle optionally specifies how the endpoint wants the
 		// client ID & client secret sent. The zero value means to
 		// auto-detect.
-		AuthStyle int `yaml:"auth_style"`
-	} `yaml:"endpoint"`
+		AuthStyle int `env:"AUTH_STYLE"`
+	}
 
 	// RedirectURL is the URL to redirect users going through
 	// the OAuth flow, after the resource owner's URLs.
-	RedirectURL string `yaml:"redirect_url"`
+	RedirectURL string `env:"REDIRECT_URL"`
 
 	// Scope specifies optional requested permissions.
-	Scopes []string `yaml:"scopes"`
+	Scopes []string `env:"SCOPES" envSeparator:","`
 }
 
 // AuthListConfig contains the list of auth configs
 type AuthListConfig struct {
 	// Local is the local auth config
-	Local AuthConfig `yaml:"local"`
+	Local AuthConfig `envPrefix:"LOCAL_"`
 
 	// Github is the github auth config
-	Github AuthConfig `yaml:"github"`
+	Github AuthConfig `envPrefix:"GITHUB_"`
 }
 
 type DatabaseConfig struct {
 	// Database is the name of the database to connect to.
-	Database string `yaml:"database"`
+	Database string `env:"DATABASE" envDefault:"musicgang"`
 
 	// User is the database user to sign in as.
-	User string `yaml:"user"`
+	User string `env:"USER" default:"postgres"`
 
 	// Password is the user's password.
-	Password string `yaml:"password"`
+	Password string `env:"PASSWORD" envDefault:"admin"`
 
 	// Host is the host to connect to. Values that start with / are for unix domain sockets.
-	Host string `yaml:"host"`
+	Host string `env:"HOST" envDefault:"localhost"`
 
 	// Port is the port to connect to.
-	Port int `yaml:"port"`
+	Port int `env:"PORT" envDefault:"5432"`
 }
 
 // HTTPConfig contains the http config
 type HTTPConfig struct {
-	Domain string `yaml:"domain"`
-	Addr   string `yaml:"addr"`
+	Domain string `env:"DOMAIN"`
+	Addr   string `env:"ADDR" envDefault:":8888"`
 }
 
 // JWTConfig contains the jwt config
 type JWTConfig struct {
-	Secret           string `yaml:"secret"`
-	ExpiresIn        int    `yaml:"expiresIn"`
-	RefreshExpiresIn int    `yaml:"refreshExpiresIn"`
+	Secret           string `env:"SECRET"`
+	ExpiresIn        int    `env:"EXPIRES_IN" envDefault:"60"`
+	RefreshExpiresIn int    `env:"REFRESH_EXPIRES_IN" envDefault:"20160"`
 }
 
 // RedisConfig contains the redis config
 type RedisConfig struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Password string `yaml:"password"`
+	Host     string `env:"HOST" envDefault:"localhost"`
+	Port     int    `env:"PORT" envDefault:"6379"`
+	Password string `env:"PASSWORD" envDefault:""`
 }
 
 // SlackConfig contains the slack config
 type SlackConfig struct {
-	Webhook string `yaml:"webhook"`
+	Webhook string `env:"WEBHOOK_URL"`
 }
 
 // DatabaseListConfig contains the list of database configs
 type DatabaseListConfig struct {
 	// Postgres is the Postgres database configuration
-	Postgres DatabaseConfig `yaml:"postgres"`
+	Postgres DatabaseConfig `envPrefix:"PG_"`
 }
 
 // VmConfig contains the vm config
 type VmConfig struct {
-	MaxFuelTank      string `yaml:"maxFuelTank"`
-	MaxExecutionTime string `yaml:"maxExecutionTime"`
-	RefuelAmount     string `yaml:"refuelAmount"`
-	RefuelRate       string `yaml:"refuelRate"`
+	MaxFuelTank      string `env:"MAX_FUEL_TANK" envDefault:"100 vKFuel"`
+	MaxExecutionTime string `env:"MAX_EXECUTION_TIME" envDefault:"10s"`
+	RefuelAmount     string `env:"REFUEL_AMOUNT" envDefault:""`
+	RefuelRate       string `env:"REFUEL_RATE" envDefault:"400ms"`
 }
 
 type AppConfig struct {
 	// HTTP is the http config
-	HTTP HTTPConfig `yaml:"http"`
+	HTTP HTTPConfig `envPrefix:"HTTP_"`
 
 	// JWT is the jwt config
-	JWT JWTConfig `yaml:"jwt"`
+	JWT JWTConfig `envPrefix:"JWT_"`
 
 	// Slack is the slack config
-	Slack SlackConfig `yaml:"slack"`
+	Slack SlackConfig `envPrefix:"SLACK_"`
 
 	// Databases contains the databases configuration
-	Databases DatabaseListConfig `yaml:"databases"`
+	Databases DatabaseListConfig
 
 	// Auths contains the auths configuration
-	Auths AuthListConfig `yaml:"auths"`
+	Auths AuthListConfig `envPrefix:"AUTH_"`
 
 	// Redis contains the redis configuration
-	Redis RedisConfig `yaml:"redis"`
+	Redis RedisConfig `envPrefix:"REDIS_"`
 
 	// Vm contains the vm configuration
-	Vm VmConfig `yaml:"vm"`
+	Vm VmConfig `envPrefix:"VM_"`
 }
 
 // Config - Configuration
 type Config struct {
 	// APP contains the application configuration
-	APP AppConfig `yaml:"app"`
-}
-
-type LoadOptions struct {
-	// ConfigFilePath is the path to the config file
-	ConfigFilePath string
+	APP AppConfig
 }
 
 // BuildDSNFromDatabaseConfigForPostgres returns a DSN string for Postgres
@@ -153,39 +148,4 @@ func BuildDSNFromDatabaseConfigForPostgres(dbConfig DatabaseConfig) string {
 // GetConfig returns the config
 func GetConfig() Config {
 	return cfg
-}
-
-// LoadConfig loads config
-func LoadConfig() error {
-	return LoadConfigWithOptions(LoadOptions{})
-}
-
-// LoadConfigWithOptions loads config with options
-func LoadConfigWithOptions(opt LoadOptions) error {
-
-	configFilePath := getConfigFilePath()
-
-	if opt.ConfigFilePath != "" {
-		configFilePath = opt.ConfigFilePath
-	}
-
-	file, err := os.Open(configFilePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	decoder := yaml.NewDecoder(file)
-
-	if err := decoder.Decode(&cfg); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// getConfigFilePath returns the config file path
-func getConfigFilePath() string {
-	wd := util.GetWd()
-	return wd + "/" + configFile
 }

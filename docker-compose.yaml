@@ -6,8 +6,40 @@ services:
       - "8888:8888"
     volumes:
       - music-gang-custom-data:/app/custom
-      - ./config.yaml:/app/config.yaml
     restart: unless-stopped
+    environment:
+      - MG_HTTP_DOMAIN=""
+      - MG_HTTP_ADDR=":8888"
+
+      - MG_JWT_SECRET="secret"
+      - MG_JWT_EXPIRES_IN=60
+      - MG_JWT_REFRESH_EXPIRES_IN=20160
+
+      - MG_SLACK_WEBHOOK_URL=""
+
+      - MG_PG_DATABASE=music-gang
+      - MG_PG_USER=music-gang
+      - MG_PG_PASSWORD=music-gang
+      - MG_PG_HOST=postgres
+      - MG_PG_PORT=5432
+
+      - MG_REDIS_HOST="127.0.0.1"
+      - MG_REDIS_PORT=6379
+      - MG_REDIS_PASSWORD=""
+
+      - MG_VM_MAX_FUEL_TANK="100 vKFuel"
+      - MG_VM_MAX_EXECUTION_TIME="10s"
+      - MG_VM_REFUEL_AMOUNT="1 vKFuel"
+      - MG_VM_REFUEL_RATE="400ms"
+
+      - MG_AUTH_GITHUB_CLIENT_ID=""
+      - MG_AUTH_GITHUB_CLIENT_SECRET=""
+      - MG_AUTH_GITHUB_AUTH_URL=""
+      - MG_AUTH_GITHUB_TOKEN_URL=""
+      - MG_AUTH_GITHUB_AUTH_STYLE=0
+      - MG_AUTH_GITHUB_REDIRECT_URL=""
+      - MG_AUTH_GITHUB_SCOPES=""
+
     depends_on:
       - postgres
       - redis

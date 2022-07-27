@@ -35,7 +35,7 @@ steps:
     image: golang:1.18
     commands:
       - sleep 15
-      - cp drone-ci/config.drone.yaml config.yaml
+      - export $(cat drone-ci/.drone.env | xargs)
       - go test ./... -timeout 120s -race -coverprofile=coverage.txt -covermode=atomic
 
   # BUILD AND RUN
@@ -44,7 +44,7 @@ steps:
     detach: true
     commands:
       - go build -o mg-api cmd/main.go
-      - 'sed -i ''s/http: {}/http: { "addr": ":8888" }/g'' config.yaml'
+      - export $(cat drone-ci/.drone.env | xargs)
       - ./mg-api
 
   # FLOW TESTING
@@ -199,4 +199,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: f15ce641780c44a1c968ab29e1c15acccc82d4e6611e8b7947f899819985bfc5
+hmac: 11e0f931cb921dad393b1c2010654e25f3e5d32e70a7a69c322157537b6875d1

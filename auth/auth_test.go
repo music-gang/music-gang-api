@@ -28,8 +28,6 @@ type Auth struct {
 func NewAuth() *Auth {
 	a := &Auth{}
 
-	config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "../config.yaml"})
-
 	a.AuthService = auth.NewAuth(&a.as, &a.us, config.GetConfig().APP.Auths)
 
 	return a
@@ -199,9 +197,9 @@ func TestAuth_TestGithubProvider(t *testing.T) {
 			RedirectURL:  "REDIRECT_URL",
 			Scopes:       []string{},
 			Endpoint: struct {
-				AuthURL   string "yaml:\"auth_url\""
-				TokenURL  string "yaml:\"token_url\""
-				AuthStyle int    "yaml:\"auth_style\""
+				AuthURL   string `env:"AUTH_URL"`
+				TokenURL  string `env:"TOKEN_URL"`
+				AuthStyle int    `env:"AUTH_STYLE"`
 			}{
 				AuthURL:  server.URL + "/auth",
 				TokenURL: server.URL + "/github/token",
