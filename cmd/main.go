@@ -26,13 +26,8 @@ var (
 )
 
 func init() {
-	if err := config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "../config.yaml"}); err != nil {
-		if err = config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "config.yaml"}); err != nil {
-			log.Fatalf("Failed to load config: %v", err)
-		}
-	}
 
-	// During the init func are loaded the vm configs from the config file.
+	// During the init func are loaded the vm configs from env variables
 
 	fuelRefillAmountFromConfig := config.GetConfig().APP.Vm.RefuelAmount
 	if f, err := entity.ParseFuel(fuelRefillAmountFromConfig); err == nil {

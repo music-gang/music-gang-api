@@ -16,8 +16,6 @@ func MustOpenDB(tb testing.TB) *postgres.DB {
 
 	tb.Helper()
 
-	config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "../config.yaml"})
-
 	dsn := config.BuildDSNFromDatabaseConfigForPostgres(config.GetConfig().APP.Databases.Postgres)
 
 	db := postgres.NewDB(dsn)

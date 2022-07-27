@@ -17,6 +17,7 @@ mg-api
 
 # config file
 config.yaml
+.env
 
 # sqltools
 sqltools*

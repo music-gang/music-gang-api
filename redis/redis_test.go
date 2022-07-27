@@ -20,8 +20,6 @@ func TestRedis(t *testing.T) {
 
 	t.Run("TimeoutPing", func(t *testing.T) {
 
-		config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "../config.yaml"})
-
 		redisHost := config.GetConfig().APP.Redis.Host
 		redisPort := config.GetConfig().APP.Redis.Port
 		redisPassword := config.GetConfig().APP.Redis.Password
@@ -39,8 +37,6 @@ func TestRedis(t *testing.T) {
 
 	t.Run("CloseNotOpened", func(t *testing.T) {
 
-		config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "../config.yaml"})
-
 		redisHost := config.GetConfig().APP.Redis.Host
 		redisPort := config.GetConfig().APP.Redis.Port
 		redisPassword := config.GetConfig().APP.Redis.Password
@@ -57,8 +53,6 @@ func TestRedis(t *testing.T) {
 func MustOpenDB(tb testing.TB) *redis.DB {
 
 	tb.Helper()
-
-	config.LoadConfigWithOptions(config.LoadOptions{ConfigFilePath: "../config.yaml"})
 
 	redisHost := config.GetConfig().APP.Redis.Host
 	redisPort := config.GetConfig().APP.Redis.Port
