@@ -48,6 +48,7 @@ func init() {
 		os.Setenv("MG_PG_PASSWORD", userPass[1])
 		os.Setenv("MG_PG_HOST", strings.Split(hostPortDbName[0], ":")[0])
 		os.Setenv("MG_PG_PORT", strings.Split(hostPortDbName[0], ":")[1])
+		os.Setenv("MG_PG_SSLMODE", "require")
 	}
 
 	if os.Getenv("REDIS_URL") != "" {
@@ -142,6 +143,9 @@ type DatabaseConfig struct {
 
 	// Port is the port to connect to.
 	Port int `env:"PORT" envDefault:"5432"`
+
+	// SSLMode specifies whether to use SSL.
+	SSLMode string `env:"SSL_MODE" envDefault:"disable"`
 }
 
 // HTTPConfig contains the http config
@@ -214,7 +218,7 @@ type Config struct {
 
 // BuildDSNFromDatabaseConfigForPostgres returns a DSN string for Postgres
 func BuildDSNFromDatabaseConfigForPostgres(dbConfig DatabaseConfig) string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable&TimeZone=UTC", dbConfig.User, dbConfig.Password, dbConfig.Host, dbConfig.Port, dbConfig.Database)
+	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s&TimeZone=UTC", dbConfig.User, dbConfig.Password, dbConfig.Host, dbConfig.Port, dbConfig.Database, dbConfig.SSLMode)
 }
 
 // GetConfig returns the config
