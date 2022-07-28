@@ -14,6 +14,11 @@ var cfg Config
 
 func init() {
 
+	if os.Getenv("PORT") == "" {
+		// Check if PORT env variable is injected by Heroku
+		os.Setenv("MG_HTTP_ADDR", fmt.Sprintf(":%s", os.Getenv("PORT")))
+	}
+
 	if os.Getenv("DATABASE_URL") != "" {
 		// split the DATABASE_URL into single elements
 		// and set the environment variables accordingly
