@@ -24,6 +24,7 @@ func init() {
 		// MG_PG_PASSWORD=host
 		// MG_PG_HOST=port
 		// MG_PG_PORT=dbname
+		// MG_PG_SSLMODE=disable
 
 		url := os.Getenv("DATABASE_URL")
 		url = strings.TrimPrefix(url, "postgres://")
@@ -48,7 +49,7 @@ func init() {
 		os.Setenv("MG_PG_PASSWORD", userPass[1])
 		os.Setenv("MG_PG_HOST", strings.Split(hostPortDbName[0], ":")[0])
 		os.Setenv("MG_PG_PORT", strings.Split(hostPortDbName[0], ":")[1])
-		os.Setenv("MG_PG_SSLMODE", "require")
+		os.Setenv("MG_PG_SSL_MODE", "require")
 	}
 
 	if os.Getenv("REDIS_URL") != "" {
