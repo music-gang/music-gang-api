@@ -14,7 +14,7 @@ var cfg Config
 
 func init() {
 
-	if os.Getenv("PORT") == "" {
+	if os.Getenv("PORT") != "" {
 		// Check if PORT env variable is injected by Heroku
 		os.Setenv("MG_HTTP_ADDR", fmt.Sprintf(":%s", os.Getenv("PORT")))
 	}
