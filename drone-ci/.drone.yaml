@@ -42,6 +42,8 @@ steps:
   - name: build-and-run
     image: golang:1.18
     detach: true
+    environment:
+      PORT: 8888
     commands:
       - go build -o mg-api cmd/main.go
       - export $(cat drone-ci/.drone.env | xargs)
@@ -199,4 +201,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: 11e0f931cb921dad393b1c2010654e25f3e5d32e70a7a69c322157537b6875d1
+hmac: 5bdfa46f4d1775e79b4213f431cd7b010937dcf48cddcb6fa0dbf64306e84b20
