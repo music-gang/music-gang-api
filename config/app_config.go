@@ -2,6 +2,9 @@ package config
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"strings"
 
 	"github.com/caarlos0/env/v6"
 )
@@ -10,6 +13,75 @@ import (
 var cfg Config
 
 func init() {
+
+	if os.Getenv("DATABASE_URL") != "" {
+		// split the DATABASE_URL into single elements
+		// and set the environment variables accordingly
+		// e.g. DATABASE_URL=postgres://user:pass@host:port/dbname
+		// will set the following environment variables:
+		// MG_PG_DATABASE=user
+		// MG_PG_USER=pass
+		// MG_PG_PASSWORD=host
+		// MG_PG_HOST=port
+		// MG_PG_PORT=dbname
+
+		url := os.Getenv("DATABASE_URL")
+		url = strings.TrimPrefix(url, "postgres://")
+
+		urlParts := strings.Split(url, "@")
+		if len(urlParts) != 2 {
+			log.Fatal("DATABASE_URL is not valid")
+		}
+
+		userPass := strings.Split(urlParts[0], ":")
+		if len(userPass) != 2 {
+			log.Fatal("DATABASE_URL is not valid")
+		}
+
+		hostPortDbName := strings.Split(urlParts[1], "/")
+		if len(hostPortDbName) != 2 {
+			log.Fatal("DATABASE_URL is not valid")
+		}
+
+		os.Setenv("MG_PG_DATABASE", hostPortDbName[len(hostPortDbName)-1])
+		os.Setenv("MG_PG_USER", userPass[0])
+		os.Setenv("MG_PG_PASSWORD", userPass[1])
+		os.Setenv("MG_PG_HOST", strings.Split(hostPortDbName[0], ":")[0])
+		os.Setenv("MG_PG_PORT", strings.Split(hostPortDbName[0], ":")[1])
+	}
+
+	if os.Getenv("REDIS_URL") != "" {
+		// split the REDIS_URL into single elements
+		// and set the environment variables accordingly
+		// e.g. REDIS_URL=redis://:pass@host:port
+		// will set the following environment variables:
+		// MG_REDIS_HOST=host
+		// MG_REDIS_PORT=port
+		// MG_REDIS_PASSWORD=pass
+
+		url := os.Getenv("REDIS_URL")
+		url = strings.TrimPrefix(url, "redis://")
+
+		urlParts := strings.Split(url, "@")
+		if len(urlParts) != 2 {
+			log.Fatal("REDIS_URL is not valid")
+		}
+
+		userPass := strings.Split(urlParts[0], ":")
+		if len(userPass) != 2 {
+			log.Fatal("DATABASE_URL is not valid")
+		}
+
+		hostPort := strings.Split(urlParts[1], ":")
+		if len(hostPort) != 2 {
+			log.Fatal("REDIS_URL is not valid")
+		}
+
+		os.Setenv("MG_REDIS_HOST", hostPort[0])
+		os.Setenv("MG_REDIS_PORT", hostPort[1])
+		os.Setenv("MG_REDIS_PASSWORD", userPass[1])
+	}
+
 	if err := env.Parse(&cfg, env.Options{
 		Prefix: "MG_",
 	}); err != nil {
