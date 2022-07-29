@@ -1,9 +1,32 @@
 package entity
 
-import "github.com/music-gang/music-gang-api/app/apperr"
+import (
+	"github.com/music-gang/music-gang-api/app/apperr"
+	"github.com/music-gang/music-gang-api/app/util"
+)
 
 // State represents the state value.
-type State []byte
+type State map[string]any
+
+// NewStateFromBytes creates a state from bytes.
+func NewStateFromBytes(b []byte) (State, error) {
+	s := make(State)
+	if b != nil {
+		if err := util.FromBytes(b, s); err != nil {
+			return nil, apperr.Errorf(apperr.EINTERNAL, "Error while converting bytes to state: %s", err.Error())
+		}
+	}
+	return s, nil
+}
+
+// Bytes converts the state to bytes.
+func (s State) Bytes() ([]byte, error) {
+	b, err := util.ToBytes(s)
+	if err != nil {
+		return nil, apperr.Errorf(apperr.EINTERNAL, "Error while converting state to bytes: %s", err.Error())
+	}
+	return b, nil
+}
 
 // ContractState represents the state of the contract at a given revision for specific user.
 // ContractState enables contract to persist its state during different executions.
