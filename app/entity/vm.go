@@ -53,6 +53,8 @@ const (
 const (
 	// NotDefinedOperationCost is the default fuel used if not specified by the VmCall when
 	NotDefinedOperationCost = Fuel(25)
+	// StateFulOperationCost is the extra fuel used when the operation is executed in the full state.
+	StateFulOperationCost = Fuel(500)
 )
 
 // vmOperationCostTable is a map of operations to their costs.
