@@ -19,7 +19,7 @@ type EngineService interface {
 	// Resume resumes the engine.
 	Resume() error
 	// State returns the state of the engine.
-	State() entity.State
+	State() entity.VmState
 	// Stop stops the engine.
 	Stop() error
 }

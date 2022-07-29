@@ -47,7 +47,7 @@ func TestVm_Run(t *testing.T) {
 				isRunning = true
 				return nil
 			},
-			StateFn: func() entity.State {
+			StateFn: func() entity.VmState {
 				return entity.StateRunning
 			},
 			StopFn: func() error {
@@ -162,7 +162,7 @@ func TestVm_Run(t *testing.T) {
 				isRunning = true
 				return nil
 			},
-			StateFn: func() entity.State {
+			StateFn: func() entity.VmState {
 				return entity.StateRunning
 			},
 			StopFn: func() error {
@@ -249,7 +249,7 @@ func TestVm_Run(t *testing.T) {
 				isRunning = true
 				return nil
 			},
-			StateFn: func() entity.State {
+			StateFn: func() entity.VmState {
 				return entity.StateRunning
 			},
 			StopFn: func() error {
@@ -320,7 +320,7 @@ func TestVm_Close(t *testing.T) {
 			ResumeFn: func() error {
 				return nil
 			},
-			StateFn: func() entity.State {
+			StateFn: func() entity.VmState {
 				return entity.StateRunning
 			},
 			StopFn: func() error {
@@ -367,7 +367,7 @@ func TestVm_Close(t *testing.T) {
 			ResumeFn: func() error {
 				return nil
 			},
-			StateFn: func() entity.State {
+			StateFn: func() entity.VmState {
 				return entity.StateRunning
 			},
 			StopFn: func() error {
@@ -414,7 +414,7 @@ func TestVm_Close(t *testing.T) {
 			ResumeFn: func() error {
 				return nil
 			},
-			StateFn: func() entity.State {
+			StateFn: func() entity.VmState {
 				return entity.StateRunning
 			},
 			StopFn: func() error {
@@ -440,7 +440,7 @@ func TestVm_Close(t *testing.T) {
 		vm := mgvm.NewMusicGangVM()
 
 		vm.EngineService = &mock.EngineService{
-			StateFn: func() entity.State {
+			StateFn: func() entity.VmState {
 				return entity.StateInitializing
 			},
 		}
@@ -449,7 +449,7 @@ func TestVm_Close(t *testing.T) {
 		}
 
 		vm.EngineService = &mock.EngineService{
-			StateFn: func() entity.State {
+			StateFn: func() entity.VmState {
 				return entity.StateStopped
 			},
 		}
@@ -504,7 +504,7 @@ func TestVm_Meter(t *testing.T) {
 				state = entity.StateRunning
 				return nil
 			},
-			StateFn: func() entity.State {
+			StateFn: func() entity.VmState {
 				muxState.Lock()
 				defer muxState.Unlock()
 				return state
@@ -567,7 +567,7 @@ func TestVm_Meter(t *testing.T) {
 
 		vm.LogService = &mock.LogServiceNoOp{}
 		vm.EngineService = &mock.EngineService{
-			StateFn: func() entity.State {
+			StateFn: func() entity.VmState {
 				return entity.StatePaused
 			},
 		}
@@ -614,7 +614,7 @@ func TestVm_Meter(t *testing.T) {
 
 		vm.LogService = &mock.LogServiceNoOp{}
 		vm.EngineService = &mock.EngineService{
-			StateFn: func() entity.State {
+			StateFn: func() entity.VmState {
 				return entity.StateRunning
 			},
 		}
@@ -661,7 +661,7 @@ func TestVm_Meter(t *testing.T) {
 
 		vm.LogService = &mock.LogServiceNoOp{}
 		vm.EngineService = &mock.EngineService{
-			StateFn: func() entity.State {
+			StateFn: func() entity.VmState {
 				return entity.StateRunning
 			},
 		}
@@ -704,7 +704,7 @@ func TestVm_MakeOperation(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -713,8 +713,8 @@ func TestVm_MakeOperation(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil

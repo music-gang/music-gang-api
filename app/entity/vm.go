@@ -1,18 +1,18 @@
 package entity
 
-// State represents the state of the MusicGangVM.
-type State int32
+// VmState represents the state of the MusicGangVM.
+type VmState int32
 
 const (
 	// StateRunning is the state of the MusicGangVM when it is running.
-	StateInitializing State = iota
+	StateInitializing VmState = iota
 	StateRunning
 	StatePaused
 	StateStopped
 )
 
 // String returns a string representation of the State.
-func (s State) String() string {
+func (s VmState) String() string {
 	switch s {
 	case StateInitializing:
 		return "initializing"

@@ -14,7 +14,7 @@ type EngineService struct {
 	IsRunningFn    func() bool
 	PauseFn        func() error
 	ResumeFn       func() error
-	StateFn        func() entity.State
+	StateFn        func() entity.VmState
 	StopFn         func() error
 }
 
@@ -46,7 +46,7 @@ func (e *EngineService) Resume() error {
 	return e.ResumeFn()
 }
 
-func (e *EngineService) State() entity.State {
+func (e *EngineService) State() entity.VmState {
 	if e.StateFn == nil {
 		panic("StateFn is not defined")
 	}

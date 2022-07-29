@@ -54,7 +54,7 @@ func TestVm_ExecContract(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -63,8 +63,8 @@ func TestVm_ExecContract(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -130,7 +130,7 @@ func TestVm_ExecContract(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -139,8 +139,8 @@ func TestVm_ExecContract(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -171,7 +171,7 @@ func TestVm_ExecContract(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -180,8 +180,8 @@ func TestVm_ExecContract(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -217,7 +217,7 @@ func TestVm_ExecContract(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -226,8 +226,8 @@ func TestVm_ExecContract(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -260,7 +260,7 @@ func TestVm_ExecContract(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -269,8 +269,8 @@ func TestVm_ExecContract(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -303,7 +303,7 @@ func TestVm_ExecContract(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -312,8 +312,8 @@ func TestVm_ExecContract(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -346,7 +346,7 @@ func TestVm_ExecContract(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -355,8 +355,8 @@ func TestVm_ExecContract(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -403,7 +403,7 @@ func TestVm_CreateContract(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -412,8 +412,8 @@ func TestVm_CreateContract(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -477,7 +477,7 @@ func TestVm_DeleteContract(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -486,8 +486,8 @@ func TestVm_DeleteContract(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -540,7 +540,7 @@ func TestVm_MakeRevision(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -549,8 +549,8 @@ func TestVm_MakeRevision(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -619,8 +619,8 @@ func TestVm_Stats(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -675,8 +675,8 @@ func TestVm_Stats(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -720,8 +720,8 @@ func TestVm_Stats(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -773,7 +773,7 @@ func TestVm_UpdateContract(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -782,8 +782,8 @@ func TestVm_UpdateContract(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -863,7 +863,7 @@ func TestVm_UpdateContract(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -872,8 +872,8 @@ func TestVm_UpdateContract(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -923,7 +923,7 @@ func TestVm_UpdateContract(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -932,8 +932,8 @@ func TestVm_UpdateContract(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -1002,7 +1002,7 @@ func TestVm_Auhenticate(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -1011,8 +1011,8 @@ func TestVm_Auhenticate(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -1066,7 +1066,7 @@ func TestVm_Auhenticate(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -1075,8 +1075,8 @@ func TestVm_Auhenticate(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -1122,7 +1122,7 @@ func TestVm_Auhenticate(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -1131,8 +1131,8 @@ func TestVm_Auhenticate(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -1182,7 +1182,7 @@ func TestVm_CreateAuth(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -1191,8 +1191,8 @@ func TestVm_CreateAuth(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -1245,7 +1245,7 @@ func TestVm_CreateAuth(t *testing.T) {
 			}
 			vm.EngineService = &mock.EngineService{
 				IsRunningFn: func() bool {
-					return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+					return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 				},
 				PauseFn: func() error {
 					return nil
@@ -1254,8 +1254,8 @@ func TestVm_CreateAuth(t *testing.T) {
 					atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 					return nil
 				},
-				StateFn: func() entity.State {
-					return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+				StateFn: func() entity.VmState {
+					return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 				},
 				StopFn: func() error {
 					return nil
@@ -1310,7 +1310,7 @@ func TestVm_CreateUser(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -1319,8 +1319,8 @@ func TestVm_CreateUser(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -1369,7 +1369,7 @@ func TestVm_CreateUser(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -1378,8 +1378,8 @@ func TestVm_CreateUser(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -1431,7 +1431,7 @@ func TestVm_DeleteAuth(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -1440,8 +1440,8 @@ func TestVm_DeleteAuth(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -1484,7 +1484,7 @@ func TestVm_DeleteAuth(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -1493,8 +1493,8 @@ func TestVm_DeleteAuth(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -1542,7 +1542,7 @@ func TestVm_DeleteUser(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -1551,8 +1551,8 @@ func TestVm_DeleteUser(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -1595,7 +1595,7 @@ func TestVm_DeleteUser(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -1604,8 +1604,8 @@ func TestVm_DeleteUser(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -1656,7 +1656,7 @@ func TestVm_UpdateUser(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -1665,8 +1665,8 @@ func TestVm_UpdateUser(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -1717,7 +1717,7 @@ func TestVm_UpdateUser(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -1726,8 +1726,8 @@ func TestVm_UpdateUser(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil
@@ -1778,7 +1778,7 @@ func TestVm_UpdateUser(t *testing.T) {
 		}
 		vm.EngineService = &mock.EngineService{
 			IsRunningFn: func() bool {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
 			},
 			PauseFn: func() error {
 				return nil
@@ -1787,8 +1787,8 @@ func TestVm_UpdateUser(t *testing.T) {
 				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
 				return nil
 			},
-			StateFn: func() entity.State {
-				return entity.State(atomic.LoadInt32((*int32)(&currentState)))
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
 			},
 			StopFn: func() error {
 				return nil

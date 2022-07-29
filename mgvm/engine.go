@@ -14,7 +14,7 @@ var _ service.EngineService = (*Engine)(nil)
 // Engine is the state machine for the MusicGangVM.
 // His job is to exec the called contracts.
 type Engine struct {
-	state     entity.State
+	state     entity.VmState
 	Executors map[entity.RevisionVersion]service.ContractExecutorService
 }
 
@@ -68,8 +68,8 @@ func (e *Engine) Resume() error {
 }
 
 // State returns the state of the engine.
-func (e *Engine) State() entity.State {
-	return entity.State(atomic.LoadInt32((*int32)(&e.state)))
+func (e *Engine) State() entity.VmState {
+	return entity.VmState(atomic.LoadInt32((*int32)(&e.state)))
 }
 
 // Stop stops the engine.
