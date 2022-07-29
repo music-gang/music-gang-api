@@ -129,12 +129,18 @@ func (c VmCall) Contract() *entity.Contract {
 
 // MaxFuel returns the maximum fuel that can be used to call the contract.
 func (c *VmCall) MaxFuel() entity.Fuel {
+
+	stateFulFuel := entity.Fuel(0)
+	if c.ContractRef != nil && c.ContractRef.Stateful {
+		stateFulFuel = entity.StateFulOperationCost
+	}
+
 	if c.CustomMaxFuel != nil {
 		return *c.CustomMaxFuel
 	} else if c.RevisionRef != nil {
-		return c.RevisionRef.MaxFuel
+		return c.RevisionRef.MaxFuel + stateFulFuel
 	} else if c.ContractRef != nil {
-		return c.ContractRef.MaxFuel
+		return c.ContractRef.MaxFuel + stateFulFuel
 	} else {
 		return entity.NotDefinedOperationCost
 	}
