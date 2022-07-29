@@ -87,6 +87,7 @@ type RevisionFilter struct {
 
 // ContractUpdate represents the options used to update the contracts.
 type ContractUpdate struct {
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
+	Name        *string      `json:"name"`
+	Description *string      `json:"description"`
+	MaxFuel     *entity.Fuel `json:"max_fuel"`
 }

@@ -452,10 +452,12 @@ func TestContract_UpdateContract(t *testing.T) {
 		oldUpdatedAt := contract.UpdatedAt
 		newContractName := "new-test-contract"
 		newContractDescription := "new-test-contract-description"
+		newMaxFuel := entity.FuelLongActionAmount
 
 		contractUpdate := service.ContractUpdate{
 			Name:        &newContractName,
 			Description: &newContractDescription,
+			MaxFuel:     &newMaxFuel,
 		}
 
 		// sleep to make sure updated_at is different

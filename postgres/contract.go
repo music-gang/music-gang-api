@@ -496,6 +496,10 @@ func updateContract(ctx context.Context, tx *Tx, id int64, upd service.ContractU
 		contract.Description = *v
 	}
 
+	if v := upd.MaxFuel; v != nil {
+		contract.MaxFuel = *v
+	}
+
 	contract.UpdatedAt = tx.now
 
 	if err := contract.Validate(); err != nil {
@@ -506,9 +510,10 @@ func updateContract(ctx context.Context, tx *Tx, id int64, upd service.ContractU
 		UPDATE contracts SET
 			name = $1,
 			description = $2,
-			updated_at = $3
-		WHERE id = $4
-	`, contract.Name, contract.Description, contract.UpdatedAt, id); err != nil {
+			max_fuel = $3,
+			updated_at = $4
+		WHERE id = $5
+	`, contract.Name, contract.Description, contract.MaxFuel, contract.UpdatedAt, id); err != nil {
 		return nil, apperr.Errorf(apperr.EINTERNAL, "failed to update contract: %v", err)
 	}
 
