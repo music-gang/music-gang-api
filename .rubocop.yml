@@ -37,6 +37,9 @@ Metrics/CyclomaticComplexity:
 Metrics/PerceivedComplexity:
   Enabled: false
 
+Style/GlobalVars:
+  Enabled: false
+
 Metrics/BlockLength:
   Enabled: false
   IgnoredMethods:

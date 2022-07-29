@@ -3,20 +3,25 @@
 require 'faker'
 
 require_relative '../services/lib'
+require_relative 'util'
 
 container = service_container
 
-name = Faker::Internet.username
-email = Faker::Internet.email name: name, separators: '.'
-password = 'Password123!'
-
-user = User.new name, email, password
+# @return [User]
+def success_register_user
+  user = new_user
+  token_pairs = service_container.auth_service.register(user: user)
+  fetched_user = service_container.auth_service.user(access_token: token_pairs.access_token)
+  user.token_pairs = token_pairs
+  user.id = fetched_user.id
+  user
+end
 
 describe 'Flow Auth:' do
   describe 'register a new user' do
     context 'given correct data' do
       it 'returns token pairs' do
-        container.auth_service.register user: user
+        container.auth_service.register user: new_user
       end
     end
 
@@ -29,6 +34,8 @@ describe 'Flow Auth:' do
             container.auth_service.register user: User.new(name, email, password)
           rescue ServiceError
             'error correctley raised'
+          else
+            raise 'error not raised'
           end
         end
       end
@@ -43,6 +50,8 @@ describe 'Flow Auth:' do
             container.auth_service.register user: User.new(name, email, password)
           rescue ServiceError
             'error correctley raised'
+          else
+            raise 'error not raised'
           end
         end
       end
@@ -56,6 +65,8 @@ describe 'Flow Auth:' do
             container.auth_service.register user: User.new(name, email, password)
           rescue ServiceError
             'error correctley raised'
+          else
+            raise 'error not raised'
           end
         end
       end
@@ -65,6 +76,8 @@ describe 'Flow Auth:' do
   describe 'login a user' do
     context 'given correct data' do
       it 'returns token pairs' do
+        user = success_register_user
+
         pairs = container.auth_service.login email: user.email, password: user.password
 
         expect(pairs.access_token).not_to be_nil
@@ -81,42 +94,55 @@ describe 'Flow Auth:' do
     context 'given incorrect data' do
       context 'for example an incorrect password' do
         it 'returns an error' do
+          user = success_register_user
+
           container.auth_service.login email: user.email, password: 'non-valid-password'
         rescue ServiceError
           'error correctley raised'
         else
+          raise 'error not raised'
         end
       end
 
       context 'for example an empty password' do
         it 'returns an error' do
+          user = success_register_user
+
           container.auth_service.login email: user.email, password: ''
         rescue ServiceError
           'error correctley raised'
+        else
+          raise 'error not raised'
         end
       end
 
       context 'for example a non valid email' do
         it 'returns an error' do
-          container.auth_service.login email: 'incorrect-email', password: user.password
+          container.auth_service.login email: 'incorrect-email', password: 'blabla'
         rescue ServiceError
           'error correctley raised'
+        else
+          raise 'error not raised'
         end
       end
 
       context 'for example an empty email' do
         it 'returns an error' do
-          container.auth_service.login email: '', password: user.password
+          container.auth_service.login email: '', password: 'blabla'
         rescue ServiceError
           'error correctley raised'
+        else
+          raise 'error not raised'
         end
       end
 
       context 'for example a not existing email' do
         it 'returns an error' do
-          container.auth_service.login email: Faker::Internet.email, password: user.password
+          container.auth_service.login email: Faker::Internet.email, password: 'blabla'
         rescue ServiceError
           'error correctley raised'
+        else
+          raise 'error not raised'
         end
       end
     end
@@ -124,6 +150,7 @@ describe 'Flow Auth:' do
 
   describe 'refresh a token pairs' do
     old_pairs = nil
+    user = success_register_user
 
     context 'given correct data' do
       it 'returns token pairs' do
@@ -143,6 +170,8 @@ describe 'Flow Auth:' do
           container.auth_service.refresh refresh_token: 'non-valid-token'
         rescue ServiceError
           'error correctley raised'
+        else
+          raise 'error not raised'
         end
       end
 
@@ -151,12 +180,16 @@ describe 'Flow Auth:' do
           container.auth_service.refresh refresh_token: old_pairs.refresh_token
         rescue ServiceError
           'error correctley raised'
+        else
+          # no raise here
         end
       end
     end
   end
 
   describe 'logout a user' do
+    user = success_register_user
+
     context 'given correct data' do
       it 'effectively logs out the user' do
         container.auth_service.logout pairs: user.token_pairs
@@ -179,6 +212,8 @@ describe 'Flow Auth:' do
           container.auth_service.logout pairs: empty_token_pairs
         rescue ServiceError
           'error correctley raised'
+        else
+          # no raise here
         end
       end
 
@@ -189,6 +224,8 @@ describe 'Flow Auth:' do
           container.auth_service.logout pairs: empty_token_pairs
         rescue ServiceError
           'error correctley raised'
+        else
+          # not raise here
         end
       end
     end

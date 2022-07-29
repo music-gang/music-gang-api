@@ -90,4 +90,23 @@ class AuthService < ServiceHTTP
 
     TokenPair.from_hash JSON.parse(response.body, symbolize_names: true)
   end
+
+  # return a user based on a token pair
+  # @param [String] access_token
+  # @return [User]
+  def user(access_token: nil)
+    raise ArgumentError, 'access_token must be provided' if access_token.nil?
+
+    url = URI("#{base_url}/user")
+
+    http = Net::HTTP.new(url.host, url.port)
+    request = Net::HTTP::Get.new(url)
+    request['Content-Type'] = 'application/json'
+    request['Authorization'] = "Bearer #{access_token}"
+
+    response = http.request(request)
+    raise ServiceError.new response.body, response.code unless response.is_a? Net::HTTPSuccess
+
+    User.from_hash JSON.parse(response.body, symbolize_names: true)[:user]
+  end
 end

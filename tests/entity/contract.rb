@@ -24,6 +24,19 @@ class Contract
     @updated_at = updated_at
   end
 
+  def to_hash 
+    {
+      id: @id,
+      name: @name,
+      description: @description,
+      user_id: @user_id,
+      visibility: @visibility,
+      max_fuel: @max_fuel,
+      created_at: @created_at,
+      updated_at: @updated_at
+    }
+  end
+
   class << self
     def from_hash(hash)
       validate_hash hash

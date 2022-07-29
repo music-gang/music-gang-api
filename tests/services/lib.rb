@@ -9,6 +9,7 @@ require_relative 'service'
 
 require_relative 'auth'
 require_relative 'fuel'
+require_relative 'contract'
 
 SCHEMA = ENV['MUSICGANG_SERVICE_SCHEMA'] || 'http'
 URL = ENV['MUSICGANG_SERVICE_URL'] || 'localhost:8888/v1'
