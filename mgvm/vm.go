@@ -116,7 +116,7 @@ func (vm *MusicGangVM) Resume() error {
 
 // State returns the state of the engine.
 // Delegates to the engine service.
-func (vm *MusicGangVM) State() entity.State {
+func (vm *MusicGangVM) State() entity.VmState {
 	return vm.EngineService.State()
 }
 
