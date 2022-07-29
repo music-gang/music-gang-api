@@ -29,6 +29,11 @@ func (*AnchorageContractExecutor) ExecContract(ctx context.Context, opt service.
 		return nil, err
 	}
 
+	contract, err := opt.Contract()
+	if err != nil {
+		return nil, err
+	}
+
 	select {
 	case <-ctx.Done():
 		return nil, apperr.Errorf(apperr.EANCHORAGE, "Timeout while executing contract")
@@ -48,6 +53,10 @@ func (*AnchorageContractExecutor) ExecContract(ctx context.Context, opt service.
 		}
 	}()
 
+	if contract.Stateful && opt.ContractStateRef != nil {
+		injectStateAccessor(ottoVm, opt.ContractStateRef)
+	}
+
 	_, err = ottoVm.Run(revision.CompiledCode)
 	close(ottoVm.Interrupt)
 
@@ -66,4 +75,58 @@ func (*AnchorageContractExecutor) ExecContract(ctx context.Context, opt service.
 	}
 
 	return str, nil
+}
+
+// injectStateAccessor injects the state accessor into the otto vm.
+func injectStateAccessor(vm *otto.Otto, contractState *entity.ContractState) {
+	vm.Set("setState", func(call otto.FunctionCall) otto.Value {
+		if len(call.ArgumentList) != 2 {
+			return otto.Value{}
+		}
+		key, err := call.Argument(0).ToString()
+		if err != nil {
+			return otto.Value{}
+		}
+		var value any
+		if call.Argument(1).IsBoolean() {
+			value, err = call.Argument(1).ToBoolean()
+		} else if call.Argument(1).IsNumber() {
+			value, err = call.Argument(1).ToFloat()
+		} else if call.Argument(1).IsString() {
+			value, err = call.Argument(1).ToString()
+		} else if call.Argument(1).IsNull() {
+			value = nil
+		} else {
+			return otto.Value{}
+		}
+		if err != nil {
+			return otto.Value{}
+		}
+		contractState.State[key] = value
+		return otto.Value{}
+	})
+
+	vm.Set("getState", func(call otto.FunctionCall) otto.Value {
+
+		if len(call.ArgumentList) != 1 {
+			return otto.Value{}
+		}
+
+		key, err := call.Argument(0).ToString()
+		if err != nil {
+			return otto.UndefinedValue()
+		}
+
+		value, ok := contractState.State[key]
+		if !ok {
+			return otto.UndefinedValue()
+		}
+
+		ottoValue, err := otto.ToValue(value)
+		if err != nil {
+			return otto.UndefinedValue()
+		}
+
+		return ottoValue
+	})
 }
