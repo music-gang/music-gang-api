@@ -62,7 +62,7 @@ func (c *Contract) Validate() error {
 	}
 
 	if c.UserID == 0 {
-		return apperr.Errorf(apperr.EINVALID, "User ID cannot be empty if provided")
+		return apperr.Errorf(apperr.EINVALID, "User ID is required")
 	}
 
 	if c.MaxFuel == 0 {
