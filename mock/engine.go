@@ -10,7 +10,7 @@ import (
 var _ service.EngineService = (*EngineService)(nil)
 
 type EngineService struct {
-	ExecContractFn func(ctx context.Context, revision *entity.Revision) (res interface{}, err error)
+	ExecContractFn func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error)
 	IsRunningFn    func() bool
 	PauseFn        func() error
 	ResumeFn       func() error
@@ -18,11 +18,11 @@ type EngineService struct {
 	StopFn         func() error
 }
 
-func (e *EngineService) ExecContract(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+func (e *EngineService) ExecContract(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 	if e.ExecContractFn == nil {
 		panic("ExecContractFn is not defined")
 	}
-	return e.ExecContractFn(ctx, revision)
+	return e.ExecContractFn(ctx, opt)
 }
 
 func (e *EngineService) IsRunning() bool {

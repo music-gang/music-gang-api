@@ -54,7 +54,7 @@ func TestVm_Run(t *testing.T) {
 				isRunning = false
 				return nil
 			},
-			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+			ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 				return nil, nil
 			},
 		}
@@ -169,7 +169,7 @@ func TestVm_Run(t *testing.T) {
 				isRunning = false
 				return nil
 			},
-			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+			ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 				return nil, nil
 			},
 		}
@@ -256,7 +256,7 @@ func TestVm_Run(t *testing.T) {
 				isRunning = false
 				return nil
 			},
-			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+			ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 				return nil, nil
 			},
 		}
@@ -326,7 +326,7 @@ func TestVm_Close(t *testing.T) {
 			StopFn: func() error {
 				return nil
 			},
-			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+			ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 				return nil, nil
 			},
 		}
@@ -373,7 +373,7 @@ func TestVm_Close(t *testing.T) {
 			StopFn: func() error {
 				return nil
 			},
-			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+			ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 				return nil, nil
 			},
 		}
@@ -420,7 +420,7 @@ func TestVm_Close(t *testing.T) {
 			StopFn: func() error {
 				return apperr.Errorf(apperr.EMGVM, "test")
 			},
-			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+			ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 				return nil, nil
 			},
 		}

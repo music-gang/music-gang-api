@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 )
 
@@ -50,10 +51,39 @@ type ContractManagmentService interface {
 	UpdateContract(ctx context.Context, id int64, contract ContractUpdate) (*entity.Contract, error)
 }
 
+// ContractCallOpt defines the options for calling a contract.
+type ContractCallOpt struct {
+	ContractRef      *entity.Contract
+	RevisionRef      *entity.Revision
+	ContractStateRef *entity.ContractState
+}
+
+// Contract returns the contract attached to the contract call options.
+func (opt ContractCallOpt) Contract() (*entity.Contract, error) {
+	if opt.ContractRef != nil {
+		return opt.ContractRef, nil
+	}
+	if opt.RevisionRef != nil && opt.RevisionRef.Contract != nil {
+		return opt.RevisionRef.Contract, nil
+	}
+	return nil, apperr.Errorf(apperr.EINVALID, "No contract specified")
+}
+
+// Revision returns the revision attached to the contract call options.
+func (opt ContractCallOpt) Revision() (*entity.Revision, error) {
+	if opt.RevisionRef != nil {
+		return opt.RevisionRef, nil
+	}
+	if opt.ContractRef != nil && opt.ContractRef.LastRevision != nil {
+		return opt.ContractRef.LastRevision, nil
+	}
+	return nil, apperr.Errorf(apperr.EINVALID, "No revision specified")
+}
+
 // ContractExecutorService rapresents the contract executor service.
 type ContractExecutorService interface {
 	// ExecContract executes a contract.
-	ExecContract(ctx context.Context, revision *entity.Revision) (res interface{}, err error)
+	ExecContract(ctx context.Context, opt ContractCallOpt) (res interface{}, err error)
 }
 
 // ContractService rapresents the contract managment service.

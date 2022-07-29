@@ -1313,7 +1313,7 @@ func TestContract_ContractCall(t *testing.T) {
 
 		s.VmCallableService = &mock.VmCallableService{
 			ExecutorService: &mock.ExecutorService{
-				ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 					return "OK", nil
 				},
 			},
@@ -1406,7 +1406,7 @@ func TestContract_ContractCall(t *testing.T) {
 
 		s.VmCallableService = &mock.VmCallableService{
 			ExecutorService: &mock.ExecutorService{
-				ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 					return "OK", nil
 				},
 			},
@@ -1561,7 +1561,7 @@ func TestContract_ContractCall(t *testing.T) {
 
 		s.VmCallableService = &mock.VmCallableService{
 			ExecutorService: &mock.ExecutorService{
-				ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 					return "", apperr.Errorf(apperr.EINTERNAL, "internal error")
 				},
 			},
@@ -1648,7 +1648,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 
 		s.VmCallableService = &mock.VmCallableService{
 			ExecutorService: &mock.ExecutorService{
-				ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 					return "OK", nil
 				},
 			},
@@ -1741,7 +1741,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 
 		s.VmCallableService = &mock.VmCallableService{
 			ExecutorService: &mock.ExecutorService{
-				ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 					return "OK", nil
 				},
 			},
@@ -1828,7 +1828,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 
 		s.VmCallableService = &mock.VmCallableService{
 			ExecutorService: &mock.ExecutorService{
-				ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 					return "OK", nil
 				},
 			},
@@ -1913,7 +1913,6 @@ func TestContract_ContractCallRev(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
 
 		if resp.StatusCode != http.StatusNotFound {
 			t.Fatalf("expected status code %d, got %d", http.StatusNotFound, resp.StatusCode)

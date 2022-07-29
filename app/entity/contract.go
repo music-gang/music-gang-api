@@ -40,6 +40,7 @@ type Contract struct {
 	UserID      int64      `json:"user_id"`
 	Visibility  Visibility `json:"visibility"`
 	MaxFuel     Fuel       `json:"max_fuel"` // The maximum amount of fuel that can be burned from the contract.
+	Stateful    bool       `json:"stateful"` // Enables the contract to persist its state during different executions (of same revision).
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 

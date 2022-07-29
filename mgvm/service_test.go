@@ -69,7 +69,7 @@ func TestVm_ExecContract(t *testing.T) {
 			StopFn: func() error {
 				return nil
 			},
-			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+			ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 				return "contract executed", nil
 			},
 		}
@@ -85,7 +85,10 @@ func TestVm_ExecContract(t *testing.T) {
 			}
 		}()
 
-		res, err := vm.ExecContract(context.Background(), contract.LastRevision)
+		res, err := vm.ExecContract(context.Background(), service.ContractCallOpt{
+			ContractRef: contract,
+			RevisionRef: contract.LastRevision,
+		})
 		if err != nil {
 			t.Errorf("Unexpected error: %s", err.Error())
 		}
@@ -107,7 +110,10 @@ func TestVm_ExecContract(t *testing.T) {
 
 		cancel()
 
-		if _, err := vm.ExecContract(ctx, &entity.Revision{}); err == nil {
+		if _, err := vm.ExecContract(ctx, service.ContractCallOpt{
+			ContractRef: &entity.Contract{},
+			RevisionRef: &entity.Revision{},
+		}); err == nil {
 			t.Errorf("Expected error, got: %v", err)
 		}
 	})
@@ -145,14 +151,17 @@ func TestVm_ExecContract(t *testing.T) {
 			StopFn: func() error {
 				return nil
 			},
-			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+			ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 				return "contract executed", nil
 			},
 		}
 
 		vm.EngineService.Resume()
 
-		if _, err := vm.ExecContract(context.Background(), contract.LastRevision); err == nil {
+		if _, err := vm.ExecContract(context.Background(), service.ContractCallOpt{
+			ContractRef: contract,
+			RevisionRef: contract.LastRevision,
+		}); err == nil {
 			t.Errorf("Expected error, got: %v", err)
 		}
 	})
@@ -186,14 +195,17 @@ func TestVm_ExecContract(t *testing.T) {
 			StopFn: func() error {
 				return nil
 			},
-			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+			ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 				return "contract executed", nil
 			},
 		}
 
 		vm.EngineService.Resume()
 
-		if _, err := vm.ExecContract(context.Background(), contract.LastRevision); err == nil {
+		if _, err := vm.ExecContract(context.Background(), service.ContractCallOpt{
+			ContractRef: contract,
+			RevisionRef: contract.LastRevision,
+		}); err == nil {
 			t.Errorf("Expected error, got: %v", err)
 		} else if err != service.ErrFuelTankNotEnough {
 			t.Errorf("Unexpected error, got: %v, want: %v", err, service.ErrFuelTankNotEnough)
@@ -232,14 +244,17 @@ func TestVm_ExecContract(t *testing.T) {
 			StopFn: func() error {
 				return nil
 			},
-			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+			ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 				return "contract executed", nil
 			},
 		}
 
 		vm.EngineService.Resume()
 
-		if _, err := vm.ExecContract(context.Background(), contract.LastRevision); err == nil {
+		if _, err := vm.ExecContract(context.Background(), service.ContractCallOpt{
+			ContractRef: contract,
+			RevisionRef: contract.LastRevision,
+		}); err == nil {
 			t.Errorf("Expected error, got: %v", err)
 		} else if code := apperr.ErrorCode(err); code != apperr.EMGVM {
 			t.Errorf("Unexpected error, got: %v, want: %v", code, apperr.EMGVM)
@@ -275,14 +290,17 @@ func TestVm_ExecContract(t *testing.T) {
 			StopFn: func() error {
 				return nil
 			},
-			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+			ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 				return nil, apperr.Errorf(apperr.EMGVM, "test")
 			},
 		}
 
 		vm.EngineService.Resume()
 
-		if _, err := vm.ExecContract(context.Background(), contract.LastRevision); err == nil {
+		if _, err := vm.ExecContract(context.Background(), service.ContractCallOpt{
+			ContractRef: contract,
+			RevisionRef: contract.LastRevision,
+		}); err == nil {
 			t.Errorf("Expected error, got: %v", err)
 		} else if code := apperr.ErrorCode(err); code != apperr.EMGVM {
 			t.Errorf("Unexpected error, got: %v, want: %v", code, apperr.EMGVM)
@@ -318,14 +336,17 @@ func TestVm_ExecContract(t *testing.T) {
 			StopFn: func() error {
 				return nil
 			},
-			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+			ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 				panic(service.EngineExecutionTimeoutPanic)
 			},
 		}
 
 		vm.EngineService.Resume()
 
-		if _, err := vm.ExecContract(context.Background(), contract.LastRevision); err == nil {
+		if _, err := vm.ExecContract(context.Background(), service.ContractCallOpt{
+			ContractRef: contract,
+			RevisionRef: contract.LastRevision,
+		}); err == nil {
 			t.Errorf("Expected error, got: %v", err)
 		} else if code := apperr.ErrorCode(err); code != apperr.EMGVM {
 			t.Errorf("Unexpected error, got: %v, want: %v", code, apperr.EMGVM)
@@ -361,14 +382,17 @@ func TestVm_ExecContract(t *testing.T) {
 			StopFn: func() error {
 				return nil
 			},
-			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+			ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 				panic("test")
 			},
 		}
 
 		vm.EngineService.Resume()
 
-		if _, err := vm.ExecContract(context.Background(), contract.LastRevision); err == nil {
+		if _, err := vm.ExecContract(context.Background(), service.ContractCallOpt{
+			ContractRef: contract,
+			RevisionRef: contract.LastRevision,
+		}); err == nil {
 			t.Errorf("Expected error, got: %v", err)
 		} else if code := apperr.ErrorCode(err); code != apperr.EMGVM {
 			t.Errorf("Unexpected error, got: %v, want: %v", code, apperr.EMGVM)
