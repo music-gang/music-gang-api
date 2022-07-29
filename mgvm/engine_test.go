@@ -6,6 +6,7 @@ import (
 
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
+	"github.com/music-gang/music-gang-api/app/service"
 	"github.com/music-gang/music-gang-api/mgvm"
 	"github.com/music-gang/music-gang-api/mock"
 )
@@ -123,7 +124,7 @@ func TestEngine_ExecContract(t *testing.T) {
 		solution := "5"
 
 		engine.Executors[entity.AnchorageVersion] = &mock.ExecutorService{
-			ExecContractFn: func(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+			ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 				return solution, nil
 			},
 		}
@@ -132,8 +133,10 @@ func TestEngine_ExecContract(t *testing.T) {
 			t.Errorf("Unexpected error: %s", err.Error())
 		}
 
-		res, err := engine.ExecContract(context.Background(), &entity.Revision{
-			Version: entity.AnchorageVersion,
+		res, err := engine.ExecContract(context.Background(), service.ContractCallOpt{
+			RevisionRef: &entity.Revision{
+				Version: entity.AnchorageVersion,
+			},
 		})
 		if err != nil {
 			t.Errorf("Unexpected error: %s", err.Error())
@@ -148,7 +151,9 @@ func TestEngine_ExecContract(t *testing.T) {
 
 		engine := mgvm.NewEngine()
 
-		_, err := engine.ExecContract(context.Background(), &entity.Revision{})
+		_, err := engine.ExecContract(context.Background(), service.ContractCallOpt{
+			RevisionRef: &entity.Revision{},
+		})
 		if err == nil {
 			t.Errorf("Expected error, got nil")
 		} else if code := apperr.ErrorCode(err); code != apperr.EMGVM {

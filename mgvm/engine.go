@@ -28,10 +28,15 @@ func NewEngine() *Engine {
 
 // ExecContract effectively executes the contract and returns the result.
 // If the engine goes into execution timeout, it panics with EngineExecutionTimeoutPanic.
-func (e *Engine) ExecContract(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+func (e *Engine) ExecContract(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 
 	if !e.IsRunning() {
 		return nil, apperr.Errorf(apperr.EMGVM, "engine is not running")
+	}
+
+	revision, err := opt.Revision()
+	if err != nil {
+		return nil, err
 	}
 
 	executor, err := e.getExecutor(revision.Version)
@@ -39,7 +44,7 @@ func (e *Engine) ExecContract(ctx context.Context, revision *entity.Revision) (r
 		return nil, err
 	}
 
-	return executor.ExecContract(ctx, revision)
+	return executor.ExecContract(ctx, opt)
 }
 
 // IsRunning returns true if the engine is running.

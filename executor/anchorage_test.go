@@ -6,6 +6,7 @@ import (
 
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
+	"github.com/music-gang/music-gang-api/app/service"
 	"github.com/music-gang/music-gang-api/executor"
 )
 
@@ -29,7 +30,10 @@ func TestAnchorageContractExecutor_ExecContract(t *testing.T) {
 
 		executor := executor.NewAnchorageContractExecutor()
 
-		if res, err := executor.ExecContract(context.Background(), contract.LastRevision); err != nil {
+		if res, err := executor.ExecContract(context.Background(), service.ContractCallOpt{
+			ContractRef: contract,
+			RevisionRef: contract.LastRevision,
+		}); err != nil {
 			t.Errorf("Unexpected error: %s", err.Error())
 		} else if res == nil {
 			t.Errorf("Expected response, got nil")
@@ -46,7 +50,10 @@ func TestAnchorageContractExecutor_ExecContract(t *testing.T) {
 
 		cancel()
 
-		if _, err := executor.ExecContract(ctx, contract.LastRevision); err == nil {
+		if _, err := executor.ExecContract(ctx, service.ContractCallOpt{
+			ContractRef: contract,
+			RevisionRef: contract.LastRevision,
+		}); err == nil {
 			t.Errorf("Expected error, got nil")
 		}
 	})
@@ -75,7 +82,10 @@ func TestAnchorageContractExecutor_ExecContract(t *testing.T) {
 			}
 		}()
 
-		executor.ExecContract(context.Background(), contract.LastRevision)
+		executor.ExecContract(context.Background(), service.ContractCallOpt{
+			ContractRef: contract,
+			RevisionRef: contract.LastRevision,
+		})
 	})
 
 	t.Run("ErrRuntime", func(t *testing.T) {
@@ -94,7 +104,10 @@ func TestAnchorageContractExecutor_ExecContract(t *testing.T) {
 
 		executor := executor.NewAnchorageContractExecutor()
 
-		if _, err := executor.ExecContract(context.Background(), contract.LastRevision); err == nil {
+		if _, err := executor.ExecContract(context.Background(), service.ContractCallOpt{
+			ContractRef: contract,
+			RevisionRef: contract.LastRevision,
+		}); err == nil {
 			t.Errorf("Expected error, got nil")
 		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EANCHORAGE {
 			t.Errorf("Expected error code %s, got %s", apperr.EANCHORAGE, errCode)

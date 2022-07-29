@@ -171,19 +171,29 @@ func (vm *MusicGangVM) DeleteUser(ctx context.Context, id int64) error {
 
 // ExecContract executes the contract.
 // This func is a wrapper for the Engine.ExecContract.
-func (vm *MusicGangVM) ExecContract(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+func (vm *MusicGangVM) ExecContract(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 
 	user := app.UserFromContext(ctx)
+
+	revision, err := opt.Revision()
+	if err != nil {
+		return nil, err
+	}
+
+	contract, err := opt.Contract()
+	if err != nil {
+		return nil, err
+	}
 
 	call := service.NewVmCallWithConfig(service.VmCallOpt{
 		User:        user,
 		RevisionRef: revision,
 		VmOperation: entity.VmOperationExecuteContract,
-		ContractRef: revision.Contract,
+		ContractRef: contract,
 	})
 
 	return vm.makeOperation(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
-		return vm.EngineService.ExecContract(ctx, ref.Revision())
+		return vm.EngineService.ExecContract(ctx, opt)
 	})
 }
 

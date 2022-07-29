@@ -62,7 +62,10 @@ func handleContractCall(c echo.Context, s *ServerAPI, contractID int64, revision
 		revision = contract.LastRevision
 	}
 
-	result, err := s.VmCallableService.ExecContract(c.Request().Context(), revision)
+	result, err := s.VmCallableService.ExecContract(c.Request().Context(), service.ContractCallOpt{
+		ContractRef: revision.Contract,
+		RevisionRef: revision,
+	})
 	if err != nil {
 		s.LogService.ReportError(c.Request().Context(), err)
 		return ErrorResponseJSON(c, err, nil)

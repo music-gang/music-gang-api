@@ -22,7 +22,12 @@ func NewAnchorageContractExecutor() *AnchorageContractExecutor {
 
 // ExecContract effectively executes the contract and returns the result.
 // If the engine goes into execution timeout, it panics with EngineExecutionTimeoutPanic.
-func (*AnchorageContractExecutor) ExecContract(ctx context.Context, revision *entity.Revision) (res interface{}, err error) {
+func (*AnchorageContractExecutor) ExecContract(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
+
+	revision, err := opt.Revision()
+	if err != nil {
+		return nil, err
+	}
 
 	select {
 	case <-ctx.Done():
