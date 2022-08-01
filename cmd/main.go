@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/music-gang/music-gang-api/app"
+	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
+	"github.com/music-gang/music-gang-api/app/service"
 	"github.com/music-gang/music-gang-api/auth"
 	"github.com/music-gang/music-gang-api/auth/jwt"
 	"github.com/music-gang/music-gang-api/config"
@@ -151,6 +153,18 @@ func (m *Main) Run(ctx context.Context) error {
 	postgresAuthService := postgres.NewAuthService(m.Postgres)
 	postgresUserService := postgres.NewUserService(m.Postgres)
 	postgresContractService := postgres.NewContractService(m.Postgres)
+	postgresStateService := postgres.NewStateService(m.Postgres)
+
+	postgresStateService.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+		userID := app.UserIDFromContext(ctx)
+		if userID == 0 {
+			return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "user not authorized")
+		}
+		if revisionID == 0 {
+			return nil, apperr.Errorf(apperr.EINVALID, "revisionID is 0")
+		}
+		return redis.NewLockService(m.Redis, fmt.Sprintf("state_user_%d_revision_%d", userID, revisionID)), nil
+	}
 
 	authService := auth.NewAuth(postgresAuthService, postgresUserService, config.GetConfig().APP.Auths)
 
@@ -198,6 +212,7 @@ func (m *Main) Run(ctx context.Context) error {
 	m.VM.ContractManagmentService = postgresContractService
 	m.VM.UserManagmentService = postgresUserService
 	m.VM.AuthManagmentService = authService
+	m.VM.StateService = postgresStateService
 
 	if err := m.VM.Run(); err != nil {
 		return err
