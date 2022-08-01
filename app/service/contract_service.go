@@ -53,9 +53,9 @@ type ContractManagmentService interface {
 
 // ContractCallOpt defines the options for calling a contract.
 type ContractCallOpt struct {
-	ContractRef      *entity.Contract
-	RevisionRef      *entity.Revision
-	ContractStateRef *entity.ContractState
+	ContractRef *entity.Contract
+	RevisionRef *entity.Revision
+	StateRef    *entity.State
 }
 
 // Contract returns the contract attached to the contract call options.
