@@ -20,6 +20,9 @@ type StateService struct {
 	// It is used to avoid querying the database when the state is already in the cache.
 	// Can be nil if the cache is not enabled.
 	CacheStateSearchService service.StateSearchService
+
+	// LockService is the service for locking the state during I/O operations.
+	CreateLockService func(ctx context.Context, revisionID int64) (service.LockService, error)
 }
 
 // NewStateService creates a new StateService.
@@ -31,6 +34,15 @@ func NewStateService(db *DB) *StateService {
 
 // CreateState creates a new state.
 func (s *StateService) CreateState(ctx context.Context, state *entity.State) error {
+
+	ls, err := s.CreateLockService(ctx, state.RevisionID)
+	if err != nil {
+		return err
+	}
+	if err := ls.LockContext(ctx); err != nil {
+		return err
+	}
+	defer ls.UnlockContext(ctx)
 
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -52,6 +64,15 @@ func (s *StateService) CreateState(ctx context.Context, state *entity.State) err
 // FindStateByRevisionID finds the state by revision ID and the authenticated user retrieved from the context.
 // If cache is enabled, it tries to find the state in the cache first.
 func (s *StateService) FindStateByRevisionID(ctx context.Context, revisionID int64) (*entity.State, error) {
+
+	ls, err := s.CreateLockService(ctx, revisionID)
+	if err != nil {
+		return nil, err
+	}
+	if err := ls.LockContext(ctx); err != nil {
+		return nil, err
+	}
+	defer ls.UnlockContext(ctx)
 
 	if s.CacheStateSearchService != nil {
 		state, err := s.CacheStateSearchService.FindStateByRevisionID(ctx, revisionID)
@@ -76,6 +97,15 @@ func (s *StateService) FindStateByRevisionID(ctx context.Context, revisionID int
 
 // UpdateState updates the state.
 func (s *StateService) UpdateState(ctx context.Context, revisionID int64, value entity.StateValue) (*entity.State, error) {
+
+	ls, err := s.CreateLockService(ctx, revisionID)
+	if err != nil {
+		return nil, err
+	}
+	if err := ls.LockContext(ctx); err != nil {
+		return nil, err
+	}
+	defer ls.UnlockContext(ctx)
 
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
