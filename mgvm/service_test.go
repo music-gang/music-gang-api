@@ -29,6 +29,28 @@ func TestVm_ExecContract(t *testing.T) {
 		},
 	}
 
+	codeStateful := `
+		function sum(a, b) {
+			var res = a+b;
+			setState("sum", res);
+		}
+
+		sum(1, 2);
+
+		var result = getState("sum");
+	`
+
+	contractStateful := &entity.Contract{
+		Name:        "test",
+		Description: "test",
+		Visibility:  entity.VisibilityPublic,
+		Stateful:    true,
+		MaxFuel:     entity.FuelLongActionAmount,
+		LastRevision: &entity.Revision{
+			CompiledCode: []byte(codeStateful),
+		},
+	}
+
 	t.Run("OK", func(t *testing.T) {
 
 		vm := mgvm.NewMusicGangVM()
@@ -100,6 +122,406 @@ func TestVm_ExecContract(t *testing.T) {
 		if !refuelCalled {
 			t.Errorf("Refuel not called")
 		}
+	})
+
+	t.Run("Stateful", func(t *testing.T) {
+
+		t.Run("OK", func(t *testing.T) {
+
+			vm := mgvm.NewMusicGangVM()
+
+			currentState := entity.StateInitializing
+			currentFuel := entity.Fuel(0)
+			refuelCalled := false
+
+			vm.LogService = &mock.LogServiceNoOp{}
+			vm.FuelTank = &mock.FuelTankService{
+				BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+					atomic.AddUint64((*uint64)(&currentFuel), uint64(fuel))
+					return nil
+				},
+				FuelFn: func(ctx context.Context) (entity.Fuel, error) {
+					return entity.Fuel(atomic.LoadUint64((*uint64)(&currentFuel))), nil
+				},
+				RefuelFn: func(ctx context.Context, fuelToRefill entity.Fuel) error {
+					atomic.AddUint64((*uint64)(&currentFuel), -uint64(fuelToRefill))
+					refuelCalled = true
+					return nil
+				},
+			}
+			vm.EngineService = &mock.EngineService{
+				IsRunningFn: func() bool {
+					return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				},
+				PauseFn: func() error {
+					return nil
+				},
+				ResumeFn: func() error {
+					atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
+					return nil
+				},
+				StateFn: func() entity.VmState {
+					return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
+				},
+				StopFn: func() error {
+					return nil
+				},
+				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
+					opt.StateRef.Value["sum"] = 3.0
+					return "contract executed", nil
+				},
+			}
+			vm.StateService = &mock.StateService{
+				FindStateByRevisionIDFn: func(ctx context.Context, revisionID int64) (*entity.State, error) {
+					return &entity.State{
+						ID:         1,
+						RevisionID: revisionID,
+						Value:      make(entity.StateValue),
+					}, nil
+				},
+				UpdateStateFn: func(ctx context.Context, revisionID int64, value entity.StateValue) (*entity.State, error) {
+					if value["sum"] != 3.0 {
+						t.Errorf("Unexpected value, got: %v, want: %v", value["sum"], 3.0)
+					}
+					return &entity.State{
+						ID:         1,
+						RevisionID: revisionID,
+						Value:      value,
+					}, nil
+				},
+			}
+
+			go func() {
+
+				// simulate late start to mock the gorutine waiting for the engine to be running
+
+				time.Sleep(time.Second)
+
+				if err := vm.Resume(); err != nil {
+					t.Errorf("Unexpected error: %s", err.Error())
+				}
+			}()
+
+			res, err := vm.ExecContract(context.Background(), service.ContractCallOpt{
+				ContractRef: contractStateful,
+				RevisionRef: contractStateful.LastRevision,
+			})
+			if err != nil {
+				t.Errorf("Unexpected error: %s", err.Error())
+			}
+
+			if res != "contract executed" {
+				t.Errorf("Unexpected result, got: %s, want: %s", res, "contract executed")
+			}
+
+			if !refuelCalled {
+				t.Errorf("Refuel not called")
+			}
+		})
+
+		t.Run("FirstRun", func(t *testing.T) {
+
+			vm := mgvm.NewMusicGangVM()
+
+			currentState := entity.StateInitializing
+			currentFuel := entity.Fuel(0)
+			refuelCalled := false
+
+			vm.LogService = &mock.LogServiceNoOp{}
+			vm.FuelTank = &mock.FuelTankService{
+				BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+					atomic.AddUint64((*uint64)(&currentFuel), uint64(fuel))
+					return nil
+				},
+				FuelFn: func(ctx context.Context) (entity.Fuel, error) {
+					return entity.Fuel(atomic.LoadUint64((*uint64)(&currentFuel))), nil
+				},
+				RefuelFn: func(ctx context.Context, fuelToRefill entity.Fuel) error {
+					atomic.AddUint64((*uint64)(&currentFuel), -uint64(fuelToRefill))
+					refuelCalled = true
+					return nil
+				},
+			}
+			vm.EngineService = &mock.EngineService{
+				IsRunningFn: func() bool {
+					return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				},
+				PauseFn: func() error {
+					return nil
+				},
+				ResumeFn: func() error {
+					atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
+					return nil
+				},
+				StateFn: func() entity.VmState {
+					return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
+				},
+				StopFn: func() error {
+					return nil
+				},
+				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
+					opt.StateRef.Value["sum"] = 3.0
+					return "contract executed", nil
+				},
+			}
+			vm.StateService = &mock.StateService{
+				FindStateByRevisionIDFn: func(ctx context.Context, revisionID int64) (*entity.State, error) {
+					return nil, apperr.Errorf(apperr.ENOTFOUND, "state not found")
+				},
+				CreateStateFn: func(ctx context.Context, state *entity.State) error {
+					state.ID = 1
+					return nil
+				},
+				UpdateStateFn: func(ctx context.Context, revisionID int64, value entity.StateValue) (*entity.State, error) {
+					if value["sum"] != 3.0 {
+						t.Errorf("Unexpected value, got: %v, want: %v", value["sum"], 3.0)
+					}
+					return &entity.State{
+						ID:         1,
+						RevisionID: revisionID,
+						Value:      value,
+					}, nil
+				},
+			}
+
+			go func() {
+
+				// simulate late start to mock the gorutine waiting for the engine to be running
+
+				time.Sleep(time.Second)
+
+				if err := vm.Resume(); err != nil {
+					t.Errorf("Unexpected error: %s", err.Error())
+				}
+			}()
+
+			res, err := vm.ExecContract(context.Background(), service.ContractCallOpt{
+				ContractRef: contractStateful,
+				RevisionRef: contractStateful.LastRevision,
+			})
+			if err != nil {
+				t.Errorf("Unexpected error: %s", err.Error())
+			}
+
+			if res != "contract executed" {
+				t.Errorf("Unexpected result, got: %s, want: %s", res, "contract executed")
+			}
+
+			if !refuelCalled {
+				t.Errorf("Refuel not called")
+			}
+		})
+
+		t.Run("ErrFindState", func(t *testing.T) {
+
+			vm := mgvm.NewMusicGangVM()
+
+			currentState := entity.StateInitializing
+			currentFuel := entity.Fuel(0)
+
+			vm.LogService = &mock.LogServiceNoOp{}
+			vm.FuelTank = &mock.FuelTankService{
+				BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+					atomic.AddUint64((*uint64)(&currentFuel), uint64(fuel))
+					return nil
+				},
+				FuelFn: func(ctx context.Context) (entity.Fuel, error) {
+					return entity.Fuel(atomic.LoadUint64((*uint64)(&currentFuel))), nil
+				},
+			}
+			vm.EngineService = &mock.EngineService{
+				IsRunningFn: func() bool {
+					return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				},
+				PauseFn: func() error {
+					return nil
+				},
+				ResumeFn: func() error {
+					atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
+					return nil
+				},
+				StateFn: func() entity.VmState {
+					return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
+				},
+				StopFn: func() error {
+					return nil
+				},
+				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
+					opt.StateRef.Value["sum"] = 3.0
+					return "contract executed", nil
+				},
+			}
+			vm.StateService = &mock.StateService{
+				FindStateByRevisionIDFn: func(ctx context.Context, revisionID int64) (*entity.State, error) {
+					return nil, apperr.Errorf(apperr.EINTERNAL, "internal error")
+				},
+			}
+
+			go func() {
+
+				// simulate late start to mock the gorutine waiting for the engine to be running
+
+				time.Sleep(time.Second)
+
+				if err := vm.Resume(); err != nil {
+					t.Errorf("Unexpected error: %s", err.Error())
+				}
+			}()
+
+			res, err := vm.ExecContract(context.Background(), service.ContractCallOpt{
+				ContractRef: contractStateful,
+				RevisionRef: contractStateful.LastRevision,
+			})
+			if err == nil {
+				t.Errorf("Expected error, got: %s", res)
+			} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINTERNAL {
+				t.Errorf("Unexpected error code, got: %s, want: %s", errCode, apperr.EINTERNAL)
+			}
+		})
+
+		t.Run("ErrCreateState", func(t *testing.T) {
+
+			vm := mgvm.NewMusicGangVM()
+
+			currentState := entity.StateInitializing
+			currentFuel := entity.Fuel(0)
+
+			vm.LogService = &mock.LogServiceNoOp{}
+			vm.FuelTank = &mock.FuelTankService{
+				BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+					atomic.AddUint64((*uint64)(&currentFuel), uint64(fuel))
+					return nil
+				},
+				FuelFn: func(ctx context.Context) (entity.Fuel, error) {
+					return entity.Fuel(atomic.LoadUint64((*uint64)(&currentFuel))), nil
+				},
+			}
+			vm.EngineService = &mock.EngineService{
+				IsRunningFn: func() bool {
+					return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				},
+				PauseFn: func() error {
+					return nil
+				},
+				ResumeFn: func() error {
+					atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
+					return nil
+				},
+				StateFn: func() entity.VmState {
+					return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
+				},
+				StopFn: func() error {
+					return nil
+				},
+				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
+					opt.StateRef.Value["sum"] = 3.0
+					return "contract executed", nil
+				},
+			}
+			vm.StateService = &mock.StateService{
+				FindStateByRevisionIDFn: func(ctx context.Context, revisionID int64) (*entity.State, error) {
+					return nil, apperr.Errorf(apperr.ENOTFOUND, "not found")
+				},
+				CreateStateFn: func(ctx context.Context, state *entity.State) error {
+					return apperr.Errorf(apperr.EINTERNAL, "internal error")
+				},
+			}
+
+			go func() {
+
+				// simulate late start to mock the gorutine waiting for the engine to be running
+
+				time.Sleep(time.Second)
+
+				if err := vm.Resume(); err != nil {
+					t.Errorf("Unexpected error: %s", err.Error())
+				}
+			}()
+
+			res, err := vm.ExecContract(context.Background(), service.ContractCallOpt{
+				ContractRef: contractStateful,
+				RevisionRef: contractStateful.LastRevision,
+			})
+			if err == nil {
+				t.Errorf("Expected error, got: %s", res)
+			} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINTERNAL {
+				t.Errorf("Unexpected error code, got: %s, want: %s", errCode, apperr.EINTERNAL)
+			}
+		})
+
+		t.Run("ErrUpdateState", func(t *testing.T) {
+
+			vm := mgvm.NewMusicGangVM()
+
+			currentState := entity.StateInitializing
+			currentFuel := entity.Fuel(0)
+
+			vm.LogService = &mock.LogServiceNoOp{}
+			vm.FuelTank = &mock.FuelTankService{
+				BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+					atomic.AddUint64((*uint64)(&currentFuel), uint64(fuel))
+					return nil
+				},
+				FuelFn: func(ctx context.Context) (entity.Fuel, error) {
+					return entity.Fuel(atomic.LoadUint64((*uint64)(&currentFuel))), nil
+				},
+			}
+			vm.EngineService = &mock.EngineService{
+				IsRunningFn: func() bool {
+					return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+				},
+				PauseFn: func() error {
+					return nil
+				},
+				ResumeFn: func() error {
+					atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
+					return nil
+				},
+				StateFn: func() entity.VmState {
+					return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
+				},
+				StopFn: func() error {
+					return nil
+				},
+				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
+					opt.StateRef.Value["sum"] = 3.0
+					return "contract executed", nil
+				},
+			}
+			vm.StateService = &mock.StateService{
+				FindStateByRevisionIDFn: func(ctx context.Context, revisionID int64) (*entity.State, error) {
+					return &entity.State{
+						ID:         1,
+						RevisionID: revisionID,
+						Value:      make(entity.StateValue),
+					}, nil
+				},
+				UpdateStateFn: func(ctx context.Context, revisionID int64, value entity.StateValue) (*entity.State, error) {
+					return nil, apperr.Errorf(apperr.EINTERNAL, "internal error")
+				},
+			}
+
+			go func() {
+
+				// simulate late start to mock the gorutine waiting for the engine to be running
+
+				time.Sleep(time.Second)
+
+				if err := vm.Resume(); err != nil {
+					t.Errorf("Unexpected error: %s", err.Error())
+				}
+			}()
+
+			_, err := vm.ExecContract(context.Background(), service.ContractCallOpt{
+				ContractRef: contractStateful,
+				RevisionRef: contractStateful.LastRevision,
+			})
+			if err == nil {
+				t.Errorf("Expected error, got nil")
+			} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINTERNAL {
+				t.Errorf("Unexpected error code, got: %s, want: %s", errCode, apperr.EINTERNAL)
+			}
+		})
 	})
 
 	t.Run("ContextCancelled", func(t *testing.T) {

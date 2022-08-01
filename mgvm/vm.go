@@ -32,6 +32,7 @@ type MusicGangVM struct {
 	AuthManagmentService     service.AuthManagmentService
 	ContractManagmentService service.ContractManagmentService
 	UserManagmentService     service.UserManagmentService
+	StateService             service.StateService
 }
 
 // MusicGangVM creates a new MusicGangVM.

@@ -193,7 +193,46 @@ func (vm *MusicGangVM) ExecContract(ctx context.Context, opt service.ContractCal
 	})
 
 	return vm.makeOperation(ctx, call, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
-		return vm.EngineService.ExecContract(ctx, opt)
+
+		if ref.Contract().Stateful {
+
+			needToCreateZeroState := false
+
+			state, err := vm.StateService.FindStateByRevisionID(ctx, ref.Revision().ID)
+			if err != nil {
+				if errCode := apperr.ErrorCode(err); errCode != apperr.ENOTFOUND {
+					return nil, err
+				}
+				needToCreateZeroState = true
+			}
+
+			if needToCreateZeroState {
+
+				state = &entity.State{
+					RevisionID: ref.Revision().ID,
+					Value:      make(entity.StateValue),
+				}
+
+				if err := vm.StateService.CreateState(ctx, state); err != nil {
+					return nil, err
+				}
+			}
+
+			opt.StateRef = state
+		}
+
+		res, err := vm.EngineService.ExecContract(ctx, opt)
+		if err != nil {
+			return nil, err
+		}
+
+		if ref.Contract().Stateful {
+			if _, err := vm.StateService.UpdateState(ctx, ref.Revision().ID, opt.StateRef.Value); err != nil {
+				return nil, err
+			}
+		}
+
+		return res, nil
 	})
 }
 
