@@ -1,0 +1,10 @@
+CREATE TABLE states(
+    id BIGSERIAL PRIMARY KEY,
+    revision_id BIGINT NOT NULL REFERENCES revisions(id) ON DELETE CASCADE,
+    value JSONB NOT NULL,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    UNIQUE(revision_id, user_id)
+);
