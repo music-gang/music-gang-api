@@ -3,12 +3,12 @@ package postgres
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/music-gang/music-gang-api/app"
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
+	"github.com/music-gang/music-gang-api/postgres/query"
 )
 
 var _ service.ContractService = (*ContractService)(nil)
@@ -244,19 +244,15 @@ func createContract(ctx context.Context, tx *Tx, contract *entity.Contract) erro
 		return apperr.Errorf(apperr.EFORBIDDEN, "user is not allowed to create a contract")
 	}
 
-	if err := tx.QueryRowContext(ctx, `
-		INSERT INTO contracts (
-			name,
-			description,
-			user_id,
-			visibility,
-			max_fuel,
-			stateful,
-			created_at,
-			updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		RETURNING id
-	`, contract.Name, contract.Description, contract.UserID, contract.Visibility, contract.MaxFuel, contract.Stateful, contract.CreatedAt, contract.UpdatedAt).Scan(&contract.ID); err != nil {
+	if err := tx.QueryRowContext(ctx, query.InsertContractQuery(),
+		contract.Name,
+		contract.Description,
+		contract.UserID,
+		contract.Visibility,
+		contract.MaxFuel,
+		contract.Stateful,
+		contract.CreatedAt,
+		contract.UpdatedAt).Scan(&contract.ID); err != nil {
 		return apperr.Errorf(apperr.EINTERNAL, "failed to insert contract: %v", err)
 	}
 
@@ -274,7 +270,7 @@ func deleteContract(ctx context.Context, tx *Tx, id int64) error {
 		return apperr.Errorf(apperr.EUNAUTHORIZED, "contract is not owned by the authenticated user")
 	}
 
-	if _, err := tx.ExecContext(ctx, `DELETE FROM contracts WHERE id = $1`, id); err != nil {
+	if _, err := tx.ExecContext(ctx, query.DeleteContractQuery(), id); err != nil {
 		return apperr.Errorf(apperr.EINTERNAL, "failed to delete contract: %v", err)
 	}
 
@@ -313,22 +309,7 @@ func findContracts(ctx context.Context, tx *Tx, filter service.ContractFilter) (
 		counterParameter++
 	}
 
-	rows, err := tx.QueryContext(ctx, `
-		SELECT
-			id,
-			name,
-			description,
-			user_id,
-			visibility,
-			max_fuel,
-			stateful,
-			created_at,
-			updated_at,
-			COUNT(*) OVER() as count
-		FROM contracts
-		WHERE `+strings.Join(where, " AND ")+`
-		ORDER BY id ASC
-		`+FormatLimitOffset(filter.Limit, filter.Offset), args...)
+	rows, err := tx.QueryContext(ctx, query.SelectContractsQuery(where, filter.Limit, filter.Offset), args...)
 
 	if err != nil {
 		return nil, 0, apperr.Errorf(apperr.EINTERNAL, "failed to query contracts: %v", err)
@@ -404,21 +385,7 @@ func findRevisions(ctx context.Context, tx *Tx, filter service.RevisionFilter) (
 		}
 	}
 
-	rows, err := tx.QueryContext(ctx, `
-		SELECT
-			id,
-			rev,
-			version,
-			contract_id,
-			notes,
-			compiled_code,
-			max_fuel,
-			created_at,
-			COUNT(*) OVER() as count
-		FROM revisions
-		WHERE `+strings.Join(where, " AND ")+`
-		ORDER BY rev DESC
-		`+FormatLimitOffset(filter.Limit, filter.Offset), args...)
+	rows, err := tx.QueryContext(ctx, query.SelectRevisionsQuery(where, filter.Limit, filter.Offset), args...)
 
 	if err != nil {
 		return nil, 0, apperr.Errorf(apperr.EINTERNAL, "failed to query revisions: %v", err)
@@ -463,17 +430,14 @@ func makeRevision(ctx context.Context, tx *Tx, revision *entity.Revision) error 
 		return err
 	}
 
-	if err := tx.QueryRowContext(ctx, `
-		INSERT INTO revisions (
-			rev,
-			version,
-			contract_id,
-			notes,
-			compiled_code,
-			max_fuel,
-			created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id
-	`, revision.Rev, revision.Version, revision.ContractID, revision.Notes, revision.CompiledCode, revision.MaxFuel, revision.CreatedAt).Scan(&revision.ID); err != nil {
+	if err := tx.QueryRowContext(ctx, query.InsertRevisionQuery(),
+		revision.Rev,
+		revision.Version,
+		revision.ContractID,
+		revision.Notes,
+		revision.CompiledCode,
+		revision.MaxFuel,
+		revision.CreatedAt).Scan(&revision.ID); err != nil {
 		return apperr.Errorf(apperr.EINTERNAL, "failed to insert revision: %v", err)
 	}
 
@@ -510,14 +474,12 @@ func updateContract(ctx context.Context, tx *Tx, id int64, upd service.ContractU
 		return nil, err
 	}
 
-	if _, err := tx.ExecContext(ctx, `
-		UPDATE contracts SET
-			name = $1,
-			description = $2,
-			max_fuel = $3,
-			updated_at = $4
-		WHERE id = $5
-	`, contract.Name, contract.Description, contract.MaxFuel, contract.UpdatedAt, id); err != nil {
+	if _, err := tx.ExecContext(ctx, query.UpdateContractQuery(),
+		contract.Name,
+		contract.Description,
+		contract.MaxFuel,
+		contract.UpdatedAt,
+		id); err != nil {
 		return nil, apperr.Errorf(apperr.EINTERNAL, "failed to update contract: %v", err)
 	}
 
