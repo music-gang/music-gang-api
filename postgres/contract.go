@@ -251,10 +251,12 @@ func createContract(ctx context.Context, tx *Tx, contract *entity.Contract) erro
 			user_id,
 			visibility,
 			max_fuel,
+			stateful,
 			created_at,
 			updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id
-	`, contract.Name, contract.Description, contract.UserID, contract.Visibility, contract.MaxFuel, contract.CreatedAt, contract.UpdatedAt).Scan(&contract.ID); err != nil {
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id
+	`, contract.Name, contract.Description, contract.UserID, contract.Visibility, contract.MaxFuel, contract.Stateful, contract.CreatedAt, contract.UpdatedAt).Scan(&contract.ID); err != nil {
 		return apperr.Errorf(apperr.EINTERNAL, "failed to insert contract: %v", err)
 	}
 
@@ -319,6 +321,7 @@ func findContracts(ctx context.Context, tx *Tx, filter service.ContractFilter) (
 			user_id,
 			visibility,
 			max_fuel,
+			stateful,
 			created_at,
 			updated_at,
 			COUNT(*) OVER() as count
@@ -345,6 +348,7 @@ func findContracts(ctx context.Context, tx *Tx, filter service.ContractFilter) (
 			&contract.UserID,
 			&contract.Visibility,
 			&contract.MaxFuel,
+			&contract.Stateful,
 			&contract.CreatedAt,
 			&contract.UpdatedAt,
 			&n,

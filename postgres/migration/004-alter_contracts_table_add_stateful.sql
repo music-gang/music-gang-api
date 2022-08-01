@@ -1,0 +1,1 @@
+ALTER TABLE contracts ADD stateful boolean NOT NULL DEFAULT false;
