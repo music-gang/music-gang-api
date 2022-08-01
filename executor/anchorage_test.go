@@ -141,21 +141,21 @@ func TestAnchorageContractExecutor_Stateful(t *testing.T) {
 
 		executor := executor.NewAnchorageContractExecutor()
 
-		contractState := &entity.ContractState{
-			State: make(entity.State),
+		contractState := &entity.State{
+			Value: make(entity.StateValue),
 		}
 
 		if res, err := executor.ExecContract(context.Background(), service.ContractCallOpt{
-			ContractRef:      contract,
-			RevisionRef:      contract.LastRevision,
-			ContractStateRef: contractState,
+			ContractRef: contract,
+			RevisionRef: contract.LastRevision,
+			StateRef:    contractState,
 		}); err != nil {
 			t.Errorf("Unexpected error: %s", err.Error())
 		} else if res == nil {
 			t.Errorf("Expected response, got nil")
 		} else if res.(string) != "3" {
 			t.Errorf("Expected response, got %v", res)
-		} else if v, ok := contractState.State["sum"]; !ok {
+		} else if v, ok := contractState.Value["sum"]; !ok {
 			t.Errorf("Expected state, got nil")
 		} else if v != float64(3) {
 			t.Errorf("Expected 3, got %v", v)

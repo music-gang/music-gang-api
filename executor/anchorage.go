@@ -53,8 +53,8 @@ func (*AnchorageContractExecutor) ExecContract(ctx context.Context, opt service.
 		}
 	}()
 
-	if contract.Stateful && opt.ContractStateRef != nil && opt.ContractStateRef.State != nil {
-		injectStateAccessor(ottoVm, opt.ContractStateRef)
+	if contract.Stateful && opt.StateRef != nil && opt.StateRef.Value != nil {
+		injectStateAccessor(ottoVm, opt.StateRef)
 	}
 
 	_, err = ottoVm.Run(revision.CompiledCode)
@@ -78,7 +78,7 @@ func (*AnchorageContractExecutor) ExecContract(ctx context.Context, opt service.
 }
 
 // injectStateAccessor injects the state accessor into the otto vm.
-func injectStateAccessor(vm *otto.Otto, contractState *entity.ContractState) {
+func injectStateAccessor(vm *otto.Otto, contractState *entity.State) {
 	vm.Set("setState", func(call otto.FunctionCall) otto.Value {
 		if len(call.ArgumentList) != 2 {
 			return otto.UndefinedValue()
@@ -94,7 +94,7 @@ func injectStateAccessor(vm *otto.Otto, contractState *entity.ContractState) {
 			return otto.UndefinedValue()
 		}
 
-		contractState.State[key] = value
+		contractState.Value[key] = value
 		return otto.UndefinedValue()
 	})
 
@@ -109,7 +109,7 @@ func injectStateAccessor(vm *otto.Otto, contractState *entity.ContractState) {
 			return otto.UndefinedValue()
 		}
 
-		value, ok := contractState.State[key]
+		value, ok := contractState.Value[key]
 		if !ok {
 			return otto.UndefinedValue()
 		}
