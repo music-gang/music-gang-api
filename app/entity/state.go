@@ -1,31 +1,54 @@
 package entity
 
 import (
+	"database/sql"
+	"database/sql/driver"
+	"encoding/json"
+	"time"
+
 	"github.com/music-gang/music-gang-api/app/apperr"
-	"github.com/music-gang/music-gang-api/app/util"
 )
+
+const (
+	// EmptyState is the empty state.
+	EmptyState = `{}`
+)
+
+var _ driver.Valuer = StateValue{}
+var _ sql.Scanner = (*StateValue)(nil)
 
 // StateValue represents the state value.
 type StateValue map[string]any
 
-// NewStateFromBytes creates a state from bytes.
-func NewStateFromBytes(b []byte) (StateValue, error) {
-	s := make(StateValue)
-	if b != nil {
-		if err := util.FromBytes(b, s); err != nil {
-			return nil, apperr.Errorf(apperr.EINTERNAL, "Error while converting bytes to state: %s", err.Error())
-		}
+// Value implements driver.Valuer
+func (s StateValue) Value() (driver.Value, error) {
+	v, err := json.Marshal(s)
+	if err != nil {
+		return nil, apperr.Errorf(apperr.EINTERNAL, "Error while converting state to Value: %s", err.Error())
 	}
-	return s, nil
+	return v, nil
 }
 
-// Bytes converts the state to bytes.
-func (s StateValue) Bytes() ([]byte, error) {
-	b, err := util.ToBytes(s)
-	if err != nil {
-		return nil, apperr.Errorf(apperr.EINTERNAL, "Error while converting state to bytes: %s", err.Error())
+// Scan implements sql.Scanner
+func (s *StateValue) Scan(src any) error {
+	b, ok := src.([]byte)
+	if !ok {
+		return apperr.Errorf(apperr.EINVALID, "invalid state value")
 	}
-	return b, nil
+	return json.Unmarshal(b, &s)
+}
+
+// NewStateFromBytes creates a state from bytes.
+// If b is nil, it returns an empty state.
+func NewStateFromBytes(b []byte) (StateValue, error) {
+	s := make(StateValue)
+	if b == nil {
+		b = []byte(EmptyState)
+	}
+	if err := json.Unmarshal(b, &s); err != nil {
+		return nil, apperr.Errorf(apperr.EINTERNAL, "Error while converting bytes to state: %s", err.Error())
+	}
+	return s, nil
 }
 
 // State represents the state of the contract at a given revision for specific user.
@@ -36,8 +59,8 @@ type State struct {
 	RevisionID int64      `json:"revision_id"`
 	Value      StateValue `json:"value"`
 	UserID     int64      `json:"user_id"`
-	CreatedAt  int64      `json:"created_at"`
-	UpdatedAt  int64      `json:"updated_at"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
 
 	User     *User     `json:"user"`
 	Revision *Revision `json:"revision"`
@@ -52,6 +75,10 @@ func (s State) Validate() error {
 
 	if s.UserID == 0 {
 		return apperr.Errorf(apperr.EINVALID, "user id is required")
+	}
+
+	if s.Value == nil {
+		return apperr.Errorf(apperr.EINVALID, "value cannot be nil")
 	}
 
 	return nil
