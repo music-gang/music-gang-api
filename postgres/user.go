@@ -3,12 +3,12 @@ package postgres
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/music-gang/music-gang-api/app"
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
+	"github.com/music-gang/music-gang-api/postgres/query"
 )
 
 // Ensure service implements interface.
@@ -170,15 +170,12 @@ func createUser(ctx context.Context, tx *Tx, user *entity.User) error {
 		return err
 	}
 
-	if err := tx.QueryRowContext(ctx, `
-		INSERT INTO users (
-			name,
-			email,
-			password,
-			created_at,
-			updated_at
-		) VALUES ( $1, $2, $3, $4, $5 ) RETURNING id
-	`, user.Name, user.Email, user.Password, user.CreatedAt, user.UpdatedAt).Scan(&user.ID); err != nil {
+	if err := tx.QueryRowContext(ctx, query.InsertUserQuery(),
+		user.Name,
+		user.Email,
+		user.Password,
+		user.CreatedAt,
+		user.UpdatedAt).Scan(&user.ID); err != nil {
 		return apperr.Errorf(apperr.EINTERNAL, "failed to insert user: %v", err)
 	}
 
@@ -196,7 +193,7 @@ func deleteUser(ctx context.Context, tx *Tx, id int64) error {
 		return apperr.Errorf(apperr.EUNAUTHORIZED, "you are not allowed to delete this user")
 	}
 
-	if _, err := tx.ExecContext(ctx, `DELETE FROM users WHERE id = $1`, id); err != nil {
+	if _, err := tx.ExecContext(ctx, query.DeleteUserQuery(), id); err != nil {
 		return apperr.Errorf(apperr.EINTERNAL, "failed to delete user: %v", err)
 	}
 
@@ -255,21 +252,7 @@ func findUsers(ctx context.Context, tx *Tx, filter service.UserFilter) (_ entity
 		counterParameter++
 	}
 
-	rows, err := tx.QueryContext(ctx, `
-		SELECT 
-		    id,
-		    name,
-		    email,
-			password,
-		    created_at,
-		    updated_at,
-		    COUNT(*) OVER() as count
-		FROM users
-		WHERE `+strings.Join(where, " AND ")+`
-		ORDER BY id ASC
-		`+FormatLimitOffset(filter.Limit, filter.Offset),
-		args...,
-	)
+	rows, err := tx.QueryContext(ctx, query.SelectUsersQuery(where, filter.Limit, filter.Offset), args...)
 	if err != nil {
 		return nil, 0, apperr.Errorf(apperr.EINTERNAL, "failed to query users: %v", err)
 	}
@@ -325,12 +308,10 @@ func updateUser(ctx context.Context, tx *Tx, id int64, upd service.UserUpdate) (
 		return nil, err
 	}
 
-	if _, err := tx.ExecContext(ctx, `
-		UPDATE users SET
-			name = $1,
-			updated_at = $2
-		WHERE id = $3
-	`, user.Name, user.UpdatedAt, id); err != nil {
+	if _, err := tx.ExecContext(ctx, query.UpdateUserQuery(),
+		user.Name,
+		user.UpdatedAt,
+		id); err != nil {
 		return nil, apperr.Errorf(apperr.EINTERNAL, "failed to update user: %v", err)
 	}
 

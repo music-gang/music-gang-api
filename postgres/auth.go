@@ -3,12 +3,12 @@ package postgres
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/music-gang/music-gang-api/app"
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
+	"github.com/music-gang/music-gang-api/postgres/query"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -185,18 +185,15 @@ func createAuth(ctx context.Context, tx *Tx, auth *entity.Auth) error {
 		return err
 	}
 
-	if err := tx.QueryRowContext(ctx, `
-		INSERT INTO auths (
-			user_id,
-			source,
-			source_id,
-			access_token,
-			refresh_token,
-			expiry,
-			created_at,
-			updated_at
-		) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 ) RETURNING id
-	`, auth.UserID, auth.Source, auth.SourceID, auth.AccessToken, auth.RefreshToken, auth.Expiry, auth.CreatedAt, auth.UpdatedAt).Scan(&auth.ID); err != nil {
+	if err := tx.QueryRowContext(ctx, query.InsertAuthQuery(),
+		auth.UserID,
+		auth.Source,
+		auth.SourceID,
+		auth.AccessToken,
+		auth.RefreshToken,
+		auth.Expiry,
+		auth.CreatedAt,
+		auth.UpdatedAt).Scan(&auth.ID); err != nil {
 		return apperr.Errorf(apperr.EINTERNAL, "failed to create auth: %v", err)
 	}
 
@@ -217,9 +214,7 @@ func deleteAuth(ctx context.Context, tx *Tx, id int64) error {
 		return apperr.Errorf(apperr.EFORBIDDEN, "cannot delete this auth")
 	}
 
-	if _, err := tx.ExecContext(ctx, `
-		DELETE FROM auths WHERE id = $1
-	`, id); err != nil {
+	if _, err := tx.ExecContext(ctx, query.DeleteAuthQuery(), id); err != nil {
 		return apperr.Errorf(apperr.EINTERNAL, "failed to delete auth: %v", err)
 	}
 
@@ -288,22 +283,7 @@ func findAuths(ctx context.Context, tx *Tx, filter service.AuthFilter) (_ entity
 		counParameter++
 	}
 
-	rows, err := tx.QueryContext(ctx, `
-		SELECT
-			id,
-			user_id,
-			source,
-			source_id,
-			access_token,
-			refresh_token,
-			expiry,
-			created_at,
-			updated_at,
-			COUNT(*) OVER()
-		FROM auths
-		WHERE `+strings.Join(where, " AND ")+`
-		ORDER BY id ASC
-		`+FormatLimitOffset(filter.Limit, filter.Offset), args...)
+	rows, err := tx.QueryContext(ctx, query.SelectAuthsQuery(where, filter.Limit, filter.Offset), args...)
 	if err != nil {
 		return nil, 0, apperr.Errorf(apperr.EINTERNAL, "failed to query auths: %v", err)
 	}
@@ -359,14 +339,12 @@ func updateAuth(ctx context.Context, tx *Tx, id int64, accessToken, refreshToken
 		return nil, err
 	}
 
-	if _, err := tx.ExecContext(ctx, `
-		UPDATE auths SET
-			access_token = $1,
-			refresh_token = $2,
-			expiry = $3,
-			updated_at = $4
-		WHERE id = $5
-	`, accessToken, refreshToken, expiry, tx.now, id); err != nil {
+	if _, err := tx.ExecContext(ctx, query.UpdateAuthQuery(),
+		accessToken,
+		refreshToken,
+		expiry,
+		tx.now,
+		id); err != nil {
 		return nil, apperr.Errorf(apperr.EINTERNAL, "failed to update auth: %v", err)
 	}
 
