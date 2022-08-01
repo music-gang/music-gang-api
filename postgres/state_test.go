@@ -6,6 +6,7 @@ import (
 
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
+	"github.com/music-gang/music-gang-api/app/service"
 	"github.com/music-gang/music-gang-api/mock"
 	"github.com/music-gang/music-gang-api/postgres"
 )
@@ -20,6 +21,17 @@ func TestStateService_CreateState(t *testing.T) {
 		MustTruncateTableForStateTests(t, db)
 
 		s := postgres.NewStateService(db)
+
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return nil
+				},
+				UnlockContextFn: func(ctx context.Context) (bool, error) {
+					return true, nil
+				},
+			}, nil
+		}
 
 		contract := &entity.Contract{
 			Name:       "test",
@@ -58,6 +70,17 @@ func TestStateService_CreateState(t *testing.T) {
 		MustTruncateTableForStateTests(t, db)
 
 		s := postgres.NewStateService(db)
+
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return nil
+				},
+				UnlockContextFn: func(ctx context.Context) (bool, error) {
+					return true, nil
+				},
+			}, nil
+		}
 
 		user := &entity.User{Name: "test-create-state-invalid"}
 
@@ -110,6 +133,17 @@ func TestStateService_CreateState(t *testing.T) {
 
 		s := postgres.NewStateService(db)
 
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return nil
+				},
+				UnlockContextFn: func(ctx context.Context) (bool, error) {
+					return true, nil
+				},
+			}, nil
+		}
+
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
@@ -129,12 +163,71 @@ func TestStateService_CreateState(t *testing.T) {
 
 		s := postgres.NewStateService(db)
 
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return nil
+				},
+				UnlockContextFn: func(ctx context.Context) (bool, error) {
+					return true, nil
+				},
+			}, nil
+		}
+
 		ctx := context.Background()
 
 		if err := s.CreateState(ctx, &entity.State{}); err == nil {
 			t.Fatal("expected error")
 		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EUNAUTHORIZED {
 			t.Fatalf("expected %s, got %s", apperr.EUNAUTHORIZED, errCode)
+		}
+	})
+
+	t.Run("ErrCreateLockService", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		MustTruncateTableForStateTests(t, db)
+
+		s := postgres.NewStateService(db)
+
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return nil, apperr.Errorf(apperr.EINTERNAL, "test")
+		}
+
+		ctx := context.Background()
+
+		if err := s.CreateState(ctx, &entity.State{}); err == nil {
+			t.Fatal("expected error")
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINTERNAL {
+			t.Fatalf("expected %s, got %s", apperr.EINTERNAL, errCode)
+		}
+	})
+
+	t.Run("CannotAcquireLock", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		MustTruncateTableForStateTests(t, db)
+
+		s := postgres.NewStateService(db)
+
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return apperr.Errorf(apperr.EINTERNAL, "test")
+				},
+			}, nil
+		}
+
+		ctx := context.Background()
+
+		if err := s.CreateState(ctx, &entity.State{}); err == nil {
+			t.Fatal("expected error")
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINTERNAL {
+			t.Fatalf("expected %s, got %s", apperr.EINTERNAL, errCode)
 		}
 	})
 }
@@ -148,6 +241,17 @@ func TestStateService_FindStateByRevisionID(t *testing.T) {
 		MustTruncateTableForStateTests(t, db)
 
 		s := postgres.NewStateService(db)
+
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return nil
+				},
+				UnlockContextFn: func(ctx context.Context) (bool, error) {
+					return true, nil
+				},
+			}, nil
+		}
 
 		ctx := context.Background()
 
@@ -183,6 +287,17 @@ func TestStateService_FindStateByRevisionID(t *testing.T) {
 
 		s := postgres.NewStateService(db)
 
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return nil
+				},
+				UnlockContextFn: func(ctx context.Context) (bool, error) {
+					return true, nil
+				},
+			}, nil
+		}
+
 		s.CacheStateSearchService = &mock.StateService{
 			FindStateByRevisionIDFn: func(ctx context.Context, revisionID int64) (*entity.State, error) {
 				return &entity.State{ID: 1, RevisionID: 1, UserID: 1, Value: make(entity.StateValue)}, nil
@@ -207,6 +322,17 @@ func TestStateService_FindStateByRevisionID(t *testing.T) {
 
 		s := postgres.NewStateService(db)
 
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return nil
+				},
+				UnlockContextFn: func(ctx context.Context) (bool, error) {
+					return true, nil
+				},
+			}, nil
+		}
+
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
@@ -226,6 +352,17 @@ func TestStateService_FindStateByRevisionID(t *testing.T) {
 
 		s := postgres.NewStateService(db)
 
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return nil
+				},
+				UnlockContextFn: func(ctx context.Context) (bool, error) {
+					return true, nil
+				},
+			}, nil
+		}
+
 		ctx := context.Background()
 
 		if _, err := s.FindStateByRevisionID(ctx, 1); err == nil {
@@ -243,6 +380,17 @@ func TestStateService_FindStateByRevisionID(t *testing.T) {
 		MustTruncateTableForStateTests(t, db)
 
 		s := postgres.NewStateService(db)
+
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return nil
+				},
+				UnlockContextFn: func(ctx context.Context) (bool, error) {
+					return true, nil
+				},
+			}, nil
+		}
 
 		ctx := context.Background()
 
@@ -268,6 +416,54 @@ func TestStateService_FindStateByRevisionID(t *testing.T) {
 			t.Fatalf("expected %s, got %s", apperr.ENOTFOUND, errCode)
 		}
 	})
+
+	t.Run("ErrCreateLockService", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		MustTruncateTableForStateTests(t, db)
+
+		s := postgres.NewStateService(db)
+
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return nil, apperr.Errorf(apperr.EINTERNAL, "test")
+		}
+
+		ctx := context.Background()
+
+		if _, err := s.FindStateByRevisionID(ctx, 1); err == nil {
+			t.Fatal("expected error")
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINTERNAL {
+			t.Fatalf("expected %s, got %s", apperr.EINTERNAL, errCode)
+		}
+	})
+
+	t.Run("CannotAcquireLock", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		MustTruncateTableForStateTests(t, db)
+
+		s := postgres.NewStateService(db)
+
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return apperr.Errorf(apperr.EINTERNAL, "test")
+				},
+			}, nil
+		}
+
+		ctx := context.Background()
+
+		if _, err := s.FindStateByRevisionID(ctx, 1); err == nil {
+			t.Fatal("expected error")
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINTERNAL {
+			t.Fatalf("expected %s, got %s", apperr.EINTERNAL, errCode)
+		}
+	})
 }
 
 func TestStateService_UpdateState(t *testing.T) {
@@ -280,6 +476,17 @@ func TestStateService_UpdateState(t *testing.T) {
 		MustTruncateTableForStateTests(t, db)
 
 		s := postgres.NewStateService(db)
+
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return nil
+				},
+				UnlockContextFn: func(ctx context.Context) (bool, error) {
+					return true, nil
+				},
+			}, nil
+		}
 
 		ctx := context.Background()
 
@@ -320,6 +527,17 @@ func TestStateService_UpdateState(t *testing.T) {
 
 		s := postgres.NewStateService(db)
 
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return nil
+				},
+				UnlockContextFn: func(ctx context.Context) (bool, error) {
+					return true, nil
+				},
+			}, nil
+		}
+
 		ctx := context.Background()
 
 		state, ctx := MustCreateState(t, ctx, db, DataToMakeState{
@@ -354,6 +572,17 @@ func TestStateService_UpdateState(t *testing.T) {
 
 		s := postgres.NewStateService(db)
 
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return nil
+				},
+				UnlockContextFn: func(ctx context.Context) (bool, error) {
+					return true, nil
+				},
+			}, nil
+		}
+
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
@@ -373,6 +602,17 @@ func TestStateService_UpdateState(t *testing.T) {
 
 		s := postgres.NewStateService(db)
 
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return nil
+				},
+				UnlockContextFn: func(ctx context.Context) (bool, error) {
+					return true, nil
+				},
+			}, nil
+		}
+
 		ctx := context.Background()
 
 		if _, err := s.UpdateState(ctx, 1, entity.StateValue{}); err == nil {
@@ -391,6 +631,17 @@ func TestStateService_UpdateState(t *testing.T) {
 
 		s := postgres.NewStateService(db)
 
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return nil
+				},
+				UnlockContextFn: func(ctx context.Context) (bool, error) {
+					return true, nil
+				},
+			}, nil
+		}
+
 		ctx := context.Background()
 
 		_, ctx = MustCreateUser(t, ctx, db, &entity.User{
@@ -401,6 +652,62 @@ func TestStateService_UpdateState(t *testing.T) {
 			t.Fatal("expected error")
 		} else if errCode := apperr.ErrorCode(err); errCode != apperr.ENOTFOUND {
 			t.Fatalf("expected %s, got %s", apperr.ENOTFOUND, errCode)
+		}
+	})
+
+	t.Run("ErrCreateLockService", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		MustTruncateTableForStateTests(t, db)
+
+		s := postgres.NewStateService(db)
+
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return nil, apperr.Errorf(apperr.EINTERNAL, "test")
+		}
+
+		ctx := context.Background()
+
+		_, ctx = MustCreateUser(t, ctx, db, &entity.User{
+			Name: "test-update-state-not-found",
+		})
+
+		if _, err := s.UpdateState(ctx, 1, entity.StateValue{}); err == nil {
+			t.Fatal("expected error")
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINTERNAL {
+			t.Fatalf("expected %s, got %s", apperr.EINTERNAL, errCode)
+		}
+	})
+
+	t.Run("CannotAcquireLock", func(t *testing.T) {
+
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		MustTruncateTableForStateTests(t, db)
+
+		s := postgres.NewStateService(db)
+
+		s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+			return &mock.LockService{
+				LockContextFn: func(ctx context.Context) error {
+					return apperr.Errorf(apperr.EINTERNAL, "test")
+				},
+			}, nil
+		}
+
+		ctx := context.Background()
+
+		_, ctx = MustCreateUser(t, ctx, db, &entity.User{
+			Name: "test-update-state-not-found",
+		})
+
+		if _, err := s.UpdateState(ctx, 1, entity.StateValue{}); err == nil {
+			t.Fatal("expected error")
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EINTERNAL {
+			t.Fatalf("expected %s, got %s", apperr.EINTERNAL, errCode)
 		}
 	})
 }
@@ -414,6 +721,17 @@ type DataToMakeState struct {
 
 func MustCreateState(t testing.TB, ctx context.Context, db *postgres.DB, data DataToMakeState) (*entity.State, context.Context) {
 	s := postgres.NewStateService(db)
+
+	s.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
+		return &mock.LockService{
+			LockContextFn: func(ctx context.Context) error {
+				return nil
+			},
+			UnlockContextFn: func(ctx context.Context) (bool, error) {
+				return true, nil
+			},
+		}, nil
+	}
 
 	rev, ctx := MustCreateRevision(t, ctx, db, DataToMakeRevision{
 		Contract: data.Contract,
