@@ -81,35 +81,27 @@ func (*AnchorageContractExecutor) ExecContract(ctx context.Context, opt service.
 func injectStateAccessor(vm *otto.Otto, contractState *entity.ContractState) {
 	vm.Set("setState", func(call otto.FunctionCall) otto.Value {
 		if len(call.ArgumentList) != 2 {
-			return otto.Value{}
+			return otto.UndefinedValue()
 		}
 		key, err := call.Argument(0).ToString()
 		if err != nil {
-			return otto.Value{}
+			return otto.UndefinedValue()
 		}
 		var value any
-		if call.Argument(1).IsBoolean() {
-			value, err = call.Argument(1).ToBoolean()
-		} else if call.Argument(1).IsNumber() {
-			value, err = call.Argument(1).ToFloat()
-		} else if call.Argument(1).IsString() {
-			value, err = call.Argument(1).ToString()
-		} else if call.Argument(1).IsNull() {
-			value = nil
-		} else {
-			return otto.Value{}
-		}
+
+		value, err = call.Argument(1).Export()
 		if err != nil {
-			return otto.Value{}
+			return otto.UndefinedValue()
 		}
+
 		contractState.State[key] = value
-		return otto.Value{}
+		return otto.UndefinedValue()
 	})
 
 	vm.Set("getState", func(call otto.FunctionCall) otto.Value {
 
 		if len(call.ArgumentList) != 1 {
-			return otto.Value{}
+			return otto.UndefinedValue()
 		}
 
 		key, err := call.Argument(0).ToString()
