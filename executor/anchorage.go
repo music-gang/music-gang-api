@@ -53,7 +53,7 @@ func (*AnchorageContractExecutor) ExecContract(ctx context.Context, opt service.
 		}
 	}()
 
-	if contract.Stateful && opt.ContractStateRef != nil {
+	if contract.Stateful && opt.ContractStateRef != nil && opt.ContractStateRef.State != nil {
 		injectStateAccessor(ottoVm, opt.ContractStateRef)
 	}
 
