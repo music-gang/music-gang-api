@@ -103,12 +103,12 @@ func parse(ctx context.Context, token string, secret string, jwtBlacklistService
 			return []byte(secret), nil
 		})
 		if err != nil {
-			return nil, apperr.Errorf(apperr.EINTERNAL, "failed to parse token: %v", err)
+			return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "failed to parse token")
 		}
 
 		claims, ok := t.Claims.(*entity.AppClaims)
 		if !ok {
-			return nil, apperr.Errorf(apperr.EINTERNAL, "failed to parse claims")
+			return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "failed to parse claims")
 		}
 
 		invalidated, err := jwtBlacklistService.IsBlacklisted(ctx, token)
