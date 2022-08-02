@@ -56,6 +56,7 @@ GEM
     diff-lcs (1.5.0)
     i18n (1.8.11)
       concurrent-ruby (~> 1.0)
+    multipart-post (2.2.3)
 
 PLATFORMS
   ruby
@@ -63,6 +64,7 @@ PLATFORMS
 
 DEPENDENCIES
   faker!
+  multipart-post (~> 2.2)
   rspec!
   rspec-core!
   rspec-expectations!
@@ -70,4 +72,4 @@ DEPENDENCIES
   rspec-support!
 
 BUNDLED WITH
-   2.2.29
+   2.3.16

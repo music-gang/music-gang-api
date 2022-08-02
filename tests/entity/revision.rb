@@ -2,6 +2,8 @@
 
 # Revision entity.
 class Revision
+  include Jsonizable
+
   attr_accessor :id, :created_at, :rev, :version, :contract_id, :notes, :max_fuel
 
   def initialize(id: nil,
@@ -20,9 +22,22 @@ class Revision
     @max_fuel = max_fuel
   end
 
+  def to_hash
+    {
+      id: @id,
+      created_at: @created_at,
+      rev: @rev,
+      version: @version,
+      contract_id: @contract_id,
+      notes: @notes,
+      max_fuel: @max_fuel
+    }
+  end
+
   class << self
     # from_hash
     # @param hash [Hash]
+    # @return [Revision]
     def from_hash(hash)
       validate_hash hash
       Revision.new id: hash[:id], created_at: Time.parse(hash[:created_at]), rev: hash[:rev], version: hash[:version], contract_id: hash[:contract_id], notes: hash[:notes], max_fuel: hash[:max_fuel]

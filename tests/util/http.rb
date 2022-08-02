@@ -2,6 +2,7 @@
 
 require 'uri'
 require 'net/http'
+require 'net/http/post/multipart'
 
 # ServiceHTTP
 class ServiceHTTP

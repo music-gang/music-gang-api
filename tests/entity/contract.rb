@@ -4,7 +4,7 @@
 class Contract
   include Jsonizable
 
-  attr_accessor :id, :name, :description, :user_id, :visibility, :max_fuel, :created_at, :updated_at
+  attr_accessor :id, :name, :description, :user_id, :visibility, :max_fuel, :stateful, :created_at, :updated_at
 
   def initialize(id: nil,
                  name: nil,
@@ -12,6 +12,7 @@ class Contract
                  user_id: nil,
                  visibility: nil,
                  max_fuel: nil,
+                 stateful: false,
                  created_at: nil,
                  updated_at: nil)
     @id = id
@@ -20,11 +21,12 @@ class Contract
     @user_id = user_id
     @visibility = visibility
     @max_fuel = max_fuel
+    @stateful = stateful
     @created_at = created_at
     @updated_at = updated_at
   end
 
-  def to_hash 
+  def to_hash
     {
       id: @id,
       name: @name,
@@ -32,6 +34,7 @@ class Contract
       user_id: @user_id,
       visibility: @visibility,
       max_fuel: @max_fuel,
+      stateful: @stateful,
       created_at: @created_at,
       updated_at: @updated_at
     }
@@ -41,7 +44,7 @@ class Contract
     def from_hash(hash)
       validate_hash hash
 
-      Contract.new id: hash[:id], name: hash[:name], description: hash[:description], user_id: hash[:user_id], visibility: hash[:visibility], max_fuel: hash[:max_fuel], created_at: Time.parse(hash[:created_at]), updated_at: Time.parse(hash[:updated_at])
+      Contract.new id: hash[:id], name: hash[:name], description: hash[:description], user_id: hash[:user_id], visibility: hash[:visibility], max_fuel: hash[:max_fuel], stateful: hash[:stateful], created_at: Time.parse(hash[:created_at]), updated_at: Time.parse(hash[:updated_at])
     end
 
     def validate_hash(hash)
@@ -51,6 +54,7 @@ class Contract
       raise 'missing user id' unless hash.key? :user_id
       raise 'missing visibility' unless hash.key? :visibility
       raise 'missing max fuel' unless hash.key? :max_fuel
+      raise 'missing stateful' unless hash.key? :stateful
       raise 'missing created at' unless hash.key? :created_at
       raise 'missing updated at' unless hash.key? :updated_at
     end
