@@ -94,14 +94,15 @@ func burn(ctx context.Context, ft *FuelTank, fuel entity.Fuel) error {
 	defer ft.LockService.UnlockContext(ctx)
 
 	// second, we need to retrive the current fuel tank capacity and the current fuel used
-
 	fuelUsed, err := ft.Fuel(ctx)
 	if err != nil {
 		return err
 	}
 
-	// third, we need to check if the current fuel used + the passed fuel is greater than the max fuel tank capacity
-	if fuelUsed+fuel > entity.FuelTankCapacity {
+	// third, we need to check if the current fuel used is actually greater than the max fuel tank capacity.
+	// It's legal to fuel used + fuel passed > max fuel tank capacity with fuel used < max fuel tank capacity.
+	// When fuel used it's already greater than the max fuel tank capacity, the MusicGang VM will stop until the fuel tank is refilled.
+	if fuelUsed > entity.FuelTankCapacity {
 		return service.ErrFuelTankNotEnough
 	}
 
