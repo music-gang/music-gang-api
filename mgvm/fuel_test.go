@@ -88,17 +88,17 @@ func TestFuelTank_Burn(t *testing.T) {
 			},
 		}
 
-		if err := fuelTank.Burn(ctx, entity.Fuel(10)); err != nil {
+		if err := fuelTank.Burn(ctx, entity.Fuel(entity.FuelTankCapacity+1)); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		if currentFuel != 10 {
+		if currentFuel != entity.FuelTankCapacity+1 {
 			t.Fatalf("unexpected currentFuel: %v", currentFuel)
 		}
 
 		// error must by ErrFuelTankNotEnough
 
-		if err := fuelTank.Burn(ctx, 10+entity.FuelTankCapacity); err == nil {
+		if err := fuelTank.Burn(ctx, 10); err == nil {
 			t.Fatalf("expected error")
 		} else if err != service.ErrFuelTankNotEnough {
 			t.Fatalf("unexpected error: %v", err)
@@ -506,10 +506,10 @@ func TestFuelTank_Stats(t *testing.T) {
 		}
 
 		fuelTank.LockService = &mock.LockService{
-			LockContextFn:   func(ctx context.Context) error {
+			LockContextFn: func(ctx context.Context) error {
 				return nil
 			},
-			NameFn:          func() string { return "lock-mock" },
+			NameFn: func() string { return "lock-mock" },
 			UnlockContextFn: func(ctx context.Context) (bool, error) {
 				return true, nil
 			},
