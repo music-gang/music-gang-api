@@ -163,7 +163,7 @@ func (m *Main) Run(ctx context.Context) error {
 		if revisionID == 0 {
 			return nil, apperr.Errorf(apperr.EINVALID, "revisionID is 0")
 		}
-		return redis.NewLockService(m.Redis, fmt.Sprintf("state_user_%d_revision_%d", userID, revisionID)), nil
+		return redis.NewLockService(m.Redis, fmt.Sprintf("state-user-%d-revision-%d-lock", userID, revisionID)), nil
 	}
 
 	authService := auth.NewAuth(postgresAuthService, postgresUserService, config.GetConfig().APP.Auths)
