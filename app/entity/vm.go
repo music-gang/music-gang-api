@@ -11,7 +11,7 @@ const (
 	StateStopped
 )
 
-// String returns a string representation of the State.
+// String returns a string representation of the VmState.
 func (s VmState) String() string {
 	switch s {
 	case StateInitializing:
