@@ -30,3 +30,9 @@ type StateService interface {
 	StateSearchService
 	StateManagementService
 }
+
+// StateCacheService is the interface for caching states.
+type StateCacheService interface {
+	// CacheState caches the state.
+	CacheState(ctx context.Context, state *entity.State) error
+}
