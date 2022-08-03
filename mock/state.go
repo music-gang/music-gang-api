@@ -35,3 +35,16 @@ func (s *StateService) UpdateState(ctx context.Context, revisionID int64, value 
 	}
 	return s.UpdateStateFn(ctx, revisionID, value)
 }
+
+var _ service.StateCacheService = (*StateCacheService)(nil)
+
+type StateCacheService struct {
+	CacheStateFn func(ctx context.Context, state *entity.State) error
+}
+
+func (s *StateCacheService) CacheState(ctx context.Context, state *entity.State) error {
+	if s.CacheStateFn == nil {
+		panic("CacheState not defined")
+	}
+	return s.CacheStateFn(ctx, state)
+}
