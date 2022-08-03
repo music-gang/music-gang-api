@@ -45,7 +45,7 @@ steps:
     environment:
       PORT: 8888
     commands:
-      - go build -o mg-api cmd/main.go
+      - go build -o mg-api cmd/mgvm/main.go
       - export $(cat drone-ci/.drone.env | xargs)
       - ./mg-api
 

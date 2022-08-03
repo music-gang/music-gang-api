@@ -12,7 +12,7 @@ RUN go mod download
 COPY . .
 
 RUN GIT_COMMIT=$(git rev-list -1 HEAD) && \ 
-    go build -ldflags "-X main.Commit=$GIT_COMMIT" -o mg-api cmd/main.go
+    go build -ldflags "-X main.Commit=$GIT_COMMIT" -o mg-api cmd/mgvm/main.go
 
 FROM gcr.io/distroless/base-debian11
 
