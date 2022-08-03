@@ -150,6 +150,8 @@ func (m *Main) Run(ctx context.Context) error {
 		return err
 	}
 
+	cacheStateService := redis.NewStateService(m.Redis)
+
 	postgresAuthService := postgres.NewAuthService(m.Postgres)
 	postgresUserService := postgres.NewUserService(m.Postgres)
 	postgresContractService := postgres.NewContractService(m.Postgres)
@@ -163,8 +165,9 @@ func (m *Main) Run(ctx context.Context) error {
 		if revisionID == 0 {
 			return nil, apperr.Errorf(apperr.EINVALID, "revisionID is 0")
 		}
-		return redis.NewLockService(m.Redis, fmt.Sprintf("state-user-%d-revision-%d-lock", userID, revisionID)), nil
+		return redis.NewLockService(m.Redis, fmt.Sprintf(redis.StateLockKeyTemplate, userID, revisionID)), nil
 	}
+	postgresStateService.CacheStateSearchService = cacheStateService
 
 	authService := auth.NewAuth(postgresAuthService, postgresUserService, config.GetConfig().APP.Auths)
 
@@ -213,6 +216,7 @@ func (m *Main) Run(ctx context.Context) error {
 	m.VM.UserManagmentService = postgresUserService
 	m.VM.AuthManagmentService = authService
 	m.VM.StateService = postgresStateService
+	m.VM.CacheStateService = cacheStateService
 
 	if err := m.VM.Run(); err != nil {
 		return err

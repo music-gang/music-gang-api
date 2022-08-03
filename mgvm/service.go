@@ -230,6 +230,9 @@ func (vm *MusicGangVM) ExecContract(ctx context.Context, opt service.ContractCal
 			if _, err := vm.StateService.UpdateState(ctx, ref.Revision().ID, opt.StateRef.Value); err != nil {
 				return nil, err
 			}
+			if err := vm.CacheStateService.CacheState(ctx, opt.StateRef); err != nil {
+				return nil, err
+			}
 		}
 
 		return res, nil
