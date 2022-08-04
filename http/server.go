@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/music-gang/music-gang-api/app"
 	"github.com/music-gang/music-gang-api/app/service"
+	"github.com/music-gang/music-gang-api/handler"
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -37,11 +38,14 @@ type ServerAPI struct {
 	JWTSecret string
 
 	// Services used by HTTP handler.
-	AuthSearchService     service.AuthSearchService
-	ContractSearchService service.ContractSearchService
-	UserSearchService     service.UserSearchService
-	VmCallableService     service.VmCallableService
-	JWTService            service.JWTService
+	// AuthSearchService     service.AuthSearchService
+	// ContractSearchService service.ContractSearchService
+	// UserSearchService     service.UserSearchService
+	// VmCallableService     service.VmCallableService
+	// JWTService            service.JWTService
+
+	// service handler
+	ServiceHandler *handler.ServiceHandler
 
 	// loggin service used by HTTP Server.
 	LogService service.LogService

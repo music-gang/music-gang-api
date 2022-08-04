@@ -20,7 +20,7 @@ func TestUserHandler(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -36,7 +36,7 @@ func TestUserHandler(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -46,7 +46,7 @@ func TestUserHandler(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -101,7 +101,7 @@ func TestUser_Update(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -116,7 +116,7 @@ func TestUser_Update(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -124,7 +124,7 @@ func TestUser_Update(t *testing.T) {
 				return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
 			},
 		}
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -136,7 +136,7 @@ func TestUser_Update(t *testing.T) {
 				return nil, apperr.Errorf(apperr.ENOTFOUND, "auth not found")
 			},
 		}
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			UserService: &mock.UserService{
 				UpdateUserFn: func(ctx context.Context, id int64, user service.UserUpdate) (*entity.User, error) {
 					if id == 1 {
@@ -194,7 +194,7 @@ func TestUser_Update(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -209,7 +209,7 @@ func TestUser_Update(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -219,7 +219,7 @@ func TestUser_Update(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -231,7 +231,7 @@ func TestUser_Update(t *testing.T) {
 				return nil, apperr.Errorf(apperr.ENOTFOUND, "auth not found")
 			},
 		}
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			UserService: &mock.UserService{
 				UpdateUserFn: func(ctx context.Context, id int64, user service.UserUpdate) (*entity.User, error) {
 					return nil, apperr.Errorf(apperr.EINTERNAL, "internal error")

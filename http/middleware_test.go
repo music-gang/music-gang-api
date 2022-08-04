@@ -17,7 +17,7 @@ func TestMiddleware_JWT(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 
 				if token != "OK" {
@@ -33,13 +33,13 @@ func TestMiddleware_JWT(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				return &entity.User{ID: 1}, nil
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				return &entity.Auth{ID: 1}, nil
 			},
@@ -67,7 +67,7 @@ func TestMiddleware_JWT(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "invalid token")
 			},
@@ -93,7 +93,7 @@ func TestMiddleware_JWT(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				return &entity.AppClaims{
 					Auth: &entity.Auth{
@@ -104,7 +104,7 @@ func TestMiddleware_JWT(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				return nil, apperr.Errorf(apperr.ENOTFOUND, "user not found")
 			},
@@ -130,7 +130,7 @@ func TestMiddleware_JWT(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				return &entity.AppClaims{
 					Auth: &entity.Auth{
@@ -141,13 +141,13 @@ func TestMiddleware_JWT(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				return &entity.User{ID: 1}, nil
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				return nil, apperr.Errorf(apperr.ENOTFOUND, "auth not found")
 			},
@@ -200,8 +200,8 @@ func TestMiddleware_ReportPanic(t *testing.T) {
 
 		// call /user endpoint, but omit AuthService and JWTService to simulate panic, it should recover panicking and return 500
 
-		s.AuthSearchService = nil
-		s.JWTService = nil
+		s.ServiceHandler.AuthSearchService = nil
+		s.ServiceHandler.JWTService = nil
 
 		req, err := http.NewRequest(http.MethodGet, s.URL()+"/v1/user", nil)
 		if err != nil {

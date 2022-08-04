@@ -7,10 +7,6 @@ import (
 	"github.com/music-gang/music-gang-api/app/entity"
 )
 
-const (
-	claimsContextParam = "claims"
-)
-
 // HTTPContextMiddleware is the middleware for setting the HTTP tag in the context.
 func (s *ServerAPI) HTTPContextMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -25,16 +21,16 @@ func (s *ServerAPI) HTTPContextMiddleware(next echo.HandlerFunc) echo.HandlerFun
 func (s *ServerAPI) JWTVerifyMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
-		claims, err := s.JWTService.Parse(c.Request().Context(), extractJWT(c.Request()))
+		claims, err := s.ServiceHandler.JWTService.Parse(c.Request().Context(), extractJWT(c.Request()))
 		if err != nil {
 			return ErrorResponseJSON(c, err, nil)
 		}
 
 		// load user by id and check if user is active with specific auth
-		if _, err := s.UserSearchService.FindUserByID(c.Request().Context(), claims.Auth.UserID); err != nil {
+		if _, err := s.ServiceHandler.UserSearchService.FindUserByID(c.Request().Context(), claims.Auth.UserID); err != nil {
 			return ErrorResponseJSON(c, err, nil)
 		}
-		if _, err := s.AuthSearchService.FindAuthByID(c.Request().Context(), claims.Auth.ID); err != nil {
+		if _, err := s.ServiceHandler.AuthSearchService.FindAuthByID(c.Request().Context(), claims.Auth.ID); err != nil {
 			return ErrorResponseJSON(c, err, nil)
 		}
 
@@ -59,18 +55,6 @@ func (s *ServerAPI) RecoverPanicMiddleware(next echo.HandlerFunc) echo.HandlerFu
 	}
 }
 
-// authUser returns the current authenticated user from the context.
-// Returns EUNAUTHORIZED error if no user is found in the context.
-func authUser(c echo.Context) (*entity.User, error) {
-
-	if claims, ok := c.Get(claimsContextParam).(*entity.AppClaims); ok {
-		return claims.Auth.User, nil
-	}
-
-	// this should never happen
-	return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "no auth user found in context")
-}
-
 // setHTTPTagInContext sets the HTTP tag in the context.
 // This is used for logging.
 func setHTTPTagInContext(c echo.Context) {
@@ -83,7 +67,7 @@ func setHTTPTagInContext(c echo.Context) {
 
 // setClaimsInContext sets the claims in the context.
 func setClaimsInContext(c echo.Context, claims *entity.AppClaims) {
-	c.Set(claimsContextParam, claims)
+	c.Set(app.ContextParamClaims, claims)
 	c.SetRequest(
 		c.Request().WithContext(
 			app.NewContextWithUser(c.Request().Context(), claims.Auth.User),

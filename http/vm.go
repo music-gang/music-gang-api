@@ -7,18 +7,11 @@ import (
 )
 
 func (s *ServerAPI) VmStatsHandler(c echo.Context) error {
-	return handleVmStats(c, s)
-}
-
-func handleVmStats(c echo.Context, s *ServerAPI) error {
-
-	stats, err := s.VmCallableService.Stats(c.Request().Context())
-	if err != nil {
-		s.LogService.ReportError(c.Request().Context(), err)
+	if stats, err := s.ServiceHandler.StatsVM(c.Request().Context()); err != nil {
 		return ErrorResponseJSON(c, err, nil)
+	} else {
+		return SuccessResponseJSON(c, http.StatusOK, echo.Map{
+			"stats": stats,
+		})
 	}
-
-	return SuccessResponseJSON(c, http.StatusOK, &echo.Map{
-		"stats": stats,
-	})
 }

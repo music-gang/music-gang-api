@@ -49,7 +49,7 @@ func TestContract_ContractCreateHandler(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -65,7 +65,7 @@ func TestContract_ContractCreateHandler(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -75,7 +75,7 @@ func TestContract_ContractCreateHandler(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -89,7 +89,7 @@ func TestContract_ContractCreateHandler(t *testing.T) {
 			},
 		}
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			ContractService: &mock.ContractService{
 				CreateContractFn: func(ctx context.Context, contract *entity.Contract) error {
 					contract.ID = 1
@@ -132,7 +132,7 @@ func TestContract_ContractCreateHandler(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -148,7 +148,7 @@ func TestContract_ContractCreateHandler(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -158,7 +158,7 @@ func TestContract_ContractCreateHandler(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -194,7 +194,7 @@ func TestContract_ContractCreateHandler(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -210,7 +210,7 @@ func TestContract_ContractCreateHandler(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -220,7 +220,7 @@ func TestContract_ContractCreateHandler(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -234,7 +234,7 @@ func TestContract_ContractCreateHandler(t *testing.T) {
 			},
 		}
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			ContractService: &mock.ContractService{
 				CreateContractFn: func(ctx context.Context, contract *entity.Contract) error {
 					return apperr.Errorf(apperr.EINTERNAL, "internal error")
@@ -268,7 +268,7 @@ func TestContract_ContractUpdateHandler(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -284,7 +284,7 @@ func TestContract_ContractUpdateHandler(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -294,7 +294,7 @@ func TestContract_ContractUpdateHandler(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -308,7 +308,7 @@ func TestContract_ContractUpdateHandler(t *testing.T) {
 			},
 		}
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			ContractService: &mock.ContractService{
 				UpdateContractFn: func(ctx context.Context, id int64, contract service.ContractUpdate) (*entity.Contract, error) {
 					return &entity.Contract{
@@ -354,7 +354,7 @@ func TestContract_ContractUpdateHandler(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -370,7 +370,7 @@ func TestContract_ContractUpdateHandler(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -380,7 +380,7 @@ func TestContract_ContractUpdateHandler(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -417,7 +417,7 @@ func TestContract_ContractUpdateHandler(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -433,7 +433,7 @@ func TestContract_ContractUpdateHandler(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -443,7 +443,7 @@ func TestContract_ContractUpdateHandler(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -479,7 +479,7 @@ func TestContract_ContractUpdateHandler(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -495,7 +495,7 @@ func TestContract_ContractUpdateHandler(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -505,7 +505,7 @@ func TestContract_ContractUpdateHandler(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -519,7 +519,7 @@ func TestContract_ContractUpdateHandler(t *testing.T) {
 			},
 		}
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			ContractService: &mock.ContractService{
 				UpdateContractFn: func(ctx context.Context, id int64, contract service.ContractUpdate) (*entity.Contract, error) {
 					return nil, apperr.Errorf(apperr.EINTERNAL, "internal error")
@@ -553,7 +553,7 @@ func TestContract_ContractHandler(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -569,7 +569,7 @@ func TestContract_ContractHandler(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -579,7 +579,7 @@ func TestContract_ContractHandler(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -593,7 +593,7 @@ func TestContract_ContractHandler(t *testing.T) {
 			},
 		}
 
-		s.ContractSearchService = &mock.ContractService{
+		s.ServiceHandler.ContractSearchService = &mock.ContractService{
 			FindContractByIDFn: func(ctx context.Context, id int64) (*entity.Contract, error) {
 				return &entity.Contract{
 					ID:          1,
@@ -636,7 +636,7 @@ func TestContract_ContractHandler(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -652,7 +652,7 @@ func TestContract_ContractHandler(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -662,7 +662,7 @@ func TestContract_ContractHandler(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -698,7 +698,7 @@ func TestContract_ContractHandler(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -714,7 +714,7 @@ func TestContract_ContractHandler(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -724,7 +724,7 @@ func TestContract_ContractHandler(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -738,7 +738,7 @@ func TestContract_ContractHandler(t *testing.T) {
 			},
 		}
 
-		s.ContractSearchService = &mock.ContractService{
+		s.ServiceHandler.ContractSearchService = &mock.ContractService{
 			FindContractByIDFn: func(ctx context.Context, id int64) (*entity.Contract, error) {
 				return nil, apperr.Errorf(apperr.EINTERNAL, "internal error")
 			},
@@ -769,7 +769,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -785,7 +785,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -795,7 +795,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -809,7 +809,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			},
 		}
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			ContractService: &mock.ContractService{
 				MakeRevisionFn: func(ctx context.Context, revision *entity.Revision) error {
 					revision.CreatedAt = util.AppNowUTC()
@@ -882,7 +882,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -898,7 +898,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -908,7 +908,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -944,7 +944,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -960,7 +960,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -970,7 +970,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -1006,7 +1006,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -1022,7 +1022,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -1032,7 +1032,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -1081,7 +1081,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -1097,7 +1097,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -1107,7 +1107,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -1156,7 +1156,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -1172,7 +1172,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -1182,7 +1182,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -1196,7 +1196,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 			},
 		}
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			ContractService: &mock.ContractService{
 				MakeRevisionFn: func(ctx context.Context, revision *entity.Revision) error {
 					return apperr.Errorf(apperr.EINTERNAL, "internal error")
@@ -1254,7 +1254,7 @@ func TestContract_ContractCall(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -1270,7 +1270,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -1280,7 +1280,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -1294,7 +1294,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.ContractSearchService = &mock.ContractService{
+		s.ServiceHandler.ContractSearchService = &mock.ContractService{
 			FindContractByIDFn: func(ctx context.Context, id int64) (*entity.Contract, error) {
 				if id == 1 {
 					return &entity.Contract{
@@ -1311,7 +1311,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			ExecutorService: &mock.ExecutorService{
 				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 					return "OK", nil
@@ -1347,7 +1347,7 @@ func TestContract_ContractCall(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -1363,7 +1363,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -1373,7 +1373,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -1387,7 +1387,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.ContractSearchService = &mock.ContractService{
+		s.ServiceHandler.ContractSearchService = &mock.ContractService{
 			FindContractByIDFn: func(ctx context.Context, id int64) (*entity.Contract, error) {
 				if id == 1 {
 					return &entity.Contract{
@@ -1404,7 +1404,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			ExecutorService: &mock.ExecutorService{
 				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 					return "OK", nil
@@ -1434,7 +1434,7 @@ func TestContract_ContractCall(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -1450,7 +1450,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -1460,7 +1460,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -1474,7 +1474,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.ContractSearchService = &mock.ContractService{
+		s.ServiceHandler.ContractSearchService = &mock.ContractService{
 			FindContractByIDFn: func(ctx context.Context, id int64) (*entity.Contract, error) {
 				return nil, apperr.Errorf(apperr.ENOTFOUND, "contract not found")
 			},
@@ -1502,7 +1502,7 @@ func TestContract_ContractCall(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -1518,7 +1518,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -1528,7 +1528,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -1542,7 +1542,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.ContractSearchService = &mock.ContractService{
+		s.ServiceHandler.ContractSearchService = &mock.ContractService{
 			FindContractByIDFn: func(ctx context.Context, id int64) (*entity.Contract, error) {
 				if id == 1 {
 					return &entity.Contract{
@@ -1559,7 +1559,7 @@ func TestContract_ContractCall(t *testing.T) {
 			},
 		}
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			ExecutorService: &mock.ExecutorService{
 				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 					return "", apperr.Errorf(apperr.EINTERNAL, "internal error")
@@ -1592,7 +1592,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -1608,7 +1608,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -1618,7 +1618,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -1632,7 +1632,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.ContractSearchService = &mock.ContractService{
+		s.ServiceHandler.ContractSearchService = &mock.ContractService{
 			FindRevisionByContractAndRevFn: func(ctx context.Context, contractID int64, rev entity.RevisionNumber) (*entity.Revision, error) {
 				if contractID == 1 && rev == 1 {
 					return &entity.Revision{
@@ -1646,7 +1646,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			ExecutorService: &mock.ExecutorService{
 				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 					return "OK", nil
@@ -1682,7 +1682,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -1698,7 +1698,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -1708,7 +1708,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -1722,7 +1722,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.ContractSearchService = &mock.ContractService{
+		s.ServiceHandler.ContractSearchService = &mock.ContractService{
 			FindContractByIDFn: func(ctx context.Context, id int64) (*entity.Contract, error) {
 				if id == 1 {
 					return &entity.Contract{
@@ -1739,7 +1739,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			ExecutorService: &mock.ExecutorService{
 				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 					return "OK", nil
@@ -1769,7 +1769,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -1785,7 +1785,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -1795,7 +1795,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -1809,7 +1809,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.ContractSearchService = &mock.ContractService{
+		s.ServiceHandler.ContractSearchService = &mock.ContractService{
 			FindContractByIDFn: func(ctx context.Context, id int64) (*entity.Contract, error) {
 				if id == 1 {
 					return &entity.Contract{
@@ -1826,7 +1826,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			ExecutorService: &mock.ExecutorService{
 				ExecContractFn: func(ctx context.Context, opt service.ContractCallOpt) (res interface{}, err error) {
 					return "OK", nil
@@ -1856,7 +1856,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
 				if token == "OK" {
 					return &entity.AppClaims{
@@ -1872,7 +1872,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.UserSearchService = &mock.UserService{
+		s.ServiceHandler.UserSearchService = &mock.UserService{
 			FindUserByIDFn: func(ctx context.Context, id int64) (*entity.User, error) {
 				if id == 1 {
 					return &entity.User{ID: 1}, nil
@@ -1882,7 +1882,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.AuthSearchService = &mock.AuthService{
+		s.ServiceHandler.AuthSearchService = &mock.AuthService{
 			FindAuthByIDFn: func(ctx context.Context, id int64) (*entity.Auth, error) {
 				if id == 1 {
 					return &entity.Auth{
@@ -1896,7 +1896,7 @@ func TestContract_ContractCallRev(t *testing.T) {
 			},
 		}
 
-		s.ContractSearchService = &mock.ContractService{
+		s.ServiceHandler.ContractSearchService = &mock.ContractService{
 			FindRevisionByContractAndRevFn: func(ctx context.Context, contractID int64, rev entity.RevisionNumber) (*entity.Revision, error) {
 				return nil, apperr.Errorf(apperr.ENOTFOUND, "contract not found")
 			},
