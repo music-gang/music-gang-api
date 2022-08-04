@@ -10,7 +10,15 @@ import (
 
 // UserHandler is the handler for the /user API.
 func (s *ServerAPI) UserHandler(c echo.Context) error {
-	return handleUser(c, s)
+
+	user, err := s.ServiceHandler.CurrentAuthUser(c.Request().Context())
+	if err != nil {
+		return ErrorResponseJSON(c, err, nil)
+	}
+
+	return SuccessResponseJSON(c, http.StatusOK, echo.Map{
+		"user": user,
+	})
 }
 
 // UserUpdateHandler is the handler for the /user update API.
@@ -21,37 +29,19 @@ func (s *ServerAPI) UserUpdateHandler(c echo.Context) error {
 		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid request"), nil)
 	}
 
-	return handleUserUpdate(c, s, userParams)
-}
-
-// handleUser handles the /user business logic.
-func handleUser(c echo.Context, s *ServerAPI) error {
-	user, err := authUser(c)
+	authUser, err := s.ServiceHandler.CurrentAuthUser(c.Request().Context())
 	if err != nil {
 		s.LogService.ReportFatal(c.Request().Context(), err)
+		return ErrorResponseJSON(c, err, nil)
+	}
+
+	updatedUser, err := s.ServiceHandler.UpdateUser(c.Request().Context(), authUser.ID, userParams)
+	if err != nil {
+		s.LogService.ReportError(c.Request().Context(), err)
 		return ErrorResponseJSON(c, err, nil)
 	}
 
 	return SuccessResponseJSON(c, http.StatusOK, echo.Map{
-		"user": user,
+		"user": updatedUser,
 	})
-}
-
-// handleUserUpdate handles the /user update business logic.
-func handleUserUpdate(c echo.Context, s *ServerAPI, userParams service.UserUpdate) error {
-
-	user, err := authUser(c)
-	if err != nil {
-		s.LogService.ReportFatal(c.Request().Context(), err)
-		return ErrorResponseJSON(c, err, nil)
-	}
-
-	if updatedUser, err := s.VmCallableService.UpdateUser(c.Request().Context(), user.ID, userParams); err != nil {
-		s.LogService.ReportError(c.Request().Context(), err)
-		return ErrorResponseJSON(c, err, nil)
-	} else {
-		return SuccessResponseJSON(c, http.StatusOK, echo.Map{
-			"user": updatedUser,
-		})
-	}
 }

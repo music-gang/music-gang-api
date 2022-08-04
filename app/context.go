@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 
+	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 )
 
@@ -20,7 +21,21 @@ const (
 	ContextTagHTTP    = "HTTP"
 	ContextTagMGVM    = "MGVM"
 	ContextTagCLI     = "CLI"
+
+	ContextParamClaims = "claims"
 )
+
+// AuthUser returns the current authenticated user from the context.
+// Returns EUNAUTHORIZED error if no user is found in the context.
+func AuthUser(ctx context.Context) (*entity.User, error) {
+
+	if user := UserFromContext(ctx); user != nil {
+		return user, nil
+	}
+
+	// this should never happen
+	return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "no auth user found in context")
+}
 
 // NewContextWithTag returns a new context with the provided tag attached.
 // This can be useful during logging to define in which context a log entry was created, for example, HTTP, cron, CLI, etc.

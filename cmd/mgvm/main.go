@@ -16,6 +16,7 @@ import (
 	"github.com/music-gang/music-gang-api/auth/jwt"
 	"github.com/music-gang/music-gang-api/config"
 	"github.com/music-gang/music-gang-api/executor"
+	"github.com/music-gang/music-gang-api/handler"
 	"github.com/music-gang/music-gang-api/http"
 	applog "github.com/music-gang/music-gang-api/log"
 	"github.com/music-gang/music-gang-api/mgvm"
@@ -175,13 +176,6 @@ func (m *Main) Run(ctx context.Context) error {
 	jwtService.Secret = config.GetConfig().APP.JWT.Secret
 	jwtService.JWTBlacklistService = redis.NewJWTBlacklistService(m.Redis)
 
-	m.HTTPServerAPI.Addr = config.GetConfig().APP.HTTP.Addr
-	m.HTTPServerAPI.Domain = config.GetConfig().APP.HTTP.Domain
-	m.HTTPServerAPI.AuthSearchService = authService
-	m.HTTPServerAPI.ContractSearchService = postgresContractService
-	m.HTTPServerAPI.UserSearchService = postgresUserService
-	m.HTTPServerAPI.JWTService = jwtService
-
 	logService := &applog.Logger{}
 
 	stdOutLogger := applog.NewStdOutputLogger()
@@ -193,6 +187,19 @@ func (m *Main) Run(ctx context.Context) error {
 		slackLogger.Fallback = stdOutLogger
 		logService.AddBackend(slackLogger)
 	}
+
+	serviceHandler := handler.NewServiceHandler()
+	serviceHandler.LogService = logService
+
+	m.HTTPServerAPI.Addr = config.GetConfig().APP.HTTP.Addr
+	m.HTTPServerAPI.Domain = config.GetConfig().APP.HTTP.Domain
+	m.HTTPServerAPI.LogService = logService
+
+	m.HTTPServerAPI.ServiceHandler = serviceHandler
+	m.HTTPServerAPI.ServiceHandler.AuthSearchService = authService
+	m.HTTPServerAPI.ServiceHandler.ContractSearchService = postgresContractService
+	m.HTTPServerAPI.ServiceHandler.UserSearchService = postgresUserService
+	m.HTTPServerAPI.ServiceHandler.JWTService = jwtService
 
 	fuelTankService := mgvm.NewFuelTank()
 	fuelTankService.LockService = redis.NewLockService(m.Redis, "fuel-tank-lock")
@@ -222,8 +229,7 @@ func (m *Main) Run(ctx context.Context) error {
 		return err
 	}
 
-	m.HTTPServerAPI.LogService = logService
-	m.HTTPServerAPI.VmCallableService = m.VM
+	m.HTTPServerAPI.ServiceHandler.VmCallableService = m.VM
 
 	if err := m.HTTPServerAPI.Open(); err != nil {
 		return err

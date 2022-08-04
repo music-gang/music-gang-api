@@ -11,7 +11,7 @@ import (
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/util"
-	apphttp "github.com/music-gang/music-gang-api/http"
+	"github.com/music-gang/music-gang-api/handler"
 	"github.com/music-gang/music-gang-api/mock"
 	"gopkg.in/guregu/null.v4"
 )
@@ -20,7 +20,7 @@ var validPassword = "SecurePassword@123!"
 
 type RegisterCase struct {
 	Name   string
-	Params apphttp.RegisterParams
+	Params handler.RegisterParams
 }
 
 type LoginResponse struct {
@@ -36,7 +36,7 @@ func TestAuth_Login(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			AuthService: &mock.AuthService{
 				AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
 					return &entity.Auth{
@@ -55,7 +55,7 @@ func TestAuth_Login(t *testing.T) {
 			},
 		}
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ExchangeFn: func(ctx context.Context, auth *entity.Auth) (*entity.TokenPair, error) {
 				return &entity.TokenPair{
 					AccessToken:  "access_token",
@@ -66,7 +66,7 @@ func TestAuth_Login(t *testing.T) {
 			},
 		}
 
-		params := apphttp.LoginParams{
+		params := handler.LoginParams{
 			Email:    "jane.doe@test.com",
 			Password: "123456",
 		}
@@ -103,7 +103,7 @@ func TestAuth_Login(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		params := apphttp.LoginParams{
+		params := handler.LoginParams{
 			Password: "123456",
 		}
 
@@ -132,7 +132,7 @@ func TestAuth_Login(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		params := apphttp.LoginParams{
+		params := handler.LoginParams{
 			Email:    "invalid_email",
 			Password: "123456",
 		}
@@ -162,7 +162,7 @@ func TestAuth_Login(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		params := apphttp.LoginParams{
+		params := handler.LoginParams{
 			Email: "jane.doe@test.com",
 		}
 
@@ -190,7 +190,7 @@ func TestAuth_Login(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			AuthService: &mock.AuthService{
 				AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
 					return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "invalid credentials")
@@ -198,7 +198,7 @@ func TestAuth_Login(t *testing.T) {
 			},
 		}
 
-		params := apphttp.LoginParams{
+		params := handler.LoginParams{
 			Email:    "jane.doe@test.com",
 			Password: "123456",
 		}
@@ -227,7 +227,7 @@ func TestAuth_Login(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			AuthService: &mock.AuthService{
 				AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
 					return &entity.Auth{
@@ -245,13 +245,13 @@ func TestAuth_Login(t *testing.T) {
 			},
 		}
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ExchangeFn: func(ctx context.Context, auth *entity.Auth) (*entity.TokenPair, error) {
 				return nil, apperr.Errorf(apperr.EINTERNAL, "internal error")
 			},
 		}
 
-		params := apphttp.LoginParams{
+		params := handler.LoginParams{
 			Email:    "jane.doe@test.com",
 			Password: "123456",
 		}
@@ -280,7 +280,7 @@ func TestAuth_Login(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			AuthService: &mock.AuthService{
 				AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
 					return nil, apperr.Errorf(apperr.ENOTFOUND, "User not found")
@@ -288,7 +288,7 @@ func TestAuth_Login(t *testing.T) {
 			},
 		}
 
-		params := apphttp.LoginParams{
+		params := handler.LoginParams{
 			Email:    "jane.doe@test.com",
 			Password: "123456",
 		}
@@ -320,7 +320,7 @@ func TestAuth_Logout(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			InvalidateFn: func(ctx context.Context, token string, expiration time.Duration) error {
 				return nil
 			},
@@ -355,7 +355,7 @@ func TestAuth_Logout(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			InvalidateFn: func(ctx context.Context, token string, expiration time.Duration) error {
 				return apperr.Errorf(apperr.EINTERNAL, "internal error")
 			},
@@ -389,7 +389,7 @@ func TestAuth_Logout(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			InvalidateFn: func(ctx context.Context, token string, expiration time.Duration) error {
 				return apperr.Errorf(apperr.EINTERNAL, "internal error")
 			},
@@ -426,7 +426,7 @@ func TestAuth_Refresh(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			RefreshFn: func(ctx context.Context, refreshToken string) (*entity.TokenPair, error) {
 				return &entity.TokenPair{
 					AccessToken:  "new_access_token",
@@ -475,7 +475,7 @@ func TestAuth_Refresh(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			RefreshFn: func(ctx context.Context, refreshToken string) (*entity.TokenPair, error) {
 				return nil, apperr.Errorf(apperr.EINTERNAL, "internal error")
 			},
@@ -507,7 +507,7 @@ func TestAuth_Refresh(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			RefreshFn: func(ctx context.Context, refreshToken string) (*entity.TokenPair, error) {
 				return nil, apperr.Errorf(apperr.EINTERNAL, "internal error")
 			},
@@ -546,7 +546,7 @@ func TestAuth_Register(t *testing.T) {
 
 		var authenticatedAuth *entity.Auth
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			AuthService: &mock.AuthService{
 				AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
 					return authenticatedAuth, nil
@@ -561,7 +561,7 @@ func TestAuth_Register(t *testing.T) {
 			},
 		}
 
-		s.JWTService = &mock.JWTService{
+		s.ServiceHandler.JWTService = &mock.JWTService{
 			ExchangeFn: func(ctx context.Context, auth *entity.Auth) (*entity.TokenPair, error) {
 				return &entity.TokenPair{
 					AccessToken:  "access_token",
@@ -572,7 +572,7 @@ func TestAuth_Register(t *testing.T) {
 			},
 		}
 
-		registerParam := apphttp.RegisterParams{
+		registerParam := handler.RegisterParams{
 			Email:           "jane.doe@test.com",
 			Name:            "JaneDoe",
 			Password:        validPassword,
@@ -625,7 +625,7 @@ func TestAuth_Register(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		registerParam := apphttp.RegisterParams{
+		registerParam := handler.RegisterParams{
 			Name:            "JaneDoe",
 			Password:        validPassword,
 			ConfirmPassword: validPassword,
@@ -655,7 +655,7 @@ func TestAuth_Register(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		registerParam := apphttp.RegisterParams{
+		registerParam := handler.RegisterParams{
 			Email:           "jane.doe.com",
 			Name:            "JaneDoe",
 			Password:        validPassword,
@@ -686,7 +686,7 @@ func TestAuth_Register(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		registerParam := apphttp.RegisterParams{
+		registerParam := handler.RegisterParams{
 			Email:           "jane.doe@test.com",
 			Password:        validPassword,
 			ConfirmPassword: validPassword,
@@ -716,7 +716,7 @@ func TestAuth_Register(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		registerParam := apphttp.RegisterParams{
+		registerParam := handler.RegisterParams{
 			Email: "jane.doe@test.com",
 			Name:  "JaneDoe",
 		}
@@ -745,7 +745,7 @@ func TestAuth_Register(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		registerParam := apphttp.RegisterParams{
+		registerParam := handler.RegisterParams{
 			Email:    "jane.doe@test.com",
 			Name:     "JaneDoe",
 			Password: "not-secure-password",
@@ -775,7 +775,7 @@ func TestAuth_Register(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		registerParam := apphttp.RegisterParams{
+		registerParam := handler.RegisterParams{
 			Email:           "jane.doe@test.com",
 			Name:            "JaneDoe",
 			Password:        validPassword,
@@ -806,7 +806,7 @@ func TestAuth_Register(t *testing.T) {
 		s := MustOpenServerAPI(t)
 		defer MustCloseServerAPI(t, s)
 
-		s.VmCallableService = &mock.VmCallableService{
+		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			AuthService: &mock.AuthService{
 				CreateAuthFn: func(ctx context.Context, auth *entity.Auth) error {
 					return apperr.Errorf(apperr.EUNAUTHORIZED, "authentication failed")
@@ -814,7 +814,7 @@ func TestAuth_Register(t *testing.T) {
 			},
 		}
 
-		registerParam := apphttp.RegisterParams{
+		registerParam := handler.RegisterParams{
 			Email:           "jane.doe@test.com",
 			Name:            "JaneDoe",
 			Password:        validPassword,

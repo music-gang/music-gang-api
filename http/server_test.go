@@ -9,6 +9,7 @@ import (
 
 	"github.com/music-gang/music-gang-api/app"
 	"github.com/music-gang/music-gang-api/app/service"
+	"github.com/music-gang/music-gang-api/handler"
 	apphttp "github.com/music-gang/music-gang-api/http"
 	"github.com/music-gang/music-gang-api/mock"
 )
@@ -97,6 +98,8 @@ func MustOpenServerAPI(tb testing.TB) *apphttp.ServerAPI {
 
 	server := apphttp.NewServerAPI()
 
+	server.ServiceHandler = handler.NewServiceHandler()
+
 	if err := server.Open(); err != nil {
 		tb.Fatal(err)
 	}
@@ -136,4 +139,6 @@ func initFakeLogger(tb testing.TB, server *apphttp.ServerAPI) {
 		ReportPanicFn:   func(ctx context.Context, err interface{}) {},
 		ReportWarningFn: func(ctx context.Context, warning string) {},
 	}
+
+	server.ServiceHandler.LogService = server.LogService
 }
