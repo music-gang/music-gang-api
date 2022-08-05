@@ -45,7 +45,7 @@ steps:
     environment:
       PORT: 8888
     commands:
-      - go build -o mg-api cmd/mgd
+      - go build -o mg-api ./cmd/mgd
       - export $(cat drone-ci/.drone.env | xargs)
       - ./mg-api
 
@@ -201,4 +201,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: 9f71dbe8d7755382284dd14959061adaf221753de5972ab26cdc609c2b43e9e2
+hmac: 04ef072b3ee88e5f2c754aaea3355cc6a05f6a9fef17a9ce85cb81e099e6db22
