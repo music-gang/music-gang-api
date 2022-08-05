@@ -20,14 +20,15 @@ func (f Fuel) MarshalBinary() (data []byte, err error) {
 // Fuel*ActionCost rappresents the cost of an action.
 // Greater is the execution time, greater is the cost.
 const (
-	FuelInstantActionAmount = Fuel(50)
-	FuelQuickActionAmount   = Fuel(200)
-	FuelFastestActionAmount = Fuel(400)
-	FuelFastActionAmount    = Fuel(600)
-	FuelMidActionAmount     = Fuel(800)
-	FuelSlowActionAmount    = Fuel(1200)
-	FuelExtremeActionAmount = Fuel(2500)
-	FuelLongActionAmount    = Fuel(5000)
+	FuelInstantActionAmount  = Fuel(50)
+	FuelQuickActionAmount    = Fuel(200)
+	FuelFastestActionAmount  = Fuel(400)
+	FuelFastActionAmount     = Fuel(600)
+	FuelMidActionAmount      = Fuel(800)
+	FuelSlowActionAmount     = Fuel(1200)
+	FuelLongActionAmount     = Fuel(2500)
+	FuelExtremeActionAmount  = Fuel(5000)
+	FuelAbsoluteActionAmount = Fuel(10000)
 )
 
 // vFuel rappresents the virtual units of measure for the power consuption of the MusicGang VM.
@@ -65,8 +66,9 @@ var (
 	// from (300 - 500]ms: FuelFastActionAmount
 	// from (500 - 1000]ms: FuelMidActionAmount
 	// from (1000 - 2000]ms: FuelSlowActionAmount
-	// from (2000 - 5000]ms: FuelExtremeActionAmount
-	// over 5000ms: FuelExtremeActionAmount
+	// from (2000 - 3000]ms: FuelLongActionAmount
+	// from (3000 - 5000]ms: FuelExtremeActionAmount
+	// over 5000ms: FuelAbsoluteActionAmount
 	fuelAmountTable = map[time.Duration]Fuel{
 		time.Millisecond * 100:  FuelInstantActionAmount,
 		time.Millisecond * 200:  FuelQuickActionAmount,
@@ -74,6 +76,7 @@ var (
 		time.Millisecond * 500:  FuelFastActionAmount,
 		time.Millisecond * 1000: FuelMidActionAmount,
 		time.Millisecond * 2000: FuelSlowActionAmount,
+		time.Millisecond * 3000: FuelLongActionAmount,
 		time.Millisecond * 5000: FuelExtremeActionAmount,
 	}
 )
@@ -85,7 +88,16 @@ func FuelAmount(execution time.Duration) Fuel {
 			return fuel
 		}
 	}
-	return FuelLongActionAmount
+	return FuelAbsoluteActionAmount
+}
+
+func FuelFromCustomFuel(customFuel Fuel) Fuel {
+	for _, f := range fuelAmountTable {
+		if customFuel <= f {
+			return f
+		}
+	}
+	return FuelAbsoluteActionAmount
 }
 
 // MaxExecutionTime returns the maximum execution time of the contract.

@@ -48,6 +48,8 @@ const (
 	VmOperationDeleteAuth   VmOperation = "delete-auth"
 
 	VmOperationVmStats VmOperation = "vm-stats"
+
+	VmOperationGeneric VmOperation = "generic"
 )
 
 const (

@@ -682,6 +682,137 @@ func TestVm_Meter(t *testing.T) {
 
 func TestVm_MakeOperation(t *testing.T) {
 
+	t.Run("CPUsPool", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		currentState := entity.StateInitializing
+		currentFuel := entity.Fuel(0)
+
+		releaseCoreCalled := false
+
+		vm.CPUsPoolService = &mock.CPUsPoolService{
+			AcquireCoreFn: func(ctx context.Context, call service.VmCallable) (release func(), err error) {
+				return func() {
+					releaseCoreCalled = true
+				}, nil
+			},
+		}
+		vm.LogService = &mock.LogServiceNoOp{}
+		vm.FuelTank = &mock.FuelTankService{
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				atomic.StoreUint64((*uint64)(&currentFuel), uint64(fuel))
+				return nil
+			},
+			FuelFn: func(ctx context.Context) (entity.Fuel, error) {
+				return entity.Fuel(atomic.LoadUint64((*uint64)(&currentFuel))), nil
+			},
+			RefuelFn: func(ctx context.Context, fuelToRefill entity.Fuel) error {
+				return nil
+			},
+		}
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+			},
+			PauseFn: func() error {
+				return nil
+			},
+			ResumeFn: func() error {
+				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
+				return nil
+			},
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
+			},
+			StopFn: func() error {
+				return nil
+			},
+		}
+
+		if err := vm.Resume(); err != nil {
+			t.Fatal(err)
+		}
+
+		var invalidOp entity.VmOperation = entity.VmOperationExecuteContract
+
+		refCall := service.NewVmCallWithConfig(service.VmCallOpt{
+			VmOperation: invalidOp,
+		})
+
+		if res, err := vm.MakeOperation(context.Background(), refCall, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+			return "ok", nil
+		}); err != nil {
+			t.Fatal(err)
+		} else if res != "ok" {
+			t.Errorf("Unexpected result, got: %s, want: %s", res, "ok")
+		}
+
+		if !releaseCoreCalled {
+			t.Error("Release core not called")
+		}
+	})
+
+	t.Run("CPUsPoolErr", func(t *testing.T) {
+
+		vm := mgvm.NewMusicGangVM()
+
+		currentState := entity.StateInitializing
+		currentFuel := entity.Fuel(0)
+
+		vm.CPUsPoolService = &mock.CPUsPoolService{
+			AcquireCoreFn: func(ctx context.Context, call service.VmCallable) (release func(), err error) {
+				return nil, apperr.Errorf(apperr.EMGVM, "internal error")
+			},
+		}
+		vm.LogService = &mock.LogServiceNoOp{}
+		vm.FuelTank = &mock.FuelTankService{
+			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
+				atomic.StoreUint64((*uint64)(&currentFuel), uint64(fuel))
+				return nil
+			},
+			FuelFn: func(ctx context.Context) (entity.Fuel, error) {
+				return entity.Fuel(atomic.LoadUint64((*uint64)(&currentFuel))), nil
+			},
+		}
+		vm.EngineService = &mock.EngineService{
+			IsRunningFn: func() bool {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState))) == entity.StateRunning
+			},
+			PauseFn: func() error {
+				return nil
+			},
+			ResumeFn: func() error {
+				atomic.StoreInt32((*int32)(&currentState), int32(entity.StateRunning))
+				return nil
+			},
+			StateFn: func() entity.VmState {
+				return entity.VmState(atomic.LoadInt32((*int32)(&currentState)))
+			},
+			StopFn: func() error {
+				return nil
+			},
+		}
+
+		if err := vm.Resume(); err != nil {
+			t.Fatal(err)
+		}
+
+		var invalidOp entity.VmOperation = entity.VmOperationExecuteContract
+
+		refCall := service.NewVmCallWithConfig(service.VmCallOpt{
+			VmOperation: invalidOp,
+		})
+
+		if _, err := vm.MakeOperation(context.Background(), refCall, func(ctx context.Context, ref service.VmCallable) (interface{}, error) {
+			return "ok", nil
+		}); err == nil {
+			t.Error("Expected error")
+		} else if errCode := apperr.ErrorCode(err); errCode != apperr.EMGVM {
+			t.Errorf("Unexpected error code, got: %s, want: %s", errCode, apperr.EMGVM)
+		}
+	})
+
 	t.Run("InvalidOperation", func(t *testing.T) {
 
 		vm := mgvm.NewMusicGangVM()

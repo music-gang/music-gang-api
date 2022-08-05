@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/music-gang/music-gang-api/app/entity"
 )
 
@@ -48,6 +50,8 @@ type VmCallable interface {
 	// Contract returns the contract that is being called.
 	// Can be nil if the Contract is not defined.
 	Contract() *entity.Contract
+	// Fuel returns only the fuel to perform the choosen operation.
+	Fuel() entity.Fuel
 	// MaxFuel returns the maximum fuel that the caller can use.
 	MaxFuel() entity.Fuel
 	// Operation returns the operation that is being called.
@@ -127,6 +131,19 @@ func (c VmCall) Contract() *entity.Contract {
 	return c.ContractRef
 }
 
+// Fuel returns the fuel to perform the choosen operation.
+func (c *VmCall) Fuel() entity.Fuel {
+	if c.CustomMaxFuel != nil {
+		return *c.CustomMaxFuel
+	} else if c.RevisionRef != nil {
+		return c.RevisionRef.MaxFuel
+	} else if c.ContractRef != nil {
+		return c.ContractRef.MaxFuel
+	} else {
+		return entity.VmOperationCost(c.Operation())
+	}
+}
+
 // MaxFuel returns the maximum fuel that can be used to call the contract.
 func (c *VmCall) MaxFuel() entity.Fuel {
 
@@ -135,19 +152,14 @@ func (c *VmCall) MaxFuel() entity.Fuel {
 		stateFulFuel = entity.StateFulOperationCost
 	}
 
-	if c.CustomMaxFuel != nil {
-		return *c.CustomMaxFuel
-	} else if c.RevisionRef != nil {
-		return c.RevisionRef.MaxFuel + stateFulFuel
-	} else if c.ContractRef != nil {
-		return c.ContractRef.MaxFuel + stateFulFuel
-	} else {
-		return entity.NotDefinedOperationCost
-	}
+	return c.Fuel() + stateFulFuel
 }
 
 // Operation returns the operation type that is being called.
 func (c *VmCall) Operation() entity.VmOperation {
+	if c.VmOperation == "" {
+		return entity.VmOperationGeneric
+	}
 	return c.VmOperation
 }
 
@@ -170,4 +182,13 @@ func (c *VmCall) WithEngineState() bool {
 // WithRefuel returns true if is necessary to refuel remaining fuel after Call ends.
 func (c *VmCall) WithRefuel() bool {
 	return !c.IgnoreRefuel
+}
+
+// CPUsPoolService is the interface for the CPUsPool service.
+// It is used from MusicGang VM to acquire and release cores in order to execute operations inside the VM.
+type CPUsPoolService interface {
+	// AcquireCore acquires a core from the CPUsPool.
+	// Returns a function that must be called when the core is not needed anymore.
+	// CORE LEAK IF NOT CALLED.
+	AcquireCore(ctx context.Context, call VmCallable) (release func(), err error)
 }

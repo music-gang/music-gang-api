@@ -24,10 +24,11 @@ type MusicGangVM struct {
 
 	*sync.Cond
 
-	LogService    service.LogService
-	EngineService service.EngineService
-	FuelTank      service.FuelTankService
-	FuelStation   service.FuelStationService
+	LogService      service.LogService
+	EngineService   service.EngineService
+	FuelTank        service.FuelTankService
+	FuelStation     service.FuelStationService
+	CPUsPoolService service.CPUsPoolService
 
 	AuthManagmentService     service.AuthManagmentService
 	ContractManagmentService service.ContractManagmentService
@@ -132,7 +133,7 @@ func (vm *MusicGangVM) Stop() error {
 func (vm *MusicGangVM) makeOperation(ctx context.Context, ref service.VmCallable, fn VmFunc) (res interface{}, err error) {
 	select {
 	case <-ctx.Done():
-		return nil, apperr.Errorf(apperr.EMGVM, "Timeout while executing contract")
+		return nil, apperr.Errorf(apperr.EMGVM, "Timeout while executing operation")
 	default:
 		if ref.WithEngineState() {
 			func() {
@@ -150,10 +151,10 @@ func (vm *MusicGangVM) makeOperation(ctx context.Context, ref service.VmCallable
 		// handle engine timeout or panic
 		if r := recover(); r != nil {
 			if r == service.EngineExecutionTimeoutPanic {
-				err = apperr.Errorf(apperr.EMGVM, "Timeout while executing contract")
+				err = apperr.Errorf(apperr.EMGVM, "Timeout while executing operation")
 				return
 			}
-			err = apperr.Errorf(apperr.EMGVM, "Panic while executing contract, %v", r)
+			err = apperr.Errorf(apperr.EMGVM, "Panic while executing operation %v", r)
 		}
 	}()
 
@@ -161,10 +162,19 @@ func (vm *MusicGangVM) makeOperation(ctx context.Context, ref service.VmCallable
 		return nil, apperr.Errorf(apperr.EFORBIDDEN, "invalid vm operation")
 	}
 
-	// burn the max fuel consumed by the contract.
+	// Check if is enable CPU pool otherwise all operations are non blocking
+	if vm.CPUsPoolService != nil {
+		release, err := vm.CPUsPoolService.AcquireCore(ctx, ref)
+		if err != nil {
+			return nil, err
+		}
+		defer release()
+	}
+
+	// burn the max fuel consumed by the operation.
 	if err := vm.FuelTank.Burn(vm.ctx, ref.MaxFuel()); err != nil {
 		if err == service.ErrFuelTankNotEnough {
-			vm.LogService.ReportInfo(vm.ctx, "Not enough fuel to execute contract, pause engine")
+			vm.LogService.ReportInfo(vm.ctx, "Not enough fuel to execute operation, pause engine")
 			vm.Pause()
 		}
 		return nil, err
@@ -180,7 +190,7 @@ func (vm *MusicGangVM) makeOperation(ctx context.Context, ref service.VmCallable
 
 	if ref.WithRefuel() {
 
-		// log the contract execution time.
+		// log the operation execution time.
 		elapsed := time.Since(startOpTime)
 
 		// calculate the fuel consumed effectively.
