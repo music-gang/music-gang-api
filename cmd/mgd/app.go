@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
-	"time"
 
 	"github.com/music-gang/music-gang-api/app"
 	"github.com/music-gang/music-gang-api/app/apperr"
@@ -18,68 +15,14 @@ import (
 	"github.com/music-gang/music-gang-api/executor"
 	"github.com/music-gang/music-gang-api/handler"
 	"github.com/music-gang/music-gang-api/http"
-	applog "github.com/music-gang/music-gang-api/log"
 	"github.com/music-gang/music-gang-api/mgvm"
 	"github.com/music-gang/music-gang-api/postgres"
 	"github.com/music-gang/music-gang-api/redis"
+
+	applog "github.com/music-gang/music-gang-api/log"
 )
 
-var (
-	Commit string
-)
-
-func init() {
-
-	// During the init func are loaded the vm configs from env variables
-
-	fuelRefillAmountFromConfig := config.GetConfig().APP.Vm.RefuelAmount
-	if f, err := entity.ParseFuel(fuelRefillAmountFromConfig); err == nil {
-		entity.FuelRefillAmount = f
-	}
-
-	fuelRefillRateFromConfig := config.GetConfig().APP.Vm.RefuelRate
-	if r, err := time.ParseDuration(fuelRefillRateFromConfig); err == nil {
-		entity.FuelRefillRate = r
-	}
-
-	FuelTankCapacityFromConfig := config.GetConfig().APP.Vm.MaxFuelTank
-	if f, err := entity.ParseFuel(FuelTankCapacityFromConfig); err == nil {
-		entity.FuelTankCapacity = f
-	}
-
-	maxExecutionTimeFromConfig := config.GetConfig().APP.Vm.MaxExecutionTime
-	if t, err := time.ParseDuration(maxExecutionTimeFromConfig); err == nil {
-		entity.MaxExecutionTime = t
-	}
-}
-
-func main() {
-
-	app.Commit = Commit
-
-	// Create a context that is cancelled when the program is terminated
-	ctx, cancel := context.WithCancel(context.Background())
-	ctx = app.NewContextWithTags(ctx, []string{app.ContextTagCLI})
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() { <-c; cancel() }()
-
-	m := NewMain()
-
-	if err := m.Run(ctx); err != nil {
-		log.Fatal(err)
-	}
-
-	<-ctx.Done()
-
-	if err := m.Close(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
-
-type Main struct {
+type App struct {
 	ctx context.Context
 
 	VM *mgvm.MusicGangVM
@@ -91,8 +34,8 @@ type Main struct {
 	HTTPServerAPI *http.ServerAPI
 }
 
-// NewMain returns a new instance of Main
-func NewMain() *Main {
+// NewApp returns a new instance of Main
+func NewApp() *App {
 
 	redisHost := config.GetConfig().APP.Redis.Host
 	redisPort := config.GetConfig().APP.Redis.Port
@@ -100,7 +43,7 @@ func NewMain() *Main {
 
 	redisAddr := fmt.Sprintf("%s:%d", redisHost, redisPort)
 
-	return &Main{
+	return &App{
 		Postgres:      postgres.NewDB(config.BuildDSNFromDatabaseConfigForPostgres(config.GetConfig().APP.Databases.Postgres)),
 		Redis:         redis.NewDB(redisAddr, redisPassword),
 		HTTPServerAPI: http.NewServerAPI(),
@@ -109,7 +52,7 @@ func NewMain() *Main {
 }
 
 // Close closes the main application
-func (m *Main) Close() error {
+func (m *App) Close() error {
 
 	if m.VM != nil {
 		if err := m.VM.Close(); err != nil {
@@ -139,7 +82,7 @@ func (m *Main) Close() error {
 }
 
 // Run starts the main application
-func (m *Main) Run(ctx context.Context) error {
+func (m *App) Run(ctx context.Context) error {
 
 	m.ctx = ctx
 
@@ -215,10 +158,16 @@ func (m *Main) Run(ctx context.Context) error {
 	engineService := mgvm.NewEngine()
 	engineService.Executors[entity.AnchorageVersion] = anchorageExecutor
 
+	InitializerCPUsPool()
+
+	cpusPoolService := mgvm.NewCPUsPool()
+
 	m.VM.LogService = logService
 	m.VM.FuelTank = fuelTankService
 	m.VM.FuelStation = fuelStationService
 	m.VM.EngineService = engineService
+	m.VM.CPUsPoolService = cpusPoolService
+
 	m.VM.ContractManagmentService = postgresContractService
 	m.VM.UserManagmentService = postgresUserService
 	m.VM.AuthManagmentService = authService

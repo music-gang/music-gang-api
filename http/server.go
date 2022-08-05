@@ -37,13 +37,6 @@ type ServerAPI struct {
 	// JWTSecret is the secret used to sign JWT tokens.
 	JWTSecret string
 
-	// Services used by HTTP handler.
-	// AuthSearchService     service.AuthSearchService
-	// ContractSearchService service.ContractSearchService
-	// UserSearchService     service.UserSearchService
-	// VmCallableService     service.VmCallableService
-	// JWTService            service.JWTService
-
 	// service handler
 	ServiceHandler *handler.ServiceHandler
 

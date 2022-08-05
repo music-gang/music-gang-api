@@ -1,1 +1,1 @@
-web: bin/mgvm
+web: bin/mgd

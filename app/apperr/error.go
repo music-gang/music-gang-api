@@ -21,8 +21,10 @@ const (
 	EFORBIDDEN      = "forbidden"       // access forbidden
 	EEXISTS         = "exists"          // resource already exists
 
-	EMGVM         = "mgvm"     // error code prefix for music gang virtual machine, it is assimilated to EINTERNAL
-	EMGVM_LOWFUEL = "low_fuel" // subcode for EMGVM, low fuel
+	EMGVM                     = "mgvm"                // error code prefix for music gang virtual machine, it is assimilated to EINTERNAL
+	EMGVM_LOWFUEL             = "low_fuel"            // subcode for EMGVM, low fuel
+	EMGVM_CORE_POOL_NOT_FOUND = "core_pool_not_found" // subcode for EMGVM, core pool not found
+	EMGVM_CORE_POOL_TIMEOUT   = "core_pool_timeout"   // subcode for EMGVM, core pool timeout
 
 	EANCHORAGE = "anchorage" // error code prefix for anchorage contract executor, it is assimilated to EINTERNAL
 )
