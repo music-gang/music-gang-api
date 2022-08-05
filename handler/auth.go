@@ -70,10 +70,10 @@ func (p *RegisterParams) validate() error {
 }
 
 // AuthLogin handles the login Business Logic.
-func (s *ServiceHandler) AuthLogin(ctx context.Context, params LoginParams) (*entity.TokenPair, error) {
+func (s *ServiceHandler) AuthLogin(ctx context.Context, params LoginParams) (*entity.User, *entity.TokenPair, error) {
 
 	if err := params.validate(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	auth, err := s.VmCallableService.Auhenticate(ctx, &entity.AuthUserOptions{
@@ -85,10 +85,10 @@ func (s *ServiceHandler) AuthLogin(ctx context.Context, params LoginParams) (*en
 	})
 	if err != nil {
 		if apperr.ErrorCode(err) == apperr.ENOTFOUND {
-			return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "wrong credentials")
+			return nil, nil, apperr.Errorf(apperr.EUNAUTHORIZED, "wrong credentials")
 		}
 		s.Logger.Error(apperr.ErrorLog(err))
-		return nil, err
+		return nil, nil, err
 	}
 
 	if auth.User.Auths != nil {
@@ -98,10 +98,10 @@ func (s *ServiceHandler) AuthLogin(ctx context.Context, params LoginParams) (*en
 	pair, err := s.JWTService.Exchange(ctx, auth)
 	if err != nil {
 		s.Logger.Error(apperr.ErrorLog(err))
-		return nil, err
+		return nil, nil, err
 	}
 
-	return pair, nil
+	return auth.User, pair, nil
 }
 
 // AuthLogout handles the logout Business Logic.
@@ -125,33 +125,43 @@ func (s *ServiceHandler) AuthLogout(ctx context.Context, pair *entity.TokenPair)
 }
 
 // AuthRefresh handles the refresh Business Logic.
-func (s *ServiceHandler) AuthRefresh(ctx context.Context, pair *entity.TokenPair) (*entity.TokenPair, error) {
+func (s *ServiceHandler) AuthRefresh(ctx context.Context, pair *entity.TokenPair) (*entity.User, *entity.TokenPair, error) {
 
 	if pair.RefreshToken == "" {
-		return nil, apperr.Errorf(apperr.EINVALID, "refresh token is required")
+		return nil, nil, apperr.Errorf(apperr.EINVALID, "refresh token is required")
 	}
 
 	pair, err := s.JWTService.Refresh(ctx, pair.RefreshToken)
 	if err != nil {
 		s.Logger.Error(apperr.ErrorLog(err))
-		return nil, err
+		return nil, nil, err
 	}
 
-	return pair, nil
+	claims, err := s.JWTService.Parse(ctx, pair.AccessToken)
+	if err != nil {
+		s.Logger.Error(apperr.ErrorLog(err))
+		return nil, pair, err
+	}
+
+	if claims.Auth.User.Auths != nil {
+		claims.Auth.User.Auths = nil
+	}
+
+	return claims.Auth.User, pair, nil
 }
 
 // AuthRegister handles the register Business Logic.
 // On success, the user is created and the JWT pairs is returned.
-func (s *ServiceHandler) AuthRegister(ctx context.Context, params RegisterParams) (*entity.TokenPair, error) {
+func (s *ServiceHandler) AuthRegister(ctx context.Context, params RegisterParams) (*entity.User, *entity.TokenPair, error) {
 
 	if err := params.validate(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	passwordhashed, err := util.HashPassword(params.Password)
 	if err != nil {
 		s.Logger.Error(apperr.ErrorLog(err))
-		return nil, err
+		return nil, nil, err
 	}
 
 	if err := s.VmCallableService.CreateAuth(ctx, &entity.Auth{
@@ -163,7 +173,7 @@ func (s *ServiceHandler) AuthRegister(ctx context.Context, params RegisterParams
 		},
 	}); err != nil {
 		s.Logger.Error(apperr.ErrorLog(err))
-		return nil, err
+		return nil, nil, err
 	}
 
 	return s.AuthLogin(ctx, LoginParams{

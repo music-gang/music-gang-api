@@ -435,6 +435,18 @@ func TestAuth_Refresh(t *testing.T) {
 					Expiry:       util.AppNowUTC().Add(1 * time.Hour).Unix(),
 				}, nil
 			},
+			ParseFn: func(ctx context.Context, token string) (*entity.AppClaims, error) {
+				return &entity.AppClaims{
+					Auth: &entity.Auth{
+						ID: 1,
+						User: &entity.User{
+							ID:    1,
+							Name:  "test",
+							Auths: []*entity.Auth{},
+						},
+					},
+				}, nil
+			},
 		}
 
 		pair := &entity.TokenPair{

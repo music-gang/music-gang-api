@@ -17,12 +17,12 @@ func (s *ServerAPI) AuthLoginHandler(c echo.Context) error {
 		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid request"), nil)
 	}
 
-	pair, err := s.ServiceHandler.AuthLogin(c.Request().Context(), params)
+	user, pair, err := s.ServiceHandler.AuthLogin(c.Request().Context(), params)
 	if err != nil {
 		return ErrorResponseJSON(c, err, nil)
 	}
 
-	return SuccessResponseJSON(c, http.StatusOK, tokenPairToEchoMap(pair))
+	return SuccessResponseJSON(c, http.StatusOK, tokenPairToEchoMap(pair, user))
 }
 
 // AuthLogoutHandler handles the logout request.
@@ -50,12 +50,12 @@ func (s *ServerAPI) AuthRefreshHandler(c echo.Context) error {
 		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid request"), nil)
 	}
 
-	pair, err := s.ServiceHandler.AuthRefresh(c.Request().Context(), pair)
+	user, pair, err := s.ServiceHandler.AuthRefresh(c.Request().Context(), pair)
 	if err != nil {
 		return ErrorResponseJSON(c, err, nil)
 	}
 
-	return SuccessResponseJSON(c, http.StatusOK, tokenPairToEchoMap(pair))
+	return SuccessResponseJSON(c, http.StatusOK, tokenPairToEchoMap(pair, user))
 }
 
 // AuthRegisterHandler handles the register request.
@@ -66,17 +66,18 @@ func (s *ServerAPI) AuthRegisterHandler(c echo.Context) error {
 		return ErrorResponseJSON(c, apperr.Errorf(apperr.EINVALID, "invalid request"), nil)
 	}
 
-	pair, err := s.ServiceHandler.AuthRegister(c.Request().Context(), params)
+	user, pair, err := s.ServiceHandler.AuthRegister(c.Request().Context(), params)
 	if err != nil {
 		return ErrorResponseJSON(c, err, nil)
 	}
 
-	return SuccessResponseJSON(c, http.StatusOK, tokenPairToEchoMap(pair))
+	return SuccessResponseJSON(c, http.StatusOK, tokenPairToEchoMap(pair, user))
 }
 
 // tokenPairToEchoMap converts a TokenPair to a map for JSON serialization.
-func tokenPairToEchoMap(pair *entity.TokenPair) echo.Map {
+func tokenPairToEchoMap(pair *entity.TokenPair, user *entity.User) echo.Map {
 	return echo.Map{
+		"user":          user,
 		"access_token":  pair.AccessToken,
 		"refresh_token": pair.RefreshToken,
 		"expires_in":    pair.Expiry,
