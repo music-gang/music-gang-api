@@ -73,6 +73,17 @@ func ErrorMessage(err error) string {
 	return err.Error()
 }
 
+// ErrorLog returns the params for a log entry for an application error.
+func ErrorLog(err error) (string, string, string) {
+	var e *Error
+	if err == nil {
+		return "", "", ""
+	} else if errors.As(err, &e) {
+		return e.Message, "code", e.Code
+	}
+	return err.Error(), "code", EINTERNAL
+}
+
 // Errorf is a helper function to return an Error with a given code and formatted message.
 func Errorf(code string, format string, args ...interface{}) *Error {
 	return &Error{

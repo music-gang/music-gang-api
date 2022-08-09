@@ -31,13 +31,11 @@ func (s *ServerAPI) UserUpdateHandler(c echo.Context) error {
 
 	authUser, err := s.ServiceHandler.CurrentAuthUser(c.Request().Context())
 	if err != nil {
-		s.LogService.ReportFatal(c.Request().Context(), err)
 		return ErrorResponseJSON(c, err, nil)
 	}
 
 	updatedUser, err := s.ServiceHandler.UpdateUser(c.Request().Context(), authUser.ID, userParams)
 	if err != nil {
-		s.LogService.ReportError(c.Request().Context(), err)
 		return ErrorResponseJSON(c, err, nil)
 	}
 

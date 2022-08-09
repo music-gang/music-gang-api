@@ -1,139 +1,122 @@
 package mock
 
-import (
-	"context"
-	"io"
+import "github.com/inconshreveable/log15"
 
-	"github.com/music-gang/music-gang-api/app/service"
-)
+var _ log15.Logger = (*Logger)(nil)
 
-var _ service.LogService = (*LogService)(nil)
-
-type LogService struct {
-	FormatFn        func() string
-	LevelFn         func() int
-	OutputFn        func() io.Writer
-	ReportDebugFn   func(ctx context.Context, msg string)
-	ReportErrorFn   func(ctx context.Context, err error)
-	ReportFatalFn   func(ctx context.Context, err error)
-	ReportInfoFn    func(ctx context.Context, info string)
-	ReportPanicFn   func(ctx context.Context, err interface{})
-	ReportWarningFn func(ctx context.Context, warning string)
+type Logger struct {
+	CritFn       func(msg string, ctx ...interface{})
+	DebugFn      func(msg string, ctx ...interface{})
+	ErrorFn      func(msg string, ctx ...interface{})
+	GetHandlerFn func() log15.Handler
+	InfoFn       func(msg string, ctx ...interface{})
+	NewFn        func(ctx ...interface{}) log15.Logger
+	SetHandlerFn func(h log15.Handler)
+	WarnFn       func(msg string, ctx ...interface{})
 }
 
-func (l *LogService) Format() string {
-	if l.FormatFn == nil {
-		panic("FormatFn not defined")
+func (l *Logger) Crit(msg string, ctx ...interface{}) {
+	if l.CritFn == nil {
+		panic("CritFn not defined")
 	}
-	return l.FormatFn()
+	l.CritFn(msg, ctx...)
 }
 
-func (l *LogService) Level() int {
-	if l.LevelFn == nil {
-		panic("LevelFn not defined")
+func (l *Logger) Debug(msg string, ctx ...interface{}) {
+	if l.DebugFn == nil {
+		panic("DebugFn not defined")
 	}
-	return l.LevelFn()
+	l.DebugFn(msg, ctx...)
 }
 
-func (l *LogService) Output() io.Writer {
-	if l.OutputFn == nil {
-		panic("OutputFn not defined")
+func (l *Logger) Error(msg string, ctx ...interface{}) {
+	if l.ErrorFn == nil {
+		panic("ErrorFn not defined")
 	}
-	return l.OutputFn()
+	l.ErrorFn(msg, ctx...)
 }
 
-func (l *LogService) ReportDebug(ctx context.Context, msg string) {
-	if l.ReportDebugFn == nil {
-		panic("ReportDebugFn not defined")
+func (l *Logger) GetHandler() log15.Handler {
+	if l.GetHandlerFn == nil {
+		panic("GetHandlerFn not defined")
 	}
-	l.ReportDebugFn(ctx, msg)
+	return l.GetHandlerFn()
 }
 
-func (l *LogService) ReportError(ctx context.Context, err error) {
-	if l.ReportErrorFn == nil {
-		panic("ReportErrorFn not defined")
+func (l *Logger) Info(msg string, ctx ...interface{}) {
+	if l.InfoFn == nil {
+		panic("InfoFn not defined")
 	}
-	l.ReportErrorFn(ctx, err)
+	l.InfoFn(msg, ctx...)
 }
 
-func (l *LogService) ReportFatal(ctx context.Context, err error) {
-	if l.ReportFatalFn == nil {
-		panic("ReportFatalFn not defined")
+func (l *Logger) New(ctx ...interface{}) log15.Logger {
+	if l.NewFn == nil {
+		panic("NewFn not defined")
 	}
-	l.ReportFatalFn(ctx, err)
+	return l.NewFn(ctx...)
 }
 
-func (l *LogService) ReportInfo(ctx context.Context, info string) {
-	if l.ReportInfoFn == nil {
-		panic("ReportInfoFn not defined")
+func (l *Logger) SetHandler(h log15.Handler) {
+	if l.SetHandlerFn == nil {
+		panic("SetHandlerFn not defined")
 	}
-	l.ReportInfoFn(ctx, info)
+	l.SetHandlerFn(h)
 }
 
-func (l *LogService) ReportPanic(ctx context.Context, err interface{}) {
-	if l.ReportPanicFn == nil {
-		panic("ReportPanicFn not defined")
+func (l *Logger) Warn(msg string, ctx ...interface{}) {
+	if l.WarnFn == nil {
+		panic("WarnFn not defined")
 	}
-	l.ReportPanicFn(ctx, err)
+	l.WarnFn(msg, ctx...)
 }
 
-func (l *LogService) ReportWarning(ctx context.Context, warning string) {
-	if l.ReportWarningFn == nil {
-		panic("ReportWarningFn not defined")
-	}
-	l.ReportWarningFn(ctx, warning)
+var _ log15.Logger = (*LoggerNoOp)(nil)
+
+type LoggerNoOp struct {
+	CritFn  func(msg string, ctx ...interface{})
+	DebugFn func(msg string, ctx ...interface{})
+	ErrorFn func(msg string, ctx ...interface{})
+	InfoFn  func(msg string, ctx ...interface{})
+	WarnFn  func(msg string, ctx ...interface{})
 }
 
-// LogServiceNoOp is a no-op implementation of the LogService interface.
-// Eventually we will want to implement this for specific test cases.
-type LogServiceNoOp struct {
-	ReportDebugFn   func(ctx context.Context, msg string)
-	ReportErrorFn   func(ctx context.Context, err error)
-	ReportFatalFn   func(ctx context.Context, err error)
-	ReportInfoFn    func(ctx context.Context, info string)
-	ReportPanicFn   func(ctx context.Context, err interface{})
-	ReportWarningFn func(ctx context.Context, warning string)
-}
-
-func (l *LogServiceNoOp) Format() string {
-	return ""
-}
-
-func (l *LogServiceNoOp) Level() int {
-	return 0
-}
-
-func (l *LogServiceNoOp) Output() io.Writer {
-	return io.Discard
-}
-
-func (l *LogServiceNoOp) ReportDebug(ctx context.Context, msg string) {
-	if l.ReportDebugFn != nil {
-		l.ReportDebugFn(ctx, msg)
+func (l *LoggerNoOp) Crit(msg string, ctx ...interface{}) {
+	if l.CritFn != nil {
+		l.CritFn(msg, ctx...)
 	}
 }
-func (l *LogServiceNoOp) ReportError(ctx context.Context, err error) {
-	if l.ReportErrorFn != nil {
-		l.ReportErrorFn(ctx, err)
+
+func (l *LoggerNoOp) Debug(msg string, ctx ...interface{}) {
+	if l.DebugFn != nil {
+		l.DebugFn(msg, ctx...)
 	}
 }
-func (l *LogServiceNoOp) ReportFatal(ctx context.Context, err error) {
-	if l.ReportFatalFn != nil {
-		l.ReportFatalFn(ctx, err)
+
+func (l *LoggerNoOp) Error(msg string, ctx ...interface{}) {
+	if l.ErrorFn != nil {
+		l.ErrorFn(msg, ctx...)
 	}
 }
-func (l *LogServiceNoOp) ReportInfo(ctx context.Context, info string) {
-	if l.ReportInfoFn != nil {
-		l.ReportInfoFn(ctx, info)
+
+func (l *LoggerNoOp) GetHandler() log15.Handler {
+	return nil
+}
+
+func (l *LoggerNoOp) Info(msg string, ctx ...interface{}) {
+	if l.InfoFn != nil {
+		l.InfoFn(msg, ctx...)
 	}
 }
-func (l *LogServiceNoOp) ReportPanic(ctx context.Context, err interface{}) {
-	if l.ReportPanicFn != nil {
-		l.ReportPanicFn(ctx, err)
-	}
+
+func (l *LoggerNoOp) New(ctx ...interface{}) log15.Logger {
+	return &LoggerNoOp{}
 }
-func (l *LogServiceNoOp) ReportWarning(ctx context.Context, warning string) {
-	if l.ReportWarningFn != nil {
-		l.ReportWarningFn(ctx, warning)
+
+func (l *LoggerNoOp) SetHandler(h log15.Handler) {}
+
+func (l *LoggerNoOp) Warn(msg string, ctx ...interface{}) {
+	if l.WarnFn != nil {
+		l.WarnFn(msg, ctx...)
 	}
 }

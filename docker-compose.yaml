@@ -15,8 +15,6 @@ services:
       - MG_JWT_EXPIRES_IN=60
       - MG_JWT_REFRESH_EXPIRES_IN=20160
 
-      - MG_SLACK_WEBHOOK_URL=""
-
       - MG_PG_DATABASE=music-gang
       - MG_PG_USER=music-gang
       - MG_PG_PASSWORD=music-gang

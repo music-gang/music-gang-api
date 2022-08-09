@@ -2,6 +2,7 @@ package mgvm_test
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -58,7 +59,7 @@ func TestVm_Run(t *testing.T) {
 				return nil, nil
 			},
 		}
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 
 		if err := vm.Run(); err != nil {
 			t.Errorf("Unexpected error: %s", err.Error())
@@ -177,9 +178,9 @@ func TestVm_Run(t *testing.T) {
 		infoChan := make(chan string, 1)
 		testIsFail := make(chan string, 1)
 
-		vm.LogService = &mock.LogServiceNoOp{
-			ReportInfoFn: func(ctx context.Context, info string) {
-				infoChan <- info
+		vm.LogService = &mock.LoggerNoOp{
+			InfoFn: func(msg string, ctx ...interface{}) {
+				infoChan <- msg
 			},
 		}
 
@@ -264,9 +265,9 @@ func TestVm_Run(t *testing.T) {
 		ErrChan := make(chan error, 1)
 		testIsFail := make(chan string, 1)
 
-		vm.LogService = &mock.LogServiceNoOp{
-			ReportErrorFn: func(ctx context.Context, err error) {
-				ErrChan <- err
+		vm.LogService = &mock.LoggerNoOp{
+			ErrorFn: func(msg string, ctx ...interface{}) {
+				ErrChan <- fmt.Errorf(msg, ctx...)
 			},
 		}
 
@@ -330,7 +331,7 @@ func TestVm_Close(t *testing.T) {
 				return nil, nil
 			},
 		}
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 
 		if err := vm.Run(); err != nil {
 			t.Errorf("Unexpected error: %s", err.Error())
@@ -377,7 +378,7 @@ func TestVm_Close(t *testing.T) {
 				return nil, nil
 			},
 		}
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 
 		if err := vm.Run(); err != nil {
 			t.Errorf("Unexpected error: %s", err.Error())
@@ -424,7 +425,7 @@ func TestVm_Close(t *testing.T) {
 				return nil, nil
 			},
 		}
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 
 		if err := vm.Run(); err != nil {
 			t.Errorf("Unexpected error: %s", err.Error())
@@ -470,7 +471,7 @@ func TestVm_Meter(t *testing.T) {
 		state := entity.StateInitializing
 		muxState := &sync.Mutex{}
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
@@ -565,7 +566,7 @@ func TestVm_Meter(t *testing.T) {
 
 		vm := mgvm.NewMusicGangVM()
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.EngineService = &mock.EngineService{
 			StateFn: func() entity.VmState {
 				return entity.StatePaused
@@ -612,7 +613,7 @@ func TestVm_Meter(t *testing.T) {
 
 		vm := mgvm.NewMusicGangVM()
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.EngineService = &mock.EngineService{
 			StateFn: func() entity.VmState {
 				return entity.StateRunning
@@ -659,7 +660,7 @@ func TestVm_Meter(t *testing.T) {
 
 		vm := mgvm.NewMusicGangVM()
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.EngineService = &mock.EngineService{
 			StateFn: func() entity.VmState {
 				return entity.StateRunning
@@ -698,7 +699,7 @@ func TestVm_MakeOperation(t *testing.T) {
 				}, nil
 			},
 		}
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				atomic.StoreUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -765,7 +766,7 @@ func TestVm_MakeOperation(t *testing.T) {
 				return nil, apperr.Errorf(apperr.EMGVM, "internal error")
 			},
 		}
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				atomic.StoreUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -820,7 +821,7 @@ func TestVm_MakeOperation(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				atomic.StoreUint64((*uint64)(&currentFuel), uint64(fuel))

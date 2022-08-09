@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/inconshreveable/log15"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/music-gang/music-gang-api/app"
-	"github.com/music-gang/music-gang-api/app/service"
 	"github.com/music-gang/music-gang-api/handler"
 	"golang.org/x/crypto/acme/autocert"
 )
@@ -41,7 +41,7 @@ type ServerAPI struct {
 	ServiceHandler *handler.ServiceHandler
 
 	// loggin service used by HTTP Server.
-	LogService service.LogService
+	LogService log.Logger
 }
 
 // NewServerAPI creates a new API server.

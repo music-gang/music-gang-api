@@ -59,7 +59,7 @@ func TestVm_ExecContract(t *testing.T) {
 		currentFuel := entity.Fuel(0)
 		refuelCalled := false
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				atomic.AddUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -134,7 +134,7 @@ func TestVm_ExecContract(t *testing.T) {
 			currentFuel := entity.Fuel(0)
 			refuelCalled := false
 
-			vm.LogService = &mock.LogServiceNoOp{}
+			vm.LogService = &mock.LoggerNoOp{}
 			vm.FuelTank = &mock.FuelTankService{
 				BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 					atomic.AddUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -232,7 +232,7 @@ func TestVm_ExecContract(t *testing.T) {
 			currentFuel := entity.Fuel(0)
 			refuelCalled := false
 
-			vm.LogService = &mock.LogServiceNoOp{}
+			vm.LogService = &mock.LoggerNoOp{}
 			vm.FuelTank = &mock.FuelTankService{
 				BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 					atomic.AddUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -329,7 +329,7 @@ func TestVm_ExecContract(t *testing.T) {
 			currentState := entity.StateInitializing
 			currentFuel := entity.Fuel(0)
 
-			vm.LogService = &mock.LogServiceNoOp{}
+			vm.LogService = &mock.LoggerNoOp{}
 			vm.FuelTank = &mock.FuelTankService{
 				BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 					atomic.AddUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -396,7 +396,7 @@ func TestVm_ExecContract(t *testing.T) {
 			currentState := entity.StateInitializing
 			currentFuel := entity.Fuel(0)
 
-			vm.LogService = &mock.LogServiceNoOp{}
+			vm.LogService = &mock.LoggerNoOp{}
 			vm.FuelTank = &mock.FuelTankService{
 				BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 					atomic.AddUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -466,7 +466,7 @@ func TestVm_ExecContract(t *testing.T) {
 			currentState := entity.StateInitializing
 			currentFuel := entity.Fuel(0)
 
-			vm.LogService = &mock.LogServiceNoOp{}
+			vm.LogService = &mock.LoggerNoOp{}
 			vm.FuelTank = &mock.FuelTankService{
 				BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 					atomic.AddUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -540,7 +540,7 @@ func TestVm_ExecContract(t *testing.T) {
 			currentState := entity.StateInitializing
 			currentFuel := entity.Fuel(0)
 
-			vm.LogService = &mock.LogServiceNoOp{}
+			vm.LogService = &mock.LoggerNoOp{}
 			vm.FuelTank = &mock.FuelTankService{
 				BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 					atomic.AddUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -646,7 +646,7 @@ func TestVm_ExecContract(t *testing.T) {
 
 		currentState := entity.StateInitializing
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				return apperr.Errorf(apperr.EMGVM, "test")
@@ -690,7 +690,7 @@ func TestVm_ExecContract(t *testing.T) {
 
 		currentState := entity.StateInitializing
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				return service.ErrFuelTankNotEnough
@@ -736,7 +736,7 @@ func TestVm_ExecContract(t *testing.T) {
 
 		currentState := entity.StateInitializing
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				return nil
@@ -785,7 +785,7 @@ func TestVm_ExecContract(t *testing.T) {
 
 		currentState := entity.StateInitializing
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				return nil
@@ -831,7 +831,7 @@ func TestVm_ExecContract(t *testing.T) {
 
 		currentState := entity.StateInitializing
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				return nil
@@ -877,7 +877,7 @@ func TestVm_ExecContract(t *testing.T) {
 
 		currentState := entity.StateInitializing
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				return nil
@@ -930,7 +930,7 @@ func TestVm_CreateContract(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				atomic.StoreUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -1004,7 +1004,7 @@ func TestVm_DeleteContract(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				atomic.StoreUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -1067,7 +1067,7 @@ func TestVm_MakeRevision(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				atomic.StoreUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -1300,7 +1300,7 @@ func TestVm_UpdateContract(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				atomic.StoreUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -1390,7 +1390,7 @@ func TestVm_UpdateContract(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				atomic.StoreUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -1450,7 +1450,7 @@ func TestVm_UpdateContract(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.FuelTank = &mock.FuelTankService{
 			BurnFn: func(ctx context.Context, fuel entity.Fuel) error {
 				atomic.StoreUint64((*uint64)(&currentFuel), uint64(fuel))
@@ -1515,7 +1515,7 @@ func TestVm_Auhenticate(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.AuthManagmentService = &mock.AuthService{
 			AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
 				return &entity.Auth{
@@ -1587,7 +1587,7 @@ func TestVm_Auhenticate(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.AuthManagmentService = &mock.AuthService{
 			AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
 				return nil, apperr.Errorf(apperr.EMGVM, "test")
@@ -1643,7 +1643,7 @@ func TestVm_Auhenticate(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.AuthManagmentService = &mock.AuthService{
 			AuthentcateFn: func(ctx context.Context, opts *entity.AuthUserOptions) (*entity.Auth, error) {
 				return nil, nil
@@ -1702,7 +1702,7 @@ func TestVm_CreateAuth(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.AuthManagmentService = &mock.AuthService{
 			CreateAuthFn: func(ctx context.Context, auth *entity.Auth) error {
 				auth.ID = 1
@@ -1766,7 +1766,7 @@ func TestVm_CreateAuth(t *testing.T) {
 			currentState := entity.StateInitializing
 			currentFuel := entity.Fuel(0)
 
-			vm.LogService = &mock.LogServiceNoOp{}
+			vm.LogService = &mock.LoggerNoOp{}
 			vm.AuthManagmentService = &mock.AuthService{
 				CreateAuthFn: func(ctx context.Context, auth *entity.Auth) error {
 					return apperr.Errorf(apperr.EMGVM, "test")
@@ -1831,7 +1831,7 @@ func TestVm_CreateUser(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.UserManagmentService = &mock.UserService{
 			CreateUserFn: func(ctx context.Context, user *entity.User) error {
 				user.ID = 1
@@ -1891,7 +1891,7 @@ func TestVm_CreateUser(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.UserManagmentService = &mock.UserService{
 			CreateUserFn: func(ctx context.Context, user *entity.User) error {
 				return apperr.Errorf(apperr.EMGVM, "test")
@@ -1953,7 +1953,7 @@ func TestVm_DeleteAuth(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.AuthManagmentService = &mock.AuthService{
 			DeleteAuthFn: func(ctx context.Context, id int64) error {
 				return nil
@@ -2006,7 +2006,7 @@ func TestVm_DeleteAuth(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.AuthManagmentService = &mock.AuthService{
 			DeleteAuthFn: func(ctx context.Context, id int64) error {
 				return apperr.Errorf(apperr.EMGVM, "test")
@@ -2064,7 +2064,7 @@ func TestVm_DeleteUser(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.UserManagmentService = &mock.UserService{
 			DeleteUserFn: func(ctx context.Context, id int64) error {
 				return nil
@@ -2117,7 +2117,7 @@ func TestVm_DeleteUser(t *testing.T) {
 		currentState := entity.StateInitializing
 		currentFuel := entity.Fuel(0)
 
-		vm.LogService = &mock.LogServiceNoOp{}
+		vm.LogService = &mock.LoggerNoOp{}
 		vm.UserManagmentService = &mock.UserService{
 			DeleteUserFn: func(ctx context.Context, id int64) error {
 				return apperr.Errorf(apperr.EMGVM, "test")

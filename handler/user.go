@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/music-gang/music-gang-api/app"
+	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
 )
@@ -12,7 +13,7 @@ import (
 func (s *ServiceHandler) CurrentAuthUser(ctx context.Context) (*entity.User, error) {
 	user, err := app.AuthUser(ctx)
 	if err != nil {
-		s.LogService.ReportFatal(ctx, err)
+		s.Logger.Error(apperr.ErrorLog(err))
 		return nil, err
 	}
 
@@ -24,12 +25,12 @@ func (s *ServiceHandler) UpdateUser(ctx context.Context, userID int64, userParam
 
 	user, err := s.UserSearchService.FindUserByID(ctx, userID)
 	if err != nil {
-		s.LogService.ReportFatal(ctx, err)
+		s.Logger.Error(apperr.ErrorLog(err))
 		return nil, err
 	}
 
 	if updatedUser, err := s.VmCallableService.UpdateUser(ctx, user.ID, userParams); err != nil {
-		s.LogService.ReportError(ctx, err)
+		s.Logger.Error(apperr.ErrorLog(err))
 		return nil, err
 	} else {
 		return updatedUser, nil

@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	log "github.com/inconshreveable/log15"
 	"github.com/music-gang/music-gang-api/app"
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
@@ -24,7 +25,8 @@ type MusicGangVM struct {
 
 	*sync.Cond
 
-	LogService      service.LogService
+	LogService log.Logger
+
 	EngineService   service.EngineService
 	FuelTank        service.FuelTankService
 	FuelStation     service.FuelStationService
@@ -68,9 +70,11 @@ func (vm *MusicGangVM) Run() error {
 			case <-vm.ctx.Done():
 				return
 			case err := <-errChan:
-				vm.LogService.ReportError(vm.ctx, err)
+
+				vm.LogService.Error(apperr.ErrorLog(err))
+
 			case info := <-infoChan:
-				vm.LogService.ReportInfo(vm.ctx, info)
+				vm.LogService.Info(info)
 			}
 		}
 	}()
@@ -139,7 +143,7 @@ func (vm *MusicGangVM) makeOperation(ctx context.Context, ref service.VmCallable
 			func() {
 				vm.L.Lock()
 				for !vm.IsRunning() {
-					vm.LogService.ReportInfo(vm.ctx, "Wait for engine to resume")
+					vm.LogService.Info("Wait for engine to resume")
 					vm.Wait()
 				}
 				vm.L.Unlock()
@@ -174,7 +178,7 @@ func (vm *MusicGangVM) makeOperation(ctx context.Context, ref service.VmCallable
 	// burn the max fuel consumed by the operation.
 	if err := vm.FuelTank.Burn(vm.ctx, ref.MaxFuel()); err != nil {
 		if err == service.ErrFuelTankNotEnough {
-			vm.LogService.ReportInfo(vm.ctx, "Not enough fuel to execute operation, pause engine")
+			vm.LogService.Info("Not enough fuel to execute operation, pause engine")
 			vm.Pause()
 		}
 		return nil, err
@@ -184,7 +188,7 @@ func (vm *MusicGangVM) makeOperation(ctx context.Context, ref service.VmCallable
 
 	res, err = fn(ctx, ref)
 	if err != nil {
-		vm.LogService.ReportError(vm.ctx, err)
+		vm.LogService.Error(apperr.ErrorLog(err))
 		return nil, err
 	}
 
@@ -224,7 +228,7 @@ func (vm *MusicGangVM) meter(infoChan chan<- string, errChan chan<- error) {
 
 			defer func() {
 				if r := recover(); r != nil {
-					vm.LogService.ReportPanic(vm.ctx, r)
+					vm.LogService.Crit("Panic while measuring fuel consumption", log.Ctx{"panic": r})
 				}
 			}()
 

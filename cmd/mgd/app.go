@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/inconshreveable/log15"
 	"github.com/music-gang/music-gang-api/app"
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
@@ -18,8 +19,6 @@ import (
 	"github.com/music-gang/music-gang-api/mgvm"
 	"github.com/music-gang/music-gang-api/postgres"
 	"github.com/music-gang/music-gang-api/redis"
-
-	applog "github.com/music-gang/music-gang-api/log"
 )
 
 type App struct {
@@ -119,30 +118,18 @@ func (m *App) Run(ctx context.Context) error {
 	jwtService.Secret = config.GetConfig().APP.JWT.Secret
 	jwtService.JWTBlacklistService = redis.NewJWTBlacklistService(m.Redis)
 
-	logService := &applog.Logger{}
-
-	stdOutLogger := applog.NewStdOutputLogger()
-	logService.AddBackend(stdOutLogger)
-
-	// Add slack logger if provided webhook urlLogs
-	if config.GetConfig().APP.Slack.Webhook != "" {
-		slackLogger := applog.NewSlackLogger(config.GetConfig().APP.Slack.Webhook)
-		slackLogger.Fallback = stdOutLogger
-		logService.AddBackend(slackLogger)
-	}
-
-	serviceHandler := handler.NewServiceHandler()
-	serviceHandler.LogService = logService
+	logService := log15.New("app", "mgd")
 
 	m.HTTPServerAPI.Addr = config.GetConfig().APP.HTTP.Addr
 	m.HTTPServerAPI.Domain = config.GetConfig().APP.HTTP.Domain
-	m.HTTPServerAPI.LogService = logService
+	m.HTTPServerAPI.LogService = logService.New("module", "http")
 
-	m.HTTPServerAPI.ServiceHandler = serviceHandler
+	m.HTTPServerAPI.ServiceHandler = handler.NewServiceHandler()
 	m.HTTPServerAPI.ServiceHandler.AuthSearchService = authService
 	m.HTTPServerAPI.ServiceHandler.ContractSearchService = postgresContractService
 	m.HTTPServerAPI.ServiceHandler.UserSearchService = postgresUserService
 	m.HTTPServerAPI.ServiceHandler.JWTService = jwtService
+	m.HTTPServerAPI.ServiceHandler.Logger = m.HTTPServerAPI.LogService
 
 	fuelTankService := mgvm.NewFuelTank()
 	fuelTankService.LockService = redis.NewLockService(m.Redis, "fuel-tank-lock")
@@ -150,7 +137,7 @@ func (m *App) Run(ctx context.Context) error {
 
 	fuelStationService := mgvm.NewFuelStation()
 	fuelStationService.FuelTankService = fuelTankService
-	fuelStationService.LogService = logService
+	fuelStationService.LogService = logService.New("module", "fuel-station")
 	fuelStationService.FuelRefillAmount = entity.FuelRefillAmount
 	fuelStationService.FuelRefillRate = entity.FuelRefillRate
 
@@ -162,7 +149,7 @@ func (m *App) Run(ctx context.Context) error {
 
 	cpusPoolService := mgvm.NewCPUsPool()
 
-	m.VM.LogService = logService
+	m.VM.LogService = logService.New("module", "vm")
 	m.VM.FuelTank = fuelTankService
 	m.VM.FuelStation = fuelStationService
 	m.VM.EngineService = engineService
@@ -190,7 +177,15 @@ func (m *App) Run(ctx context.Context) error {
 		}()
 	}
 
-	m.HTTPServerAPI.LogService.ReportInfo(context.Background(), fmt.Sprintf("Starting application %s", m.HTTPServerAPI.URL()))
+	logService.Info("Starting application",
+		"addr", m.HTTPServerAPI.Addr,
+		"domain", m.HTTPServerAPI.Domain,
+		"tls", m.HTTPServerAPI.UseTLS(),
+		"vm_fuel_tank_capacity", entity.FuelTankCapacity,
+		"vm_fuel_refill_amount", entity.FuelRefillAmount,
+		"vm_fuel_refill_rate", entity.FuelRefillRate,
+		"vm_max_execution_time", entity.MaxExecutionTime,
+	)
 
 	return nil
 }

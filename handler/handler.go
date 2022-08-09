@@ -1,6 +1,9 @@
 package handler
 
-import "github.com/music-gang/music-gang-api/app/service"
+import (
+	log "github.com/inconshreveable/log15"
+	"github.com/music-gang/music-gang-api/app/service"
+)
 
 type ServiceHandler struct {
 	ContractSearchService service.ContractSearchService
@@ -9,10 +12,16 @@ type ServiceHandler struct {
 	VmCallableService     service.VmCallableService
 	JWTService            service.JWTService
 
-	LogService service.LogService
+	Logger log.Logger
 }
 
 // NewServiceHandler creates a new ServiceHandler.
 func NewServiceHandler() *ServiceHandler {
-	return &ServiceHandler{}
+	return NewServiceHandlerWithLogger(log.Root())
+}
+
+func NewServiceHandlerWithLogger(logger log.Logger) *ServiceHandler {
+	return &ServiceHandler{
+		Logger: logger,
+	}
 }

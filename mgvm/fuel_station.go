@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	log "github.com/inconshreveable/log15"
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
@@ -16,7 +17,7 @@ var _ service.FuelStationService = (*FuelStation)(nil)
 // FuelStation is responsible for starting and stopping the refueling of the fuel tank.
 type FuelStation struct {
 	FuelTankService service.FuelTankService
-	LogService      service.LogService
+	LogService      log.Logger
 
 	FuelRefillAmount entity.Fuel
 	FuelRefillRate   time.Duration
@@ -80,7 +81,7 @@ func resumeRefueling(ctx context.Context, fs *FuelStation) error {
 			return nil
 		case <-ticker.C:
 			if err := internalRefueler(ctx, fs); err != nil {
-				fs.LogService.ReportError(ctx, err)
+				fs.LogService.Error(apperr.ErrorLog(err))
 			}
 		}
 	}

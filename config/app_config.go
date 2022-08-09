@@ -174,11 +174,6 @@ type RedisConfig struct {
 	Password string `env:"PASSWORD" envDefault:""`
 }
 
-// SlackConfig contains the slack config
-type SlackConfig struct {
-	Webhook string `env:"WEBHOOK_URL"`
-}
-
 // DatabaseListConfig contains the list of database configs
 type DatabaseListConfig struct {
 	// Postgres is the Postgres database configuration
@@ -199,9 +194,6 @@ type AppConfig struct {
 
 	// JWT is the jwt config
 	JWT JWTConfig `envPrefix:"JWT_"`
-
-	// Slack is the slack config
-	Slack SlackConfig `envPrefix:"SLACK_"`
 
 	// Databases contains the databases configuration
 	Databases DatabaseListConfig

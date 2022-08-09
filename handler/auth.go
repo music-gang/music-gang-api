@@ -87,7 +87,7 @@ func (s *ServiceHandler) AuthLogin(ctx context.Context, params LoginParams) (*en
 		if apperr.ErrorCode(err) == apperr.ENOTFOUND {
 			return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "wrong credentials")
 		}
-		s.LogService.ReportError(ctx, err)
+		s.Logger.Error(apperr.ErrorLog(err))
 		return nil, err
 	}
 
@@ -97,7 +97,7 @@ func (s *ServiceHandler) AuthLogin(ctx context.Context, params LoginParams) (*en
 
 	pair, err := s.JWTService.Exchange(ctx, auth)
 	if err != nil {
-		s.LogService.ReportError(ctx, err)
+		s.Logger.Error(apperr.ErrorLog(err))
 		return nil, err
 	}
 
@@ -109,14 +109,14 @@ func (s *ServiceHandler) AuthLogout(ctx context.Context, pair *entity.TokenPair)
 
 	if pair.AccessToken != "" {
 		if err := s.JWTService.Invalidate(ctx, pair.AccessToken, entity.AccessTokenExpiration); err != nil {
-			s.LogService.ReportError(ctx, err)
+			s.Logger.Error(apperr.ErrorLog(err))
 			return err
 		}
 	}
 
 	if pair.RefreshToken != "" {
 		if err := s.JWTService.Invalidate(ctx, pair.RefreshToken, entity.RefreshTokenExpiration); err != nil {
-			s.LogService.ReportError(ctx, err)
+			s.Logger.Error(apperr.ErrorLog(err))
 			return err
 		}
 	}
@@ -133,7 +133,7 @@ func (s *ServiceHandler) AuthRefresh(ctx context.Context, pair *entity.TokenPair
 
 	pair, err := s.JWTService.Refresh(ctx, pair.RefreshToken)
 	if err != nil {
-		s.LogService.ReportError(ctx, err)
+		s.Logger.Error(apperr.ErrorLog(err))
 		return nil, err
 	}
 
@@ -150,7 +150,7 @@ func (s *ServiceHandler) AuthRegister(ctx context.Context, params RegisterParams
 
 	passwordhashed, err := util.HashPassword(params.Password)
 	if err != nil {
-		s.LogService.ReportError(ctx, err)
+		s.Logger.Error(apperr.ErrorLog(err))
 		return nil, err
 	}
 
@@ -162,7 +162,7 @@ func (s *ServiceHandler) AuthRegister(ctx context.Context, params RegisterParams
 			Password: null.StringFrom(string(passwordhashed)),
 		},
 	}); err != nil {
-		s.LogService.ReportError(ctx, err)
+		s.Logger.Error(apperr.ErrorLog(err))
 		return nil, err
 	}
 

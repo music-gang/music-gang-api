@@ -23,7 +23,7 @@ func TestFuelStation_ResumeRefueling(t *testing.T) {
 		fuelStation.FuelRefillRate = time.Second
 		fuelStation.FuelRefillAmount = entity.Fuel(0)
 
-		fuelStation.LogService = &mock.LogServiceNoOp{}
+		fuelStation.LogService = &mock.LoggerNoOp{}
 		fuelStation.FuelTankService = &mock.FuelTankServiceNoOp{}
 
 		if err := fuelStation.ResumeRefueling(ctx); err != nil {
@@ -58,7 +58,7 @@ func TestFuelStation_ResumeRefueling(t *testing.T) {
 		errChan := make(chan *apperr.Error, 1)
 		timeout := time.NewTimer(2 * time.Second)
 
-		fuelStation.LogService = &mock.LogServiceNoOp{}
+		fuelStation.LogService = &mock.LoggerNoOp{}
 		fuelStation.FuelTankService = &mock.FuelTankService{
 			FuelFn: func(ctx context.Context) (entity.Fuel, error) {
 				return 0, nil
@@ -94,7 +94,7 @@ func TestFuelStation_ResumeRefueling(t *testing.T) {
 		fuelStation.FuelRefillRate = 500 * time.Millisecond
 		fuelStation.FuelRefillAmount = entity.Fuel(0)
 
-		fuelStation.LogService = &mock.LogServiceNoOp{}
+		fuelStation.LogService = &mock.LoggerNoOp{}
 		fuelStation.FuelTankService = &mock.FuelTankService{
 			FuelFn: func(ctx context.Context) (entity.Fuel, error) {
 				return 0, nil
@@ -121,7 +121,7 @@ func TestFuelStation_ResumeRefueling(t *testing.T) {
 		fuelStation.FuelRefillRate = 500 * time.Millisecond
 		fuelStation.FuelRefillAmount = entity.Fuel(0)
 
-		fuelStation.LogService = &mock.LogServiceNoOp{}
+		fuelStation.LogService = &mock.LoggerNoOp{}
 		fuelStation.FuelTankService = &mock.FuelTankService{
 			FuelFn: func(ctx context.Context) (entity.Fuel, error) {
 				return 0, nil
@@ -155,7 +155,7 @@ func TestFuelStation_StopRefueling(t *testing.T) {
 		fuelStation.FuelRefillRate = 500 * time.Millisecond
 		fuelStation.FuelRefillAmount = entity.Fuel(0)
 
-		fuelStation.LogService = &mock.LogServiceNoOp{}
+		fuelStation.LogService = &mock.LoggerNoOp{}
 		fuelStation.FuelTankService = &mock.FuelTankServiceNoOp{}
 
 		if err := fuelStation.ResumeRefueling(ctx); err != nil {
@@ -185,7 +185,7 @@ func TestFuelStation_StopRefueling(t *testing.T) {
 		fuelStation.FuelRefillRate = 500 * time.Millisecond
 		fuelStation.FuelRefillAmount = entity.Fuel(0)
 
-		fuelStation.LogService = &mock.LogServiceNoOp{}
+		fuelStation.LogService = &mock.LoggerNoOp{}
 		fuelStation.FuelTankService = &mock.FuelTankServiceNoOp{}
 
 		if err := fuelStation.ResumeRefueling(ctx); err != nil {

@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 
+	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
 )
@@ -15,14 +16,14 @@ func (s *ServiceHandler) CallContract(ctx context.Context, contractID int64, rev
 	if revisionNumber != 0 {
 		revision, err = s.ContractSearchService.FindRevisionByContractAndRev(ctx, contractID, revisionNumber)
 		if err != nil {
-			s.LogService.ReportError(ctx, err)
+			s.Logger.Error(apperr.ErrorLog(err))
 			return nil, err
 		}
 	} else {
 
 		contract, err := s.ContractSearchService.FindContractByID(ctx, contractID)
 		if err != nil {
-			s.LogService.ReportError(ctx, err)
+			s.Logger.Error(apperr.ErrorLog(err))
 			return nil, err
 		}
 
@@ -34,7 +35,7 @@ func (s *ServiceHandler) CallContract(ctx context.Context, contractID int64, rev
 		RevisionRef: revision,
 	})
 	if err != nil {
-		s.LogService.ReportError(ctx, err)
+		s.Logger.Error(apperr.ErrorLog(err))
 		return nil, err
 	}
 
@@ -44,7 +45,7 @@ func (s *ServiceHandler) CallContract(ctx context.Context, contractID int64, rev
 // CreateContract handles the contract create business logic.
 func (s *ServiceHandler) CreateContract(ctx context.Context, contract *entity.Contract) (*entity.Contract, error) {
 	if err := s.VmCallableService.CreateContract(ctx, contract); err != nil {
-		s.LogService.ReportError(ctx, err)
+		s.Logger.Error(apperr.ErrorLog(err))
 		return nil, err
 	}
 	return contract, nil
@@ -53,7 +54,7 @@ func (s *ServiceHandler) CreateContract(ctx context.Context, contract *entity.Co
 // FindContractByID handles the contract search business logic.
 func (s *ServiceHandler) FindContractByID(ctx context.Context, contractID int64) (res *entity.Contract, err error) {
 	if contract, err := s.ContractSearchService.FindContractByID(ctx, contractID); err != nil {
-		s.LogService.ReportError(ctx, err)
+		s.Logger.Error(apperr.ErrorLog(err))
 		return nil, err
 	} else {
 		return contract, nil
@@ -63,7 +64,7 @@ func (s *ServiceHandler) FindContractByID(ctx context.Context, contractID int64)
 // MakeContractRevision handles the creation of new revision of a contract business logic.
 func (s *ServiceHandler) MakeContractRevision(ctx context.Context, revision *entity.Revision) (*entity.Revision, error) {
 	if err := s.VmCallableService.MakeRevision(ctx, revision); err != nil {
-		s.LogService.ReportError(ctx, err)
+		s.Logger.Error(apperr.ErrorLog(err))
 		return nil, err
 	}
 	return revision, nil
@@ -74,7 +75,7 @@ func (s *ServiceHandler) UpdateContract(ctx context.Context, contractID int64, p
 
 	contract, err := s.VmCallableService.UpdateContract(ctx, contractID, params)
 	if err != nil {
-		s.LogService.ReportError(ctx, err)
+		s.Logger.Error(apperr.ErrorLog(err))
 		return nil, err
 	}
 
