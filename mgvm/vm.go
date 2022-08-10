@@ -63,6 +63,9 @@ func NewMusicGangVM() *MusicGangVM {
 // Run starts the vm.
 func (vm *MusicGangVM) Run() (err error) {
 
+	vm.engineShouldResumeSub = vm.EventService.Subscribe(vm.ctx, event.EngineShouldResumeEvent)
+	vm.engineShouldPauseSub = vm.EventService.Subscribe(vm.ctx, event.EngineShouldPauseEvent)
+
 	if err := vm.FuelStation.ResumeRefueling(vm.ctx); err != nil {
 		return err
 	}
@@ -74,10 +77,6 @@ func (vm *MusicGangVM) Run() (err error) {
 	if err := vm.Resume(); err != nil {
 		return err
 	}
-
-	vm.engineShouldResumeSub = vm.EventService.Subscribe(vm.ctx, event.EngineShouldResumeEvent)
-
-	vm.engineShouldPauseSub = vm.EventService.Subscribe(vm.ctx, event.EngineShouldPauseEvent)
 
 	go func() {
 
