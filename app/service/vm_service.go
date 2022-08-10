@@ -11,17 +11,21 @@ const (
 	EngineExecutionTimeoutPanic = "engine-execution-panic-timeout"
 )
 
+type EngineStateService interface {
+	// State returns the state of the engine.
+	State() entity.VmState
+}
+
 // EngineService is the interface for the engine service.
 type EngineService interface {
 	ContractExecutorService
+	EngineStateService
 	// IsRunning returns true if the engine is running.
 	IsRunning() bool
 	// Pause pauses the engine.
 	Pause() error
 	// Resume resumes the engine.
 	Resume() error
-	// State returns the state of the engine.
-	State() entity.VmState
 	// Stop stops the engine.
 	Stop() error
 }
@@ -37,7 +41,7 @@ type VmCallableService interface {
 	AuthManagmentService
 	ContractExecutorService
 	ContractManagmentService
-	FuelMeterService
+	FuelStatsService
 	UserManagmentService
 }
 
