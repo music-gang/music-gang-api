@@ -13,10 +13,6 @@ import (
 	"github.com/music-gang/music-gang-api/config"
 )
 
-var (
-	Commit string
-)
-
 func init() {
 
 	// During the init func are loaded the vm configs from env variables
@@ -44,7 +40,9 @@ func init() {
 
 func main() {
 
-	app.Commit = Commit
+	app.Commit = os.Getenv("HEROKU_SLUG_COMMIT")
+	app.ReleaseVersion = os.Getenv("HEROKU_RELEASE_VERSION")
+	app.ReleaseCreatedAt = os.Getenv("HEROKU_RELEASE_CREATED_AT")
 
 	// Create a context that is cancelled when the program is terminated
 	ctx, cancel := context.WithCancel(context.Background())

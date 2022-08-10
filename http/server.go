@@ -137,7 +137,9 @@ func (s *ServerAPI) registerRoutes(g *echo.Group) {
 	buildGroup := g.Group("/build")
 	buildGroup.GET("/info", func(c echo.Context) error {
 		return SuccessResponseJSON(c, http.StatusOK, map[string]string{
-			"commit": app.Commit,
+			"commit":          app.Commit,
+			"release_version": app.ReleaseVersion,
+			"release_date":    app.ReleaseCreatedAt,
 		})
 	})
 
