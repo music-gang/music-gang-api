@@ -48,7 +48,11 @@ type FuelStatsService interface {
 	Stats(ctx context.Context) (*entity.FuelStat, error)
 }
 
+// FuelMonitorService is the interface for the fuel monitor.
+// This service monitors the fuel consumption of the engine and should send events when reach safe levels or when the fuel usage is too high.
 type FuelMonitorService interface {
+	// StartMonitoring starts the fuel monitor.
 	StartMonitoring(ctx context.Context) error
+	// StopMonitoring stops the fuel monitor.
 	StopMonitoring(ctx context.Context) error
 }
