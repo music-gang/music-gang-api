@@ -10,6 +10,7 @@ import (
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
+	"github.com/music-gang/music-gang-api/event"
 )
 
 var _ service.VmService = (*MusicGangVM)(nil)
@@ -23,13 +24,19 @@ type MusicGangVM struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
+	engineShouldResumeSub *event.Subscription
+	engineShouldPauseSub  *event.Subscription
+
 	*sync.Cond
 
 	LogService log.Logger
 
+	EventService *event.EventService
+
 	EngineService   service.EngineService
 	FuelTank        service.FuelTankService
 	FuelStation     service.FuelStationService
+	FuelMonitor     service.FuelMonitorService
 	CPUsPoolService service.CPUsPoolService
 
 	AuthManagmentService     service.AuthManagmentService
@@ -48,54 +55,77 @@ func NewMusicGangVM() *MusicGangVM {
 		ctx:    ctx,
 		cancel: cancel,
 		Cond:   sync.NewCond(&sync.Mutex{}),
+		// Create a default event service, later we can replace it with a real one.
+		EventService: event.NewEventService(),
 	}
 }
 
 // Run starts the vm.
-func (vm *MusicGangVM) Run() error {
+func (vm *MusicGangVM) Run() (err error) {
+
 	if err := vm.FuelStation.ResumeRefueling(vm.ctx); err != nil {
 		return err
 	}
+
+	if err := vm.FuelMonitor.StartMonitoring(vm.ctx); err != nil {
+		return err
+	}
+
 	if err := vm.Resume(); err != nil {
 		return err
 	}
-	go func() {
-		errChan := make(chan error, 1)
-		infoChan := make(chan string, 1)
 
-		go vm.meter(infoChan, errChan)
+	vm.engineShouldResumeSub = vm.EventService.Subscribe(vm.ctx, event.EngineShouldResumeEvent)
+
+	vm.engineShouldPauseSub = vm.EventService.Subscribe(vm.ctx, event.EngineShouldPauseEvent)
+
+	go func() {
 
 		for {
 			select {
 			case <-vm.ctx.Done():
 				return
-			case err := <-errChan:
-
-				vm.LogService.Error(apperr.ErrorLog(err))
-
-			case info := <-infoChan:
-				vm.LogService.Info(info)
+			case e := <-vm.engineShouldResumeSub.C():
+				vm.LogService.Info(e.Message)
+				vm.Resume()
+			case e := <-vm.engineShouldPauseSub.C():
+				vm.LogService.Info(e.Message)
+				vm.Pause()
 			}
 		}
 	}()
+
 	return nil
 }
 
 // Close closes the vm.
 func (vm *MusicGangVM) Close() error {
+
 	if vm.State() == entity.StateStopped {
 		return apperr.Errorf(apperr.EMGVM, "VM is already closed")
 	}
+
 	if vm.State() == entity.StateInitializing {
 		return apperr.Errorf(apperr.EMGVM, "VM is still initializing")
 	}
+
 	vm.cancel()
+
+	vm.engineShouldPauseSub.Close()
+	vm.engineShouldResumeSub.Close()
+
 	if err := vm.EngineService.Stop(); err != nil {
 		return err
 	}
+
 	if err := vm.FuelStation.StopRefueling(vm.ctx); err != nil {
 		return err
 	}
+
+	if err := vm.FuelMonitor.StopMonitoring(vm.ctx); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -212,48 +242,4 @@ func (vm *MusicGangVM) makeOperation(ctx context.Context, ref service.VmCallable
 	}
 
 	return res, nil
-}
-
-// meter measures the fuel consumption of the engine.
-func (vm *MusicGangVM) meter(infoChan chan<- string, errChan chan<- error) {
-
-	ticker := time.NewTicker(500 * time.Millisecond)
-	defer ticker.Stop()
-
-	loop := true
-
-	for loop {
-
-		func() {
-
-			defer func() {
-				if r := recover(); r != nil {
-					vm.LogService.Crit("Panic while measuring fuel consumption", log.Ctx{"panic": r})
-				}
-			}()
-
-			select {
-			case <-vm.ctx.Done():
-				loop = false
-				return
-			case <-ticker.C:
-			}
-
-			if vm.State() == entity.StatePaused {
-				if fuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
-					errChan <- err
-				} else if float64(fuel) <= float64(entity.FuelTankCapacity)*0.65 {
-					vm.Resume()
-					infoChan <- "Resume engine due to reaching safe fuel level"
-				}
-			} else if vm.State() == entity.StateRunning {
-				if fuel, err := vm.FuelTank.Fuel(vm.ctx); err != nil {
-					errChan <- err
-				} else if float64(fuel) >= float64(entity.FuelTankCapacity)*0.95 {
-					vm.Pause()
-					infoChan <- "Pause engine due to excessive fuel consumption"
-				}
-			}
-		}()
-	}
 }

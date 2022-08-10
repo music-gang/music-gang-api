@@ -2,13 +2,13 @@ package mgvm
 
 import (
 	"context"
-	"sync/atomic"
 	"time"
 
 	log "github.com/inconshreveable/log15"
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
+	"github.com/music-gang/music-gang-api/app/util"
 )
 
 var _ service.FuelStationService = (*FuelStation)(nil)
@@ -16,23 +16,18 @@ var _ service.FuelStationService = (*FuelStation)(nil)
 // FuelStation is a fuel station that can be used to refuel the fuel tank.
 // FuelStation is responsible for starting and stopping the refueling of the fuel tank.
 type FuelStation struct {
+	util.RunningState
+
 	FuelTankService service.FuelTankService
 	LogService      log.Logger
 
 	FuelRefillAmount entity.Fuel
 	FuelRefillRate   time.Duration
-
-	running int32
 }
 
 // NewFuelStation creates a new FuelStation
 func NewFuelStation() *FuelStation {
 	return &FuelStation{}
-}
-
-// IsRunning returns true if the FuelStation is running
-func (fs *FuelStation) IsRunning() bool {
-	return atomic.LoadInt32(&fs.running) == 1
 }
 
 // ResumeRefueling starts the FuelStation.
@@ -55,15 +50,10 @@ func (fs *FuelStation) StopRefueling(ctx context.Context) error {
 	return stopRefueling(ctx, fs)
 }
 
-// setRunningState sets the running state of the FuelStation.
-func (fs *FuelStation) setRunningState(val int32) {
-	atomic.StoreInt32(&fs.running, val)
-}
-
 // resumeRefueling starts the FuelStation.
 func resumeRefueling(ctx context.Context, fs *FuelStation) error {
 
-	fs.setRunningState(1)
+	fs.SetRunningState(1)
 
 	ticker := time.NewTicker(fs.FuelRefillRate)
 	defer ticker.Stop()
@@ -77,7 +67,7 @@ func resumeRefueling(ctx context.Context, fs *FuelStation) error {
 
 		select {
 		case <-ctx.Done():
-			fs.setRunningState(0)
+			fs.SetRunningState(0)
 			return nil
 		case <-ticker.C:
 			if err := internalRefueler(ctx, fs); err != nil {
@@ -89,7 +79,7 @@ func resumeRefueling(ctx context.Context, fs *FuelStation) error {
 
 // stopRefueling stops the FuelStation.
 func stopRefueling(ctx context.Context, fs *FuelStation) error {
-	fs.setRunningState(0)
+	fs.SetRunningState(0)
 	return nil
 }
 

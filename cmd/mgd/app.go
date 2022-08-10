@@ -13,6 +13,7 @@ import (
 	"github.com/music-gang/music-gang-api/auth"
 	"github.com/music-gang/music-gang-api/auth/jwt"
 	"github.com/music-gang/music-gang-api/config"
+	"github.com/music-gang/music-gang-api/event"
 	"github.com/music-gang/music-gang-api/executor"
 	"github.com/music-gang/music-gang-api/handler"
 	"github.com/music-gang/music-gang-api/http"
@@ -31,6 +32,8 @@ type App struct {
 	Redis *redis.DB
 
 	HTTPServerAPI *http.ServerAPI
+
+	EventService *event.EventService
 }
 
 // NewApp returns a new instance of Main
@@ -47,32 +50,33 @@ func NewApp() *App {
 		Redis:         redis.NewDB(redisAddr, redisPassword),
 		HTTPServerAPI: http.NewServerAPI(),
 		VM:            mgvm.NewMusicGangVM(),
+		EventService:  event.NewEventService(),
 	}
 }
 
 // Close closes the main application
-func (m *App) Close() error {
+func (a *App) Close() error {
 
-	if m.VM != nil {
-		if err := m.VM.Close(); err != nil {
+	if a.VM != nil {
+		if err := a.VM.Close(); err != nil {
 			return err
 		}
 	}
 
-	if m.HTTPServerAPI != nil {
-		if err := m.HTTPServerAPI.Close(); err != nil {
+	if a.HTTPServerAPI != nil {
+		if err := a.HTTPServerAPI.Close(); err != nil {
 			return err
 		}
 	}
 
-	if m.Postgres != nil {
-		if err := m.Postgres.Close(); err != nil {
+	if a.Postgres != nil {
+		if err := a.Postgres.Close(); err != nil {
 			return err
 		}
 	}
 
-	if m.Redis != nil {
-		if err := m.Redis.Close(); err != nil {
+	if a.Redis != nil {
+		if err := a.Redis.Close(); err != nil {
 			return err
 		}
 	}
@@ -81,24 +85,24 @@ func (m *App) Close() error {
 }
 
 // Run starts the main application
-func (m *App) Run(ctx context.Context) error {
+func (a *App) Run(ctx context.Context) error {
 
-	m.ctx = ctx
+	a.ctx = ctx
 
-	if err := m.Postgres.Open(); err != nil {
+	if err := a.Postgres.Open(); err != nil {
 		return err
 	}
 
-	if err := m.Redis.Open(); err != nil {
+	if err := a.Redis.Open(); err != nil {
 		return err
 	}
 
-	cacheStateService := redis.NewStateService(m.Redis)
+	cacheStateService := redis.NewStateService(a.Redis)
 
-	postgresAuthService := postgres.NewAuthService(m.Postgres)
-	postgresUserService := postgres.NewUserService(m.Postgres)
-	postgresContractService := postgres.NewContractService(m.Postgres)
-	postgresStateService := postgres.NewStateService(m.Postgres)
+	postgresAuthService := postgres.NewAuthService(a.Postgres)
+	postgresUserService := postgres.NewUserService(a.Postgres)
+	postgresContractService := postgres.NewContractService(a.Postgres)
+	postgresStateService := postgres.NewStateService(a.Postgres)
 
 	postgresStateService.CreateLockService = func(ctx context.Context, revisionID int64) (service.LockService, error) {
 		userID := app.UserIDFromContext(ctx)
@@ -108,7 +112,7 @@ func (m *App) Run(ctx context.Context) error {
 		if revisionID == 0 {
 			return nil, apperr.Errorf(apperr.EINVALID, "revisionID is 0")
 		}
-		return redis.NewLockService(m.Redis, fmt.Sprintf(redis.StateLockKeyTemplate, userID, revisionID)), nil
+		return redis.NewLockService(a.Redis, fmt.Sprintf(redis.StateLockKeyTemplate, userID, revisionID)), nil
 	}
 	postgresStateService.CacheStateSearchService = cacheStateService
 
@@ -116,24 +120,24 @@ func (m *App) Run(ctx context.Context) error {
 
 	jwtService := jwt.NewJWTService()
 	jwtService.Secret = config.GetConfig().APP.JWT.Secret
-	jwtService.JWTBlacklistService = redis.NewJWTBlacklistService(m.Redis)
+	jwtService.JWTBlacklistService = redis.NewJWTBlacklistService(a.Redis)
 
 	logService := log15.New("app", "mgd")
 
-	m.HTTPServerAPI.Addr = config.GetConfig().APP.HTTP.Addr
-	m.HTTPServerAPI.Domain = config.GetConfig().APP.HTTP.Domain
-	m.HTTPServerAPI.LogService = logService.New("module", "http")
+	a.HTTPServerAPI.Addr = config.GetConfig().APP.HTTP.Addr
+	a.HTTPServerAPI.Domain = config.GetConfig().APP.HTTP.Domain
+	a.HTTPServerAPI.LogService = logService.New("module", "http")
 
-	m.HTTPServerAPI.ServiceHandler = handler.NewServiceHandler()
-	m.HTTPServerAPI.ServiceHandler.AuthSearchService = authService
-	m.HTTPServerAPI.ServiceHandler.ContractSearchService = postgresContractService
-	m.HTTPServerAPI.ServiceHandler.UserSearchService = postgresUserService
-	m.HTTPServerAPI.ServiceHandler.JWTService = jwtService
-	m.HTTPServerAPI.ServiceHandler.Logger = m.HTTPServerAPI.LogService
+	a.HTTPServerAPI.ServiceHandler = handler.NewServiceHandler()
+	a.HTTPServerAPI.ServiceHandler.AuthSearchService = authService
+	a.HTTPServerAPI.ServiceHandler.ContractSearchService = postgresContractService
+	a.HTTPServerAPI.ServiceHandler.UserSearchService = postgresUserService
+	a.HTTPServerAPI.ServiceHandler.JWTService = jwtService
+	a.HTTPServerAPI.ServiceHandler.Logger = a.HTTPServerAPI.LogService
 
 	fuelTankService := mgvm.NewFuelTank()
-	fuelTankService.LockService = redis.NewLockService(m.Redis, "fuel-tank-lock")
-	fuelTankService.FuelTankService = redis.NewFuelTankService(m.Redis)
+	fuelTankService.LockService = redis.NewLockService(a.Redis, "fuel-tank-lock")
+	fuelTankService.FuelTankService = redis.NewFuelTankService(a.Redis)
 
 	fuelStationService := mgvm.NewFuelStation()
 	fuelStationService.FuelTankService = fuelTankService
@@ -145,42 +149,52 @@ func (m *App) Run(ctx context.Context) error {
 	engineService := mgvm.NewEngine()
 	engineService.Executors[entity.AnchorageVersion] = anchorageExecutor
 
+	fuelMonitorService := mgvm.NewFuelMonitor()
+	fuelMonitorService.EngineStateService = engineService
+	fuelMonitorService.EventService = a.EventService
+	fuelMonitorService.FuelService = fuelTankService
+	fuelMonitorService.LogService = logService.New("module", "fuel-monitor")
+
 	InitializerCPUsPool()
 
 	cpusPoolService := mgvm.NewCPUsPool()
 
-	m.VM.LogService = logService.New("module", "vm")
-	m.VM.FuelTank = fuelTankService
-	m.VM.FuelStation = fuelStationService
-	m.VM.EngineService = engineService
-	m.VM.CPUsPoolService = cpusPoolService
+	a.VM.LogService = logService.New("module", "vm")
 
-	m.VM.ContractManagmentService = postgresContractService
-	m.VM.UserManagmentService = postgresUserService
-	m.VM.AuthManagmentService = authService
-	m.VM.StateService = postgresStateService
-	m.VM.CacheStateService = cacheStateService
+	a.VM.EventService = a.EventService
 
-	if err := m.VM.Run(); err != nil {
+	a.VM.FuelTank = fuelTankService
+	a.VM.FuelStation = fuelStationService
+	a.VM.FuelMonitor = fuelMonitorService
+	a.VM.EngineService = engineService
+	a.VM.CPUsPoolService = cpusPoolService
+
+	a.VM.ContractManagmentService = postgresContractService
+	a.VM.UserManagmentService = postgresUserService
+	a.VM.AuthManagmentService = authService
+	a.VM.StateService = postgresStateService
+	a.VM.CacheStateService = cacheStateService
+
+	if err := a.VM.Run(); err != nil {
 		return err
 	}
 
-	m.HTTPServerAPI.ServiceHandler.VmCallableService = m.VM
+	a.HTTPServerAPI.ServiceHandler.VmCallableService = a.VM
 
-	if err := m.HTTPServerAPI.Open(); err != nil {
+	if err := a.HTTPServerAPI.Open(); err != nil {
 		return err
 	}
 
-	if m.HTTPServerAPI.UseTLS() {
+	if a.HTTPServerAPI.UseTLS() {
 		go func() {
 			log.Fatal(http.ListenAndServeTLSRedirect(""))
 		}()
 	}
 
 	logService.Info("Starting application",
-		"addr", m.HTTPServerAPI.Addr,
-		"domain", m.HTTPServerAPI.Domain,
-		"tls", m.HTTPServerAPI.UseTLS(),
+		"addr", a.HTTPServerAPI.Addr,
+		"domain", a.HTTPServerAPI.Domain,
+		"tls", a.HTTPServerAPI.UseTLS(),
 		"vm_fuel_tank_capacity", entity.FuelTankCapacity,
 		"vm_fuel_refill_amount", entity.FuelRefillAmount,
 		"vm_fuel_refill_rate", entity.FuelRefillRate,
