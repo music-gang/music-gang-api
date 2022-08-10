@@ -93,3 +93,45 @@ func (fs *FuelStationService) StopRefueling(ctx context.Context) error {
 	}
 	return fs.StopRefuelingFn(ctx)
 }
+
+var _ service.FuelMonitorService = (*FuelMonitorService)(nil)
+
+type FuelMonitorService struct {
+	StartMonitoringFn func(ctx context.Context) error
+	StopMonitoringFn  func(ctx context.Context) error
+}
+
+func (fm *FuelMonitorService) StartMonitoring(ctx context.Context) error {
+	if fm.StartMonitoringFn == nil {
+		panic("StartMonitoringFn is not defined")
+	}
+	return fm.StartMonitoringFn(ctx)
+}
+
+func (fm *FuelMonitorService) StopMonitoring(ctx context.Context) error {
+	if fm.StopMonitoringFn == nil {
+		panic("StopMonitoringFn is not defined")
+	}
+	return fm.StopMonitoringFn(ctx)
+}
+
+var _ service.FuelMonitorService = (*FuelMonitorServiceNoOp)(nil)
+
+type FuelMonitorServiceNoOp struct {
+	StartMonitoringFn func(ctx context.Context) error
+	StopMonitoringFn  func(ctx context.Context) error
+}
+
+func (fm *FuelMonitorServiceNoOp) StartMonitoring(ctx context.Context) error {
+	if fm.StartMonitoringFn != nil {
+		return fm.StartMonitoringFn(ctx)
+	}
+	return nil
+}
+
+func (fm *FuelMonitorServiceNoOp) StopMonitoring(ctx context.Context) error {
+	if fm.StopMonitoringFn != nil {
+		return fm.StopMonitoringFn(ctx)
+	}
+	return nil
+}
