@@ -40,10 +40,16 @@ func (s *EventService) PublishEvent(ctx context.Context, event Event) {
 	}
 
 	for sub := range subs {
+
 		select {
-		case sub.c <- event:
 		case <-sub.ctx.Done():
 			s.unsubscribe(sub)
+			continue
+		default:
+		}
+
+		select {
+		case sub.c <- event:
 		default:
 			s.unsubscribe(sub)
 
