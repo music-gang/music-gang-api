@@ -28,13 +28,13 @@ func TestFuelMonitor_StartMonitor(t *testing.T) {
 
 		fuelMonitor.EngineStateService = &mock.EngineService{
 			StateFn: func() entity.VmState {
-				return engineState
+				return entity.VmState(atomic.LoadInt32((*int32)(&engineState)))
 			},
 		}
 		fuelMonitor.LogService = &mock.LoggerNoOp{}
 		fuelMonitor.FuelService = &mock.FuelTankService{
 			FuelFn: func(ctx context.Context) (entity.Fuel, error) {
-				return currentFuel, nil
+				return entity.Fuel(atomic.LoadUint64((*uint64)(&currentFuel))), nil
 			},
 		}
 		fuelMonitor.EventService = event.NewEventService()
@@ -42,8 +42,8 @@ func TestFuelMonitor_StartMonitor(t *testing.T) {
 		subToResumeEngine := fuelMonitor.EventService.Subscribe(ctx, event.EngineShouldResumeEvent)
 		subToPauseEngine := fuelMonitor.EventService.Subscribe(ctx, event.EngineShouldPauseEvent)
 
-		receivedResumeEvent := false
-		receivedPauseEvent := false
+		receivedResumeEvent := atomic.Bool{}
+		receivedPauseEvent := atomic.Bool{}
 
 		go func() {
 
@@ -52,9 +52,9 @@ func TestFuelMonitor_StartMonitor(t *testing.T) {
 				case <-ctx.Done():
 					return
 				case <-subToResumeEngine.C():
-					receivedResumeEvent = true
+					receivedResumeEvent.Store(true)
 				case <-subToPauseEngine.C():
-					receivedPauseEvent = true
+					receivedPauseEvent.Store(true)
 				}
 			}
 		}()
@@ -68,11 +68,11 @@ func TestFuelMonitor_StartMonitor(t *testing.T) {
 		time.Sleep(1 * time.Second)
 
 		atomic.StoreUint64((*uint64)(&currentFuel), uint64(0))
-		engineState = entity.StatePaused
+		atomic.StoreInt32((*int32)(&engineState), int32(entity.StatePaused))
 
 		time.Sleep(1 * time.Second)
 
-		if !receivedResumeEvent || !receivedPauseEvent {
+		if !receivedResumeEvent.Load() || !receivedPauseEvent.Load() {
 			t.Errorf("Expected resume and pause events to be received, got %v and %v", receivedResumeEvent, receivedPauseEvent)
 		}
 
@@ -127,7 +127,7 @@ func TestFuelMonitor_StartMonitor(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 
 		engineState := entity.StatePaused
-		errorOccurred := false
+		errorOccurred := atomic.Bool{}
 
 		defer cancel()
 
@@ -140,7 +140,7 @@ func TestFuelMonitor_StartMonitor(t *testing.T) {
 		}
 		fuelMonitor.LogService = &mock.LoggerNoOp{
 			ErrorFn: func(msg string, ctx ...interface{}) {
-				errorOccurred = true
+				errorOccurred.Store(true)
 			},
 		}
 		fuelMonitor.FuelService = &mock.FuelTankService{
@@ -156,7 +156,7 @@ func TestFuelMonitor_StartMonitor(t *testing.T) {
 
 		time.Sleep(1 * time.Second)
 
-		if !errorOccurred {
+		if !errorOccurred.Load() {
 			t.Errorf("Expected error to be logged, got none")
 		}
 	})
@@ -166,7 +166,7 @@ func TestFuelMonitor_StartMonitor(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 
 		engineState := entity.StateRunning
-		errorOccurred := false
+		errorOccurred := atomic.Bool{}
 
 		defer cancel()
 
@@ -179,7 +179,7 @@ func TestFuelMonitor_StartMonitor(t *testing.T) {
 		}
 		fuelMonitor.LogService = &mock.LoggerNoOp{
 			ErrorFn: func(msg string, ctx ...interface{}) {
-				errorOccurred = true
+				errorOccurred.Store(true)
 			},
 		}
 		fuelMonitor.FuelService = &mock.FuelTankService{
@@ -195,7 +195,7 @@ func TestFuelMonitor_StartMonitor(t *testing.T) {
 
 		time.Sleep(1 * time.Second)
 
-		if !errorOccurred {
+		if !errorOccurred.Load() {
 			t.Errorf("Expected error to be logged, got none")
 		}
 	})
@@ -205,7 +205,7 @@ func TestFuelMonitor_StartMonitor(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 
 		engineState := entity.StateRunning
-		panicOccurred := false
+		panicOccurred := atomic.Bool{}
 
 		defer cancel()
 
@@ -219,7 +219,7 @@ func TestFuelMonitor_StartMonitor(t *testing.T) {
 		fuelMonitor.EventService = event.NewEventService()
 		fuelMonitor.LogService = &mock.LoggerNoOp{
 			CritFn: func(msg string, ctx ...interface{}) {
-				panicOccurred = true
+				panicOccurred.Store(true)
 			},
 		}
 
@@ -229,7 +229,7 @@ func TestFuelMonitor_StartMonitor(t *testing.T) {
 
 		time.Sleep(1 * time.Second)
 
-		if !panicOccurred {
+		if !panicOccurred.Load() {
 			t.Errorf("Expected panic to be logged, got none")
 		}
 	})
