@@ -32,7 +32,7 @@ services:
 steps:
   # TESTING
   - name: test
-    image: golang:1.18
+    image: golang:1.19
     commands:
       - sleep 15
       - export $(cat drone-ci/.drone.env | xargs)
@@ -40,7 +40,7 @@ steps:
 
   # BUILD AND RUN
   - name: build-and-run
-    image: golang:1.18
+    image: golang:1.19
     detach: true
     environment:
       PORT: 8888
@@ -201,4 +201,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: 04ef072b3ee88e5f2c754aaea3355cc6a05f6a9fef17a9ce85cb81e099e6db22
+hmac: a975a3b8d56f9ebad377b1457739c6ec0c1b5b78fb993b02f6cdc0a8705c69f5
