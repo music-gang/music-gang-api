@@ -6,7 +6,7 @@ import (
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
-	"github.com/music-gang/music-gang-api/app/util"
+	"github.com/music-gang/music-gang-api/common"
 	"golang.org/x/oauth2"
 )
 
@@ -23,7 +23,8 @@ func NewLocalProvider(authService service.AuthService, userService service.UserS
 	return &LocalProvider{authService: authService, userService: userService}
 }
 
-//  GetConfig returns the oauth2.Config for the provider.
+//	GetConfig returns the oauth2.Config for the provider.
+//
 // Local provider does not use oauth2.
 func (p *LocalProvider) GetOAuthConfig() *oauth2.Config { return nil }
 
@@ -63,7 +64,7 @@ func (p *LocalProvider) Auhenticate(ctx context.Context, opts *entity.AuthUserOp
 		return nil, apperr.Errorf(apperr.EINVALID, "user does not have local auth")
 	}
 
-	if err := util.CompareHashAndPassword([]byte(user.Password.String), []byte(*opts.UserParams.Password)); err != nil {
+	if err := common.CompareHashAndPassword([]byte(user.Password.String), []byte(*opts.UserParams.Password)); err != nil {
 		return nil, apperr.Errorf(apperr.EUNAUTHORIZED, "wrong credentials")
 	}
 

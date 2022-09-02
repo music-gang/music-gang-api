@@ -8,8 +8,8 @@ import (
 
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
-	"github.com/music-gang/music-gang-api/app/util"
 	"github.com/music-gang/music-gang-api/auth"
+	"github.com/music-gang/music-gang-api/common"
 	"github.com/music-gang/music-gang-api/config"
 	"github.com/music-gang/music-gang-api/mock"
 	"gopkg.in/guregu/null.v4"
@@ -66,7 +66,7 @@ func TestAuth_TestLocalProvider(t *testing.T) {
 		password := "123456"
 
 		var hashedPassword []byte
-		if p, err := util.HashPassword(password); err == nil {
+		if p, err := common.HashPassword(password); err == nil {
 			hashedPassword = p
 		}
 
@@ -80,14 +80,14 @@ func TestAuth_TestLocalProvider(t *testing.T) {
 				Name:      name,
 				Email:     null.StringFrom(email),
 				Password:  null.StringFrom(string(hashedPassword)),
-				CreatedAt: util.AppNowUTC(),
-				UpdatedAt: util.AppNowUTC(),
+				CreatedAt: common.AppNowUTC(),
+				UpdatedAt: common.AppNowUTC(),
 				Auths: []*entity.Auth{{
 					ID:        1,
 					UserID:    1,
 					Source:    authSourceLocal,
-					CreatedAt: util.AppNowUTC(),
-					UpdatedAt: util.AppNowUTC(),
+					CreatedAt: common.AppNowUTC(),
+					UpdatedAt: common.AppNowUTC(),
 				}},
 			}, nil
 		}
@@ -138,7 +138,7 @@ func TestAuth_TestLocalProvider(t *testing.T) {
 		password := "123456"
 
 		var hashedPassword []byte
-		if p, err := util.HashPassword(password); err == nil {
+		if p, err := common.HashPassword(password); err == nil {
 			hashedPassword = p
 		}
 
@@ -152,14 +152,14 @@ func TestAuth_TestLocalProvider(t *testing.T) {
 				Name:      name,
 				Email:     null.StringFrom(email),
 				Password:  null.StringFrom(string(hashedPassword)),
-				CreatedAt: util.AppNowUTC(),
-				UpdatedAt: util.AppNowUTC(),
+				CreatedAt: common.AppNowUTC(),
+				UpdatedAt: common.AppNowUTC(),
 				Auths: []*entity.Auth{{
 					ID:        1,
 					UserID:    1,
 					Source:    authSourceLocal,
-					CreatedAt: util.AppNowUTC(),
-					UpdatedAt: util.AppNowUTC(),
+					CreatedAt: common.AppNowUTC(),
+					UpdatedAt: common.AppNowUTC(),
 				}},
 			}, nil
 		}

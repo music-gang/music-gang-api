@@ -10,7 +10,7 @@ import (
 
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
-	"github.com/music-gang/music-gang-api/app/util"
+	"github.com/music-gang/music-gang-api/common"
 	"github.com/music-gang/music-gang-api/handler"
 	"github.com/music-gang/music-gang-api/mock"
 	"gopkg.in/guregu/null.v4"
@@ -432,7 +432,7 @@ func TestAuth_Refresh(t *testing.T) {
 					AccessToken:  "new_access_token",
 					RefreshToken: "new_refresh_token",
 					TokenType:    "Bearer",
-					Expiry:       util.AppNowUTC().Add(1 * time.Hour).Unix(),
+					Expiry:       common.AppNowUTC().Add(1 * time.Hour).Unix(),
 				}, nil
 			},
 		}

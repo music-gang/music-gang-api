@@ -1,9 +1,9 @@
-package util_test
+package common_test
 
 import (
 	"testing"
 
-	"github.com/music-gang/music-gang-api/app/util"
+	"github.com/music-gang/music-gang-api/common"
 )
 
 func TestBytes(t *testing.T) {
@@ -15,14 +15,14 @@ func TestBytes(t *testing.T) {
 			"c": "hello",
 		}
 
-		b, err := util.ToBytes(m)
+		b, err := common.ToBytes(m)
 		if err != nil {
 			t.Errorf("Error while converting map to bytes: %s", err.Error())
 		}
 
 		m2 := make(map[string]any)
 
-		if err := util.FromBytes(b, &m2); err != nil {
+		if err := common.FromBytes(b, &m2); err != nil {
 			t.Errorf("Error while converting bytes to map: %s", err.Error())
 		}
 

@@ -8,7 +8,7 @@ import (
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
-	"github.com/music-gang/music-gang-api/app/util"
+	"github.com/music-gang/music-gang-api/common"
 )
 
 var _ service.FuelStationService = (*FuelStation)(nil)
@@ -16,7 +16,7 @@ var _ service.FuelStationService = (*FuelStation)(nil)
 // FuelStation is a fuel station that can be used to refuel the fuel tank.
 // FuelStation is responsible for starting and stopping the refueling of the fuel tank.
 type FuelStation struct {
-	util.RunningState
+	common.RunningState
 
 	FuelTankService service.FuelTankService
 	LogService      log.Logger

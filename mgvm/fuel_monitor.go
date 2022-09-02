@@ -8,7 +8,7 @@ import (
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
-	"github.com/music-gang/music-gang-api/app/util"
+	"github.com/music-gang/music-gang-api/common"
 	"github.com/music-gang/music-gang-api/event"
 )
 
@@ -19,7 +19,7 @@ var _ service.FuelMonitorService = (*FuelMonitor)(nil)
 // When the fuel reach a specific threshold, an event is published and this event should be handled by the VM.
 // When the fuel reach a safe level, an event is published and this event should be handled by the VM.
 type FuelMonitor struct {
-	util.RunningState
+	common.RunningState
 
 	EventService       *event.EventService
 	EngineStateService service.EngineStateService

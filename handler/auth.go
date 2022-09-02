@@ -6,7 +6,7 @@ import (
 
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
-	"github.com/music-gang/music-gang-api/app/util"
+	"github.com/music-gang/music-gang-api/common"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -58,8 +58,8 @@ func (p *RegisterParams) validate() error {
 
 	if p.Password == "" {
 		return apperr.Errorf(apperr.EINVALID, "password is required")
-	} else if ok := util.IsValidPassword(p.Password); !ok {
-		return apperr.Errorf(apperr.EINVALID, util.PasswordRequirements)
+	} else if ok := common.IsValidPassword(p.Password); !ok {
+		return apperr.Errorf(apperr.EINVALID, common.PasswordRequirements)
 	}
 
 	if p.Password != p.ConfirmPassword {
@@ -148,7 +148,7 @@ func (s *ServiceHandler) AuthRegister(ctx context.Context, params RegisterParams
 		return nil, err
 	}
 
-	passwordhashed, err := util.HashPassword(params.Password)
+	passwordhashed, err := common.HashPassword(params.Password)
 	if err != nil {
 		s.Logger.Error(apperr.ErrorLog(err))
 		return nil, err

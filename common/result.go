@@ -1,4 +1,4 @@
-package util
+package common
 
 // Result is a result of an operation.
 // It usefull for the result of an operation and passed to a channel.

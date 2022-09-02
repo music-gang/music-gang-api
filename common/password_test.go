@@ -1,9 +1,9 @@
-package util_test
+package common_test
 
 import (
 	"testing"
 
-	"github.com/music-gang/music-gang-api/app/util"
+	"github.com/music-gang/music-gang-api/common"
 )
 
 func TestPassword_CompareHashAndPassword(t *testing.T) {
@@ -12,12 +12,12 @@ func TestPassword_CompareHashAndPassword(t *testing.T) {
 
 		password := "123456"
 
-		hashedPassword, err := util.HashPassword(password)
+		hashedPassword, err := common.HashPassword(password)
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
 
-		if err := util.CompareHashAndPassword(hashedPassword, []byte(password)); err != nil {
+		if err := common.CompareHashAndPassword(hashedPassword, []byte(password)); err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
 	})
@@ -26,12 +26,12 @@ func TestPassword_CompareHashAndPassword(t *testing.T) {
 
 		password := "123456"
 
-		hashedPassword, err := util.HashPassword(password)
+		hashedPassword, err := common.HashPassword(password)
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
 
-		if err := util.CompareHashAndPassword(hashedPassword, []byte("wrong-password")); err == nil {
+		if err := common.CompareHashAndPassword(hashedPassword, []byte("wrong-password")); err == nil {
 			t.Errorf("Expected error, got nil")
 		}
 	})
@@ -43,7 +43,7 @@ func TestPasword_IsValidPassword(t *testing.T) {
 
 		password := "AsecurePassword123!"
 
-		if ok := util.IsValidPassword(password); !ok {
+		if ok := common.IsValidPassword(password); !ok {
 			t.Errorf("Expected true, got false")
 		}
 	})
@@ -52,7 +52,7 @@ func TestPasword_IsValidPassword(t *testing.T) {
 
 		password := "As1!"
 
-		if ok := util.IsValidPassword(password); ok {
+		if ok := common.IsValidPassword(password); ok {
 			t.Errorf("Expected false, got true")
 		}
 	})
@@ -61,7 +61,7 @@ func TestPasword_IsValidPassword(t *testing.T) {
 
 		password := "As1!butTooLooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong"
 
-		if ok := util.IsValidPassword(password); ok {
+		if ok := common.IsValidPassword(password); ok {
 			t.Errorf("Expected false, got true")
 		}
 	})
@@ -70,7 +70,7 @@ func TestPasword_IsValidPassword(t *testing.T) {
 
 		password := "asdfghjkl1!"
 
-		if ok := util.IsValidPassword(password); ok {
+		if ok := common.IsValidPassword(password); ok {
 			t.Errorf("Expected false, got true")
 		}
 	})
@@ -79,7 +79,7 @@ func TestPasword_IsValidPassword(t *testing.T) {
 
 		password := "ASDFGHJKL1!"
 
-		if ok := util.IsValidPassword(password); ok {
+		if ok := common.IsValidPassword(password); ok {
 			t.Errorf("Expected false, got true")
 		}
 	})
@@ -88,7 +88,7 @@ func TestPasword_IsValidPassword(t *testing.T) {
 
 		password := "ASDFGHJKL!"
 
-		if ok := util.IsValidPassword(password); ok {
+		if ok := common.IsValidPassword(password); ok {
 			t.Errorf("Expected false, got true")
 		}
 	})
@@ -97,7 +97,7 @@ func TestPasword_IsValidPassword(t *testing.T) {
 
 		password := "ASDFGHghjkl123"
 
-		if ok := util.IsValidPassword(password); ok {
+		if ok := common.IsValidPassword(password); ok {
 			t.Errorf("Expected false, got true")
 		}
 	})

@@ -9,7 +9,7 @@ import (
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
-	"github.com/music-gang/music-gang-api/app/util"
+	"github.com/music-gang/music-gang-api/common"
 	"github.com/music-gang/music-gang-api/postgres"
 	"gopkg.in/guregu/null.v4"
 )
@@ -30,7 +30,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 			User: &entity.User{
 				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.done@test.com"),
@@ -74,7 +74,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 			User: &entity.User{
 				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
@@ -86,7 +86,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN-NEW"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN-NEW"),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 			User:         auth0.User,
 		}
 
@@ -114,7 +114,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 			User: &entity.User{
 				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
@@ -141,7 +141,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			Source:       entity.AuthSourceGitHub,
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 			User: &entity.User{
 				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
@@ -169,7 +169,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 		}
 
 		if err := s.CreateAuth(context.Background(), auth); err == nil {
@@ -193,7 +193,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom(""),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 			User: &entity.User{
 				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
@@ -221,7 +221,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom(""),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 			User: &entity.User{
 				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
@@ -287,7 +287,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 			User: &entity.User{
 				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
@@ -340,7 +340,7 @@ func TestAuthService_CreateAuth(t *testing.T) {
 			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 			User: &entity.User{
 				Name:  "JaneDoe",
 				Email: null.StringFrom("jane.doe@test.com"),
@@ -379,7 +379,7 @@ func TestAuthService_DeleteAuth(t *testing.T) {
 			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 			User: &entity.User{
 				Name: "JaneDoe",
 			},
@@ -424,7 +424,7 @@ func TestAuthService_DeleteAuth(t *testing.T) {
 			SourceID:     null.StringFromPtr(nil),
 			AccessToken:  null.StringFromPtr(nil),
 			RefreshToken: null.StringFromPtr(nil),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 			UserID:       user.ID,
 			User:         user,
 		})
@@ -450,7 +450,7 @@ func TestAuthService_DeleteAuth(t *testing.T) {
 			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 			User: &entity.User{
 				Name: "JaneDoe",
 			},
@@ -461,7 +461,7 @@ func TestAuthService_DeleteAuth(t *testing.T) {
 			SourceID:     null.StringFrom("SOURCEID-1"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN-1"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN-1"),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 			User: &entity.User{
 				Name: "BobDoe",
 			},
@@ -491,7 +491,7 @@ func TestAuthService_FindAuthByID(t *testing.T) {
 			SourceID:     null.StringFrom("SOURCEID"),
 			AccessToken:  null.StringFrom("ACCESSTOKEN"),
 			RefreshToken: null.StringFrom("REFRESHTOKEN"),
-			Expiry:       null.TimeFrom(util.AppNowUTC()),
+			Expiry:       null.TimeFrom(common.AppNowUTC()),
 			User: &entity.User{
 				Name: "JaneDoe",
 			},

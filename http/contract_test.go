@@ -14,7 +14,7 @@ import (
 	"github.com/music-gang/music-gang-api/app/apperr"
 	"github.com/music-gang/music-gang-api/app/entity"
 	"github.com/music-gang/music-gang-api/app/service"
-	"github.com/music-gang/music-gang-api/app/util"
+	"github.com/music-gang/music-gang-api/common"
 	"github.com/music-gang/music-gang-api/mock"
 )
 
@@ -812,7 +812,7 @@ func TestContract_ContractMakeRevision(t *testing.T) {
 		s.ServiceHandler.VmCallableService = &mock.VmCallableService{
 			ContractService: &mock.ContractService{
 				MakeRevisionFn: func(ctx context.Context, revision *entity.Revision) error {
-					revision.CreatedAt = util.AppNowUTC()
+					revision.CreatedAt = common.AppNowUTC()
 					revision.Rev = 1
 					if err := revision.Validate(); err != nil {
 						return err
