@@ -36,7 +36,7 @@ steps:
     commands:
       - sleep 15
       - export $(cat drone-ci/.drone.env | xargs)
-      - go test ./... -timeout 120s -race -coverprofile=coverage.txt -covermode=atomic
+      - go test ./... -timeout 480s -race -coverprofile=coverage.txt -covermode=atomic
 
   # BUILD AND RUN
   - name: build-and-run
@@ -201,4 +201,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: a975a3b8d56f9ebad377b1457739c6ec0c1b5b78fb993b02f6cdc0a8705c69f5
+hmac: 8987ca45a25d1984c881de0b0a972daf49dbd66ab58c676add2c170aad2a537a
