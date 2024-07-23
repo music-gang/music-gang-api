@@ -55,7 +55,7 @@ steps:
     environment:
       MUSICGANG_SERVICE_URL: build-and-run:8888/v1
     commands:
-      - gem install bundler:2.2.29
+      - gem install bundler:2.3.16
       - cd tests
       - bundle install
       - sleep 10
@@ -201,4 +201,4 @@ steps:
         - success
 ---
 kind: signature
-hmac: 8987ca45a25d1984c881de0b0a972daf49dbd66ab58c676add2c170aad2a537a
+hmac: 4a17bde673bcb969aaf8ad67774c80c414e92586d96138c4b43922083c37752f
