@@ -18,7 +18,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
-	google.golang.org/protobuf v1.26.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 )
 
